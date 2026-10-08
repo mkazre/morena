@@ -18,7 +18,7 @@ class ReferenceDataSeeder extends Seeder
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        foreach (['admin', 'branch_manager', 'hr', 'agent', 'landlord', 'tenant'] as $role) {
+        foreach (['admin', 'branch_manager', 'hr', 'finance', 'agent', 'landlord', 'tenant'] as $role) {
             Role::findOrCreate($role, 'web');
         }
 
@@ -55,5 +55,7 @@ class ReferenceDataSeeder extends Seeder
                 ));
             }
         }
+
+        $this->call(ChartOfAccountsSeeder::class);
     }
 }

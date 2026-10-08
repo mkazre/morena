@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CommissionResource;
 use App\Models\Commission;
+use App\Services\Accounting\Automation;
 use App\Support\Scope;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CommissionController extends Controller
 {
@@ -44,10 +46,13 @@ class CommissionController extends Controller
         ];
     }
 
-    public function markPaid(Commission $commission)
+    public function markPaid(Request $request, Commission $commission, Automation $accounting)
     {
         abort_if($commission->status === 'paid', 422, 'Already paid.');
-        $commission->update(['status' => 'paid', 'paid_at' => now()]);
+        DB::transaction(function () use ($request, $commission, $accounting) {
+            $commission->update(['status' => 'paid', 'paid_at' => now()]);
+            $accounting->postCommissionPayout($commission->load('deal'), $request->user());
+        });
 
         return new CommissionResource($commission->load(['deal', 'agent.user', 'coAgent.user', 'tier']));
     }

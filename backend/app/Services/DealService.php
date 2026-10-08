@@ -5,12 +5,13 @@ namespace App\Services;
 use App\Models\Deal;
 use App\Models\PipelineStage;
 use App\Models\User;
+use App\Services\Accounting\Automation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class DealService
 {
-    public function __construct(private CommissionService $commissions) {}
+    public function __construct(private CommissionService $commissions, private Automation $accounting) {}
 
     public function create(array $data, ?User $by): Deal
     {
@@ -34,7 +35,7 @@ class DealService
             if ($newStage && (int) $newStage !== $deal->pipeline_stage_id) {
                 $this->moveTo($deal, PipelineStage::findOrFail($newStage), $by);
             }
-            $this->commissions->calculateForDeal($deal->fresh());
+            $this->afterChange($deal, $by);
 
             return $deal->fresh();
         });
@@ -52,7 +53,7 @@ class DealService
 
         return DB::transaction(function () use ($deal, $next, $by) {
             $this->moveTo($deal, $next, $by);
-            $this->commissions->calculateForDeal($deal->fresh());
+            $this->afterChange($deal, $by);
 
             return $deal->fresh();
         });
@@ -74,6 +75,16 @@ class DealService
         }
 
         $this->log($deal, $by, 'Moved to '.$stage->name);
+    }
+
+    /** Recalculate commission; when the deal has just closed, raise the commission invoice in the books. */
+    private function afterChange(Deal $deal, ?User $by): void
+    {
+        $this->commissions->calculateForDeal($deal->fresh());
+        $deal = $deal->fresh(['commission', 'seller']);
+        if ($deal->status === 'closed') {
+            $this->accounting->invoiceDealCommission($deal, $by);
+        }
     }
 
     public function log(Deal $deal, ?User $by, string $text): void
