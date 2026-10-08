@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Budgets &amp; Recurring</span></div>
+      <div class="btn-row"><sc-if value="{{ isRecurring }}"><button class="btn btn-primary" onClick="{{ onNewRecurring }}">+ New recurring</button></sc-if>
+<sc-if value="{{ isBudgetish }}"><select class="sel" style="width:auto" value="{{ year }}" onChange="{{ onYear }}"><sc-for list="{{ yearOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></sc-if></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Budgets &amp; recurring transactions</h1><p>Plan the year by account, track actuals against it, and let monthly rent, retainers and subscriptions raise themselves.</p></div>
+</div>
+<div class="tabs"><sc-for list="{{ tabs }}" as="t"><div class="{{ t.cls }}" onClick="{{ t.onClick }}">{{ t.label }}</div></sc-for></div>
+
+<sc-if value="{{ isBva }}">
+  <div class="grid grid-3" style="margin-bottom:16px">
+    <div class="kpi"><div class="kpi-label">Income vs budget</div><div class="kpi-value">{{ incActual }}</div><div class="kpi-sub">Budget to date {{ incBudget }}</div></div>
+    <div class="kpi"><div class="kpi-label">Expenses vs budget</div><div class="kpi-value">{{ expActual }}</div><div class="kpi-sub">Budget to date {{ expBudget }}</div></div>
+    <div class="kpi"><div class="kpi-label">Net profit vs budget</div><div class="kpi-value">{{ netActual }}</div><div class="kpi-sub">Budget to date {{ netBudget }}</div></div>
+  </div>
+  <div class="card flush"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Account</th><th class="num">Budget to date</th><th class="num">Actual</th><th class="num">Variance</th><th style="min-width:140px">Used</th><th class="num">Full-year budget</th></tr></thead>
+    <tbody>
+      <sc-if value="{{ bvaEmpty }}"><tr><td colspan="6" class="empty">No budgets or activity for this year yet — set budgets on the Budgets tab.</td></tr></sc-if>
+      <sc-for list="{{ bva }}" as="r">
+        <tr class="{{ r.rowCls }}"><td>{{ r.name }}</td><td class="num">{{ r.budget }}</td><td class="num">{{ r.actual }}</td><td class="{{ r.varCls }}">{{ r.variance }}</td>
+          <td><sc-if value="{{ r.hasPct }}"><div class="small">{{ r.pct }}</div><div class="progress"><div style="{{ r.bar }}"></div></div></sc-if></td><td class="num muted">{{ r.full }}</td></tr>
+      </sc-for>
+    </tbody>
+  </table></div></div>
+  <p class="muted small" style="margin-top:10px">{{ bvaRange }} Variance is shown as good (green) when income beats budget or expenses come in under it.</p>
+</sc-if>
+
+<sc-if value="{{ isBudgets }}">
+  <div class="card flush"><div class="tbl-wrap"><table class="tbl" style="font-size:12px">
+    <thead><tr><th>Account</th><sc-for list="{{ monthHeads }}" as="m"><th class="num">{{ m }}</th></sc-for><th class="num">Year</th><th></th></tr></thead>
+    <tbody>
+      <sc-for list="{{ budgetRows }}" as="r">
+        <tr class="{{ r.rowCls }}"><td style="white-space:nowrap">{{ r.name }}</td><sc-for list="{{ r.cells }}" as="c"><td class="num muted">{{ c }}</td></sc-for><td class="num strong">{{ r.total }}</td>
+          <td><sc-if value="{{ r.editable }}"><a class="link small" onClick="{{ r.onEdit }}">Edit</a></sc-if></td></tr>
+      </sc-for>
+    </tbody>
+  </table></div></div>
+</sc-if>
+
+<sc-if value="{{ isRecurring }}">
+  <div class="card flush"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Type</th><th>Customer / supplier</th><th>Reference</th><th>Every</th><th>Next on</th><th class="num">Amount (excl.)</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <sc-if value="{{ recEmpty }}"><tr><td colspan="8" class="empty">Nothing recurring yet. Add office rent, software subscriptions or monthly management fees so they’re raised automatically every morning at 06:00.</td></tr></sc-if>
+      <sc-for list="{{ recurring }}" as="r">
+        <tr><td><span class="{{ r.kindCls }}">{{ r.kind }}</span></td><td class="strong">{{ r.contact }}</td><td class="muted">{{ r.reference }}</td><td>{{ r.every }}</td><td>{{ r.next }}</td><td class="num">{{ r.amount }}</td>
+          <td><span class="{{ r.statusCls }}">{{ r.status }}</span></td>
+          <td style="white-space:nowrap"><a class="link small" onClick="{{ r.onToggle }}">{{ r.toggleLabel }}</a> · <a class="link small" style="color:#b42318" onClick="{{ r.onDelete }}">Delete</a></td></tr>
+      </sc-for>
+    </tbody>
+  </table></div></div>
+</sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], tab: 'bva', year: 0, accounts: [], months: [], budgets: {}, bva: null, recurring: [], fyStart: 3, loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-planning', ['admin', 'finance']));
+    const [lk, settings] = await Promise.all([this.fin.lookups(), this.app.api('/finance/settings').catch(() => null)]);
+    const fyStart = settings ? (settings.data || settings).financial_year_start_month || 3 : 3;
+    const now = new Date();
+    const year = now.getMonth() + 1 >= fyStart ? now.getFullYear() : now.getFullYear() - 1;
+    this.setState({ accounts: lk.accounts.filter((a) => a.type === 'income' || a.type === 'expense'), fyStart, year, tab: this.app.param('tab') || 'bva' }, this.loadAll);
+  }
+
+  loadAll = () => { this.loadBudgets(); this.loadBva(); this.loadRecurring(); };
+  loadBudgets = async () => {
+    const res = await this.app.run(() => this.app.api('/finance/budgets?year=' + this.state.year));
+    if (res) this.setState({ months: res.months, budgets: Array.isArray(res.data) ? {} : res.data, loaded: true });
+  };
+  loadBva = async () => {
+    const res = await this.app.run(() => this.app.api('/finance/reports/budget-vs-actual?year=' + this.state.year));
+    if (res) this.setState({ bva: res });
+  };
+  loadRecurring = async () => {
+    const res = await this.app.run(() => this.app.api('/finance/recurring'));
+    if (res) this.setState({ recurring: res.data });
+  };
+  onYear = (e) => this.setState({ year: Number(e.target.value) }, this.loadAll);
+
+  editBudget = async (a) => {
+    const { app } = this;
+    const s = this.state;
+    const cur = s.budgets[a.id] || {};
+    const label = (m) => { const [y, mm] = m.split('-'); return new Date(+y, +mm - 1, 1).toLocaleString('en-ZA', { month: 'short', year: 'numeric' }); };
+    const out = await app.form({
+      title: 'Budget · ' + a.code + ' ' + a.name, intro: 'Fill in an annual amount to spread evenly over 12 months, or set each month. Leave a month blank to clear it.', submitLabel: 'Save budget',
+      fields: [{ name: 'annual', label: 'Annual amount (spread evenly)', type: 'number' }, ...s.months.map((m) => ({ name: m, label: label(m), type: 'number', value: cur[m] ?? '' }))],
+      onSubmit: (v) => {
+        const amounts = {};
+        for (const m of s.months) amounts[m] = v.annual != null ? Math.round(v.annual / 12 * 100) / 100 : v[m];
+        return app.api('/finance/budgets', { method: 'PUT', body: { account_id: a.id, amounts } });
+      },
+    });
+    if (out) { app.toast('Budget saved'); this.loadBudgets(); this.loadBva(); }
+  };
+
+  onNewRecurring = async () => {
+    const { app, fin } = this;
+    const lk = await fin.lookups();
+    const out = await app.form({
+      title: 'New recurring transaction', intro: 'Raised automatically as a draft (or approved) invoice/bill on each run date.', submitLabel: 'Create',
+      fields: [
+        { name: 'kind', label: 'Type', type: 'select', value: 'bill', options: [{ value: 'bill', label: 'Bill (we pay)' }, { value: 'invoice', label: 'Invoice (we charge)' }] },
+        { name: 'contact_id', label: 'Customer / supplier', type: 'select', required: true, options: [{ value: '', label: 'Choose…' }, ...lk.contacts.map((c) => ({ value: c.id, label: c.name }))] },
+        { name: 'description', label: 'Line description', required: true, hint: 'e.g. Office rent — Sandton branch' },
+        { name: 'account_id', label: 'Account', type: 'select', required: true, options: [{ value: '', label: 'Choose…' }, ...fin.accountOptions(lk.accounts, ['income', 'expense', 'asset'])] },
+        { name: 'unit_price', label: 'Amount excl. VAT (R)', type: 'number', required: true, step: '0.01' },
+        { name: 'tax_rate_id', label: 'VAT', type: 'select', options: lk.taxRates.map((t) => ({ value: t.id, label: t.name })) },
+        { name: 'frequency', label: 'Every', type: 'select', value: 'monthly', options: [{ value: 'monthly', label: 'Month' }, { value: 'quarterly', label: 'Quarter' }, { value: 'yearly', label: 'Year' }] },
+        { name: 'next_run_on', label: 'First date', type: 'date', value: fin.today(), required: true },
+        { name: 'due_days', label: 'Payment terms (days)', type: 'number', value: 30 },
+        { name: 'ends_on', label: 'Stop after (optional)', type: 'date' },
+        { name: 'reference', label: 'Reference' },
+        { name: 'auto_approve', label: 'Approve automatically (posts to the ledger straight away)', type: 'checkbox' },
+      ],
+      onSubmit: (v) => app.api('/finance/recurring', { method: 'POST', body: {
+        kind: v.kind, contact_id: Number(v.contact_id), reference: v.reference, frequency: v.frequency, next_run_on: v.next_run_on,
+        day_of_month: Math.min(28, new Date(v.next_run_on + 'T00:00:00').getDate()), due_days: v.due_days ?? 30, ends_on: v.ends_on, auto_approve: v.auto_approve,
+        lines: [{ description: v.description, account_id: Number(v.account_id), tax_rate_id: v.tax_rate_id ? Number(v.tax_rate_id) : null, quantity: 1, unit_price: v.unit_price }],
+      } }),
+    });
+    if (out) { app.toast('Recurring transaction created'); this.loadRecurring(); }
+  };
+  toggleRecurring = async (r) => {
+    if (await this.app.run(() => this.app.api('/finance/recurring/' + r.id, { method: 'PUT', body: { is_active: !r.is_active } }))) this.loadRecurring();
+  };
+  deleteRecurring = async (r) => {
+    if (!confirm('Delete this recurring ' + r.kind + '? Documents already raised stay.')) return;
+    if (await this.app.run(() => this.app.api('/finance/recurring/' + r.id, { method: 'DELETE' }), 'Deleted') !== undefined) this.loadRecurring();
+  };
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const A = (n) => (fin ? fin.amt(n) : '');
+    const tabs = [['bva', 'Budget vs actual'], ['budgets', 'Budgets'], ['recurring', 'Recurring']];
+    const yearOptions = [-1, 0, 1].map((d) => s.year + d).filter(Boolean).map((y) => ({ value: y, label: 'FY ' + y + '/' + String(y + 1).slice(2) }));
+    const rows = s.bva ? s.bva.rows : [];
+    const tot = (type, k) => rows.filter((r) => r.type === type).reduce((n, r) => n + r[k], 0);
+    const bvaList = [];
+    for (const type of ['income', 'expense']) {
+      const list = rows.filter((r) => r.type === type);
+      if (!list.length) continue;
+      bvaList.push({ rowCls: 'section', name: type === 'income' ? 'Income' : 'Expenses', budget: '', actual: '', variance: '', varCls: 'num', hasPct: false, full: '' });
+      for (const r of list) {
+        const good = type === 'income' ? r.variance >= 0 : r.variance <= 0;
+        const p = r.percent;
+        bvaList.push({ rowCls: 'indent', name: r.code + ' · ' + r.name, budget: A(r.budget), actual: A(r.actual), variance: (r.variance > 0 ? '+' : '') + A(r.variance),
+          varCls: 'num ' + (r.budget ? (good ? 'strong' : 'neg strong') : 'muted'), hasPct: p != null, pct: p + '%',
+          bar: { width: Math.min(100, p || 0) + '%', background: type === 'expense' ? (p > 100 ? '#b42318' : p > 90 ? '#c07c1e' : '#2f7d5a') : (p >= 100 ? '#2f7d5a' : '#7a1528') },
+          full: A(r.full_year_budget) });
+      }
+    }
+    const mlabel = (m) => { const [y, mm] = m.split('-'); return new Date(+y, +mm - 1, 1).toLocaleString('en-ZA', { month: 'short' }); };
+    const budgetRows = [];
+    for (const type of ['income', 'expense']) {
+      budgetRows.push({ rowCls: 'section', name: type === 'income' ? 'Income' : 'Expenses', cells: s.months.map(() => ''), total: '', editable: false });
+      for (const a of s.accounts.filter((x) => x.type === type)) {
+        const b = s.budgets[a.id] || {};
+        const total = s.months.reduce((n, m) => n + Number(b[m] || 0), 0);
+        budgetRows.push({ rowCls: 'indent', name: a.code + ' · ' + a.name, cells: s.months.map((m) => (b[m] != null ? fin.amt(b[m]).replace(/\.00$/, '') : '·')), total: total ? A(total) : '—', editable: true, onEdit: () => this.editBudget(a) });
+      }
+    }
+    const every = { monthly: 'Month', quarterly: 'Quarter', yearly: 'Year' };
+    return {
+      ...(app ? app.shellVals(s) : {}),
+      tabs: tabs.map(([k, label]) => ({ label, cls: 'tab' + (s.tab === k ? ' on' : ''), onClick: () => this.setState({ tab: k }) })),
+      isBva: s.tab === 'bva', isBudgets: s.tab === 'budgets', isRecurring: s.tab === 'recurring', isBudgetish: s.tab !== 'recurring',
+      year: s.year, yearOptions, onYear: this.onYear, onNewRecurring: this.onNewRecurring,
+      incActual: A(tot('income', 'actual')), incBudget: A(tot('income', 'budget')), expActual: A(tot('expense', 'actual')), expBudget: A(tot('expense', 'budget')),
+      netActual: A(tot('income', 'actual') - tot('expense', 'actual')), netBudget: A(tot('income', 'budget') - tot('expense', 'budget')),
+      bva: bvaList, bvaEmpty: !!s.bva && !rows.length, bvaRange: s.bva && app ? 'Actuals from ' + app.date(s.bva.from) + ' to ' + app.date(s.bva.to) + '.' : '',
+      monthHeads: s.months.map(mlabel), budgetRows: fin ? budgetRows : [],
+      recEmpty: !s.recurring.length,
+      recurring: app ? s.recurring.map((r) => ({
+        kind: r.kind === 'bill' ? 'Bill' : 'Invoice', kindCls: 'badge ' + (r.kind === 'bill' ? 'b-warn' : 'b-info'), contact: r.contact, reference: r.reference || '—',
+        every: every[r.frequency] + ' (day ' + r.day_of_month + ')', next: r.is_active ? app.date(r.next_run_on) : '—', amount: A(r.amount),
+        status: r.is_active ? (r.auto_approve ? 'Active · auto-approve' : 'Active · draft') : 'Paused', statusCls: 'badge ' + (r.is_active ? 'b-ok' : ''),
+        toggleLabel: r.is_active ? 'Pause' : 'Resume', onToggle: () => this.toggleRecurring(r), onDelete: () => this.deleteRecurring(r),
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

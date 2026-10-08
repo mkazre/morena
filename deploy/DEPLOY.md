@@ -69,6 +69,16 @@ cPanel → **Cron Jobs**
 3. Wait ~2 minutes, open `morena-crm/storage/logs/deploy.log` in File Manager and look for `== Done ==`.
 4. **Delete the cron job.** (Re-running it is harmless, but it should not stay on.)
 
+## 8b. Keep the scheduler cron (this one stays on)
+Daily alerts (FFC/contract/mandate expiries, overdue invoices, task reminders, recurring bills/invoices) and the
+Monday 07:00 weekly digest run from Laravel's scheduler. Add **one permanent** cron, Common Settings **Once Per Minute**:
+
+```
+cd /home/morenau6r4c3/morena-crm && /opt/cpanel/ea-php83/root/usr/bin/php artisan schedule:run >> /dev/null 2>&1
+```
+It does nothing most minutes; at 06:00 it runs `morena:daily`, on Mondays at 07:00 `morena:weekly-digest`.
+Untick the cron email for this one, or you'll get a mail every minute.
+
 ## 9. Sign in
 Open https://app.morenagroup.co.za → check the admin inbox (and spam) for the set-password email → set a password → sign in.
 No email? Fix `MAIL_*` in `.env`, run step 8 again (without changing anything else), then use **Forgot password?**.
@@ -89,3 +99,6 @@ Build a new zip → upload into `morena-crm` → Extract (overwrite) → run the
 | Sign-in loops back to login | HTTPS not active yet, or `SESSION_DOMAIN` / `SANCTUM_STATEFUL_DOMAINS` not `app.morenagroup.co.za`. |
 | "Storage link" warning | Host blocks symlinks; listing photos won't display — ask the host to allow `symlink()`, everything else works. |
 | Uploads fail over ~2MB | Step 3 INI limits not applied to the subdomain. |
+| No daily alerts / recurring bills not raised | The step-8b `schedule:run` cron is missing, or uses the wrong PHP path. Test once: replace `>> /dev/null` with `>> storage/logs/schedule.log` and check the file. |
+| Staff locked out ("Too many failed attempts") | Wait 15 minutes, use **Forgot password?** (a reset lifts the lock), or Admin: **Users & Roles → Manage → Unlock account**. |
+| Someone lost their 2FA phone | They sign in with a recovery code and turn 2FA off/on under Account Security. No codes left? Admin: **Users & Roles → Manage → Reset two-factor**, then they re-enrol. |

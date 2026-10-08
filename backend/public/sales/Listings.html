@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
   <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
   <script src="../assets/logo-scale.js"></script>
   <script src="../image-slot.js"></script>
@@ -36,7 +40,7 @@
   <div style="flex:1;display:flex;flex-direction:column;min-width:0">
     <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
       <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / <span style="color:#1c1a19;font-weight:700">Listings</span></div>
-      <button onClick="{{ onNew }}" style="padding:9px 16px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ New listing</button>
+      <div class="btn-row"><button onClick="{{ onImport }}" style="padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;background:#fff;color:#1c1a19;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer">Import CSV</button><button onClick="{{ onNew }}" style="padding:9px 16px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ New listing</button></div>
     </header>
     <main style="flex:1;padding:28px 32px">
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px">
@@ -51,6 +55,7 @@
               <div style="font-size:12.5px;color:#6b6660;margin-bottom:10px">{{ item.suburb }}</div>
               <div style="font-size:17px;font-weight:700;color:#7a1528;margin-bottom:8px">R{{ item.price }}</div>
               <div style="font-size:12px;color:#6b6660">{{ item.agent }} · {{ item.beds }} bed · {{ item.baths }} bath</div>
+              <div style="display:flex;gap:14px;margin-top:12px;padding-top:10px;border-top:1px solid #f1ede9;font-size:12.5px;font-weight:600"><a href="{{ item.brochure }}" onClick="{{ item.stop }}">Brochure &amp; QR</a><a href="{{ item.cma }}" onClick="{{ item.stop }}">Market analysis</a></div>
             </div>
           </div>
         </sc-for>
@@ -66,6 +71,7 @@ class Component extends DCLogic {
   async componentDidMount() {
     this.app = await import('../assets/app.js');
     this.forms = await import('../assets/forms.js');
+    this.x = await import('../assets/extras.js');
     this.setState(await this.app.shell('listings', ['admin', 'branch_manager']));
     this.load();
   }
@@ -75,6 +81,7 @@ class Component extends DCLogic {
     if (res) this.setState({ listings: res.data });
   };
 
+  onImport = async () => { if (await this.x.csvImport({ endpoint: '/listings/import', title: 'Import listings', columns: 'title, suburb, price, beds, baths, type, agent_email, mandate_expiry, status' })) this.load(); };
   onNew = async () => { if (await this.forms.listingForm()) { this.app.toast('Listing added'); this.load(); } };
 
   renderVals() {
@@ -86,10 +93,12 @@ class Component extends DCLogic {
         title: l.title, suburb: l.suburb, price: app.money(l.price), status: st.label, statusBadge: st.style,
         agent: l.agent || 'Unassigned', beds: l.beds, baths: l.baths, photoStyle: { width: '100%', height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b6660', fontSize: 12, fontWeight: 600, background: l.photo_url ? '#f1ede9 url(' + JSON.stringify(l.photo_url) + ') center / cover no-repeat' : '#f1ede9' },
         photoLabel: l.photo_url ? '' : 'Property photo',
+        brochure: './Brochure.html?id=' + l.id, cma: '../work/Tools.html?tab=cma&suburb=' + encodeURIComponent(l.suburb || '') + '&beds=' + (l.beds || '') + '&price=' + l.price,
+        stop: (e) => e.stopPropagation(),
         onEdit: async () => { if (await this.forms.listingForm(l)) { app.toast('Listing saved'); this.load(); } },
       };
     }) : [];
-    return { ...(app ? app.shellVals(s) : {}), listings, onNew: this.onNew };
+    return { ...(app ? app.shellVals(s) : {}), listings, onNew: this.onNew, onImport: this.onImport };
   }
 }
 </script>

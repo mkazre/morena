@@ -57,6 +57,25 @@ Tests: `php artisan test` (feature tests cover auth and invites, the §6 commiss
 - **Client messaging** goes through the `App\Services\Messaging\NotificationChannel` interface. `LogChannel` is bound by default;
   swap in a WhatsApp Business implementation in `AppServiceProvider` once credentials exist.
 
+## Workspace, security and productivity features
+
+- **`public/assets/extras.js`** is loaded by `shell()` on every page and lives outside the React tree: the **Ctrl K command
+  palette** (`GET /search`, scoped per role), the **notification bell** (`/notifications`, polled every 60 s), quick
+  **task / appointment** dialogs, the **WhatsApp click-to-chat + email composer** (templates in `config/morena.php`),
+  CSV import/export helpers, the **My Day** panel on dashboards, and local QR codes (`assets/vendor/qrcode.js`, MIT).
+- **Workspace pages** (`public/work/`): Tasks, Calendar (month grid plus a private iCal feed at `/calendar/{token}.ics`),
+  Calculators & CMA (transfer duty, bond, commission what-if, and a comparative market analysis from Morena's sold history), and
+  Account Security (TOTP 2FA, recovery codes, sign-in history). Also `sales/Targets`, `sales/Brochure` (printable,
+  with a WhatsApp QR), `admin/Audit` (record changes and sign-ins), and `finance/Planning` (budgets, budget vs actual, and recurring bills/invoices).
+- **Security**: 5 wrong passwords lock the account for 15 minutes (a reset or an admin unlock lifts it). Optional TOTP 2FA with 8
+  single-use recovery codes. Admins can reset a lost 2FA device. Every change to core records is written to `audit_logs`
+  by the `Audited` trait.
+- **Leads**: a 0–100 score (`LeadScoring`, refreshed daily), a duplicate guard (HTTP 409 unless `confirm_duplicate`),
+  CSV import, and recorded POPIA marketing consent.
+- **Scheduler**: one cPanel cron runs `schedule:run`. `morena:daily` (06:00) raises recurring documents, sends overdue-invoice
+  reminders, and fires FFC/contract/mandate/task/appointment alerts, all de-duplicated. `morena:weekly-digest` runs Mondays at 07:00.
+- **PWA**: `manifest.webmanifest`, `sw.js` and `offline.html`. The service worker caches static files only, never `/api`.
+
 ## Deviations from the handover (and why)
 
 - **Laravel 12, not 11.** Composer refuses every Laravel 11 release on this machine because of published security

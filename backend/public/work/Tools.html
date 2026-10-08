@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Workspace / <span style="color:#1c1a19;font-weight:700">Calculators &amp; CMA</span></div>
+      <div class="btn-row"><button class="btn no-print" onClick="{{ onPrint }}">Print</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Calculators &amp; market analysis</h1><p>Quick answers for clients. Figures are estimates — confirm with the bank, conveyancer or SARS before quoting formally.</p></div>
+</div>
+<div class="tabs no-print"><sc-for list="{{ tabs }}" as="t"><div class="{{ t.cls }}" onClick="{{ t.onClick }}">{{ t.label }}</div></sc-for></div>
+
+<sc-if value="{{ isDuty }}">
+  <div class="grid grid-main">
+    <div class="card">
+      <div class="card-title">Transfer duty</div>
+      <div class="field"><label>Purchase price (R)</label><input class="inp" type="number" value="{{ price }}" onChange="{{ onPrice }}" /></div>
+      <p class="muted small" style="margin-top:10px">{{ dutyNote }}</p>
+      <div class="tbl-wrap" style="margin-top:14px"><table class="tbl">
+        <thead><tr><th>Property value</th><th class="num">Rate</th></tr></thead>
+        <tbody><sc-for list="{{ brackets }}" as="b"><tr><td>{{ b.range }}</td><td class="num">{{ b.rate }}</td></tr></sc-for></tbody>
+      </table></div>
+    </div>
+    <div class="stack">
+      <div class="kpi"><div class="kpi-label">Transfer duty payable</div><div class="kpi-value">{{ duty }}</div><div class="kpi-sub">{{ dutyPct }} of the price · paid by the buyer</div></div>
+      <div class="notice warn">VAT-registered sellers (e.g. developers) charge VAT instead of transfer duty. Attorney fees, bond registration and deeds office fees are extra.</div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isBond }}">
+  <div class="grid grid-main">
+    <div class="card">
+      <div class="card-title">Bond repayment</div>
+      <div class="grid grid-2">
+        <div class="field"><label>Purchase price (R)</label><input class="inp" type="number" value="{{ price }}" onChange="{{ onPrice }}" /></div>
+        <div class="field"><label>Deposit (R)</label><input class="inp" type="number" value="{{ deposit }}" onChange="{{ onDeposit }}" /></div>
+        <div class="field"><label>Interest rate (% a year)</label><input class="inp" type="number" step="0.25" value="{{ rate }}" onChange="{{ onRate }}" /></div>
+        <div class="field"><label>Term (years)</label><input class="inp" type="number" value="{{ years }}" onChange="{{ onYears }}" /></div>
+      </div>
+      <p class="muted small" style="margin-top:10px">{{ primeNote }}</p>
+    </div>
+    <div class="stack">
+      <div class="kpi"><div class="kpi-label">Monthly repayment</div><div class="kpi-value">{{ monthly }}</div><div class="kpi-sub">Loan of {{ loan }}</div></div>
+      <div class="kpi"><div class="kpi-label">Gross income needed</div><div class="kpi-value">{{ income }}</div><div class="kpi-sub">Banks usually cap repayments at 30% of gross monthly income</div></div>
+      <div class="kpi"><div class="kpi-label">Total interest over the term</div><div class="kpi-value">{{ interest }}</div><div class="kpi-sub">Total repaid {{ totalPaid }}</div></div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isComm }}">
+  <div class="grid grid-main">
+    <div class="card">
+      <div class="card-title">Commission what-if</div>
+      <div class="grid grid-2">
+        <div class="field"><label>Sale price (R)</label><input class="inp" type="number" value="{{ price }}" onChange="{{ onPrice }}" /></div>
+        <div class="field"><label>Commission rate (% excl. VAT)</label><input class="inp" type="number" step="0.25" value="{{ commRate }}" onChange="{{ onCommRate }}" /></div>
+        <div class="field"><label>Your tier</label><select class="sel" value="{{ tierId }}" onChange="{{ onTier }}"><sc-for list="{{ tierOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
+        <div class="field"><label>Co-listing / co-selling</label><select class="sel" value="{{ coSplit }}" onChange="{{ onCo }}"><option value="100">No — my deal only</option><option value="{{ coDefault }}">Yes — {{ coDefault }}% my share</option></select></div>
+      </div>
+      <p class="muted small" style="margin-top:10px">Uses the commission rules in Commission Settings. Your actual payout is calculated on the deal when it closes.</p>
+    </div>
+    <div class="stack">
+      <div class="kpi"><div class="kpi-label">Seller pays</div><div class="kpi-value">{{ grossIncl }}</div><div class="kpi-sub">{{ grossExcl }} + VAT {{ vatAmt }}</div></div>
+      <div class="kpi"><div class="kpi-label">Agency share</div><div class="kpi-value">{{ agencyShare }}</div></div>
+      <div class="kpi" style="border-color:#7a1528"><div class="kpi-label">You earn (excl. VAT)</div><div class="kpi-value" style="color:#7a1528">{{ agentShare }}</div><div class="kpi-sub">{{ tierSplit }}</div></div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isCma }}">
+  <div class="card no-print" style="margin-bottom:16px">
+    <div class="toolbar" style="margin-bottom:0">
+      <input class="inp" placeholder="Suburb, e.g. Fourways" value="{{ suburb }}" onChange="{{ onSuburb }}" />
+      <input class="inp" type="number" placeholder="Bedrooms" value="{{ beds }}" onChange="{{ onBeds }}" style="max-width:120px" />
+      <input class="inp" type="number" placeholder="Seller's asking price (R)" value="{{ asking }}" onChange="{{ onAsking }}" />
+      <button class="btn btn-primary" onClick="{{ onCma }}">Run analysis</button>
+    </div>
+  </div>
+  <sc-if value="{{ hasCma }}">
+    <div class="grid grid-4" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-label">Comparable sales</div><div class="kpi-value">{{ cma.count }}</div><div class="kpi-sub">{{ cma.scope }}, last 24 months</div></div>
+      <div class="kpi"><div class="kpi-label">Median sold price</div><div class="kpi-value">{{ cma.median }}</div><div class="kpi-sub">Range {{ cma.low }} – {{ cma.high }}</div></div>
+      <div class="kpi"><div class="kpi-label">Avg. days on market</div><div class="kpi-value">{{ cma.days }}</div></div>
+      <div class="kpi"><div class="kpi-label">Asking vs median</div><div class="kpi-value" style="{{ cma.vsStyle }}">{{ cma.vs }}</div><div class="kpi-sub">{{ cma.vsHint }}</div></div>
+    </div>
+    <div class="card flush" style="margin-bottom:16px"><div class="card-title" style="padding:16px 20px 0">Sold by Morena</div><div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Property</th><th>Suburb</th><th>Type</th><th class="num">Beds</th><th class="num">Baths</th><th class="num">Sold for</th><th>Sold on</th></tr></thead>
+      <tbody>
+        <sc-if value="{{ noComps }}"><tr><td colspan="7" class="empty">No closed Morena sales match yet.</td></tr></sc-if>
+        <sc-for list="{{ comps }}" as="c"><tr><td class="strong">{{ c.property }}</td><td>{{ c.suburb }}</td><td class="muted">{{ c.type }}</td><td class="num">{{ c.beds }}</td><td class="num">{{ c.baths }}</td><td class="num">{{ c.price }}</td><td class="muted">{{ c.sold }}</td></tr></sc-for>
+      </tbody>
+    </table></div></div>
+    <div class="card flush"><div class="card-title" style="padding:16px 20px 0">Competing active listings</div><div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Listing</th><th class="num">Beds</th><th class="num">Baths</th><th class="num">Asking</th><th>Listed</th></tr></thead>
+      <tbody>
+        <sc-if value="{{ noCompeting }}"><tr><td colspan="5" class="empty">No other active Morena listings in this suburb.</td></tr></sc-if>
+        <sc-for list="{{ competing }}" as="c"><tr><td class="strong">{{ c.title }}</td><td class="num">{{ c.beds }}</td><td class="num">{{ c.baths }}</td><td class="num">{{ c.price }}</td><td class="muted">{{ c.listed }}</td></tr></sc-for>
+      </tbody>
+    </table></div></div>
+    <p class="muted small" style="margin-top:12px">Based on Morena Properties' own sales history. Not a formal valuation — for that, use a bank or registered valuer.</p>
+  </sc-if>
+</sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], tab: 'duty', rules: null, price: 2000000, deposit: 200000, rate: 10.5, years: 20, commRate: null, tierId: '', coSplit: '100',
+    suburb: '', beds: '', asking: '', cma: null };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    const s = await this.app.shell('tools', ['admin', 'branch_manager', 'hr', 'finance', 'agent']);
+    const q = new URLSearchParams(location.search);
+    this.setState({ ...s, tab: q.get('tab') || 'duty', suburb: q.get('suburb') || '', beds: q.get('beds') || '', asking: q.get('price') || '' });
+    const rules = await this.app.run(() => this.app.api('/tools/rules'));
+    if (rules) this.setState({ rules, rate: rules.prime_rate, commRate: rules.base_rate_percent, tierId: String(rules.my_tier_id || (rules.tiers[0] && rules.tiers[0].id) || ''), coSplit: '100' });
+    if (q.get('suburb')) this.onCma();
+  }
+
+  num = (k) => (e) => this.setState({ [k]: e.target.value });
+  onPrice = this.num('price'); onDeposit = this.num('deposit'); onRate = this.num('rate'); onYears = this.num('years');
+  onCommRate = this.num('commRate'); onTier = this.num('tierId'); onCo = this.num('coSplit');
+  onSuburb = this.num('suburb'); onBeds = this.num('beds'); onAsking = this.num('asking');
+  onPrint = () => window.print();
+
+  onCma = async () => {
+    const s = this.state;
+    if (!s.suburb.trim()) { this.app.toast('Enter a suburb', 'warn'); return; }
+    const q = new URLSearchParams({ suburb: s.suburb.trim() });
+    if (s.beds) q.set('beds', s.beds);
+    if (s.asking) q.set('asking_price', s.asking);
+    const cma = await this.app.run(() => this.app.api('/cma?' + q));
+    if (cma) this.setState({ cma });
+  };
+
+  duty(price) {
+    const b = (this.state.rules?.transfer_duty.brackets || []).filter((x) => price > x.from).pop();
+    return b ? b.base + (price - b.from) * b.rate / 100 : 0;
+  }
+
+  renderVals() {
+    const { app } = this;
+    const s = this.state;
+    const R = (n) => (n == null || isNaN(n) ? '—' : 'R ' + Math.round(n).toLocaleString('en-US'));
+    const price = Number(s.price) || 0;
+    const tabs = [['duty', 'Transfer duty'], ['bond', 'Bond repayment'], ['comm', 'Commission what-if'], ['cma', 'Market analysis (CMA)']];
+    const td = s.rules?.transfer_duty;
+    const brackets = (td?.brackets || []).map((b, i, all) => ({
+      range: R(b.from + (i ? 1 : 0)) + (all[i + 1] ? ' – ' + R(all[i + 1].from) : ' and above'),
+      rate: b.rate ? (b.base ? R(b.base) + ' + ' : '') + b.rate + '% above ' + R(b.from) : 'Nil',
+    }));
+    const duty = this.duty(price);
+    // Bond
+    const loan = Math.max(0, price - (Number(s.deposit) || 0));
+    const r = (Number(s.rate) || 0) / 1200;
+    const n = (Number(s.years) || 0) * 12;
+    const monthly = n ? (r ? loan * r / (1 - Math.pow(1 + r, -n)) : loan / n) : 0;
+    // Commission
+    const rules = s.rules;
+    const tier = rules?.tiers.find((t) => String(t.id) === String(s.tierId));
+    const excl = price * (Number(s.commRate) || 0) / 100;
+    const vat = rules?.vat_registered ? excl * rules.vat_rate / 100 : 0;
+    const mine = excl * (Number(s.coSplit) || 100) / 100;
+    const agentShare = tier ? mine * tier.agent_split_percent / 100 : 0;
+    // CMA
+    const c = s.cma;
+    const vs = c?.asking_vs_median_percent;
+    return {
+      ...(app ? app.shellVals(s) : {}),
+      tabs: tabs.map(([k, label]) => ({ label, cls: 'tab' + (s.tab === k ? ' on' : ''), onClick: () => this.setState({ tab: k }) })),
+      isDuty: s.tab === 'duty', isBond: s.tab === 'bond', isComm: s.tab === 'comm', isCma: s.tab === 'cma', onPrint: this.onPrint,
+      price: s.price, deposit: s.deposit, rate: s.rate, years: s.years, onPrice: this.onPrice, onDeposit: this.onDeposit, onRate: this.onRate, onYears: this.onYears,
+      dutyNote: td ? td.note : '', brackets, duty: R(duty), dutyPct: price ? (duty / price * 100).toFixed(2) + '%' : '0%',
+      primeNote: rules ? 'Prime is set at ' + rules.prime_rate + '% in the system — change the rate to match the bank’s offer.' : '',
+      monthly: R(monthly), loan: R(loan), income: R(monthly / 0.3), interest: R(monthly * n - loan), totalPaid: R(monthly * n),
+      commRate: s.commRate ?? '', onCommRate: this.onCommRate, tierId: s.tierId, onTier: this.onTier, coSplit: s.coSplit, onCo: this.onCo,
+      coDefault: rules ? String(rules.co_listing_split_default_percent) : '50',
+      tierOptions: (rules?.tiers || []).map((t) => ({ value: String(t.id), label: t.name + ' — ' + t.agent_split_percent + '% to agent' + (t.id === rules.my_tier_id ? ' (your tier)' : '') })),
+      grossIncl: R(excl + vat), grossExcl: R(excl), vatAmt: R(vat), agencyShare: R(mine - agentShare), agentShare: R(agentShare),
+      tierSplit: tier ? tier.name + ': ' + tier.agent_split_percent + '% of ' + R(mine) : '',
+      suburb: s.suburb, beds: s.beds, asking: s.asking, onSuburb: this.onSuburb, onBeds: this.onBeds, onAsking: this.onAsking, onCma: this.onCma,
+      hasCma: !!c,
+      cma: c ? {
+        count: c.count, scope: c.scope === 'suburb' ? 'Same suburb' : 'Similar homes, all areas', median: R(c.median), low: R(c.low), high: R(c.high),
+        days: c.avg_days_on_market ?? '—', vs: vs == null ? '—' : (vs > 0 ? '+' : '') + vs + '%',
+        vsStyle: { color: vs == null ? '#1c1a19' : Math.abs(vs) <= 5 ? '#2f7d5a' : vs > 10 ? '#b42318' : '#c07c1e' },
+        vsHint: vs == null ? 'Enter the asking price to compare' : Math.abs(vs) <= 5 ? 'In line with the market' : vs > 0 ? 'Above recent sales — expect longer time on market' : 'Below recent sales — may sell quickly',
+      } : {},
+      comps: c && app ? c.comparables.map((x) => ({ property: x.property, suburb: x.suburb, type: x.type || '—', beds: x.beds ?? '—', baths: x.baths ?? '—', price: R(x.price), sold: app.date(x.sold_on) })) : [],
+      competing: c && app ? c.competing.map((x) => ({ title: x.title, beds: x.beds ?? '—', baths: x.baths ?? '—', price: R(x.price), listed: app.date(x.listed_at) })) : [],
+      noComps: !!c && !c.comparables.length, noCompeting: !!c && !c.competing.length,
+    };
+  }
+}
+</script>
+</body>
+</html>

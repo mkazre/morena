@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
   <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
   <script src="../assets/logo-scale.js"></script>
 </helmet>
@@ -111,6 +115,31 @@
           </div>
         </div>
       </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-title">Team notes <span class="muted small" style="font-weight:500">Type @Name to notify a colleague</span></div>
+          <textarea class="txt" rows="3" value="{{ draft }}" onChange="{{ onDraft }}" placeholder="e.g. @Thandiwe bond approved by ABSA, waiting on guarantees"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn btn-primary btn-sm" onClick="{{ onPost }}">Post note</button></div>
+          <sc-if value="{{ noComments }}"><div class="empty">No notes yet. Keep deal conversations here instead of WhatsApp groups so the record stays with the deal.</div></sc-if>
+          <sc-for list="{{ comments }}" as="cm">
+            <div class="comment"><span class="avatar">{{ cm.initials }}</span><div class="grow"><div class="small"><strong>{{ cm.by }}</strong> <span class="muted">· {{ cm.at }}</span></div><div style="font-size:13px;white-space:pre-wrap;margin-top:2px">{{ cm.body }}</div></div></div>
+          </sc-for>
+        </div>
+        <div class="card">
+          <div class="card-title">Tasks &amp; appointments <span class="btn-row"><button class="btn btn-sm" onClick="{{ onAddAppt }}">+ Appointment</button><button class="btn btn-sm" onClick="{{ onAddTask }}">+ Task</button></span></div>
+          <sc-if value="{{ noTasks }}"><div class="empty">Nothing scheduled for this deal.</div></sc-if>
+          <sc-for list="{{ tasks }}" as="t">
+            <div class="list-row"><span class="{{ t.checkCls }}" onClick="{{ t.onToggle }}">{{ t.tick }}</span><div class="grow"><div class="{{ t.titleCls }}" style="font-size:13px;font-weight:600">{{ t.title }}</div><div class="muted small">{{ t.meta }}</div></div><span class="{{ t.dueCls }}">{{ t.due }}</span></div>
+          </sc-for>
+          <sc-if value="{{ hasParties }}">
+            <div style="border-top:1px solid #f1ede9;margin-top:10px;padding-top:12px" class="btn-row">
+              <span class="muted small">Message:</span>
+              <sc-for list="{{ parties }}" as="pt"><button class="btn btn-sm" onClick="{{ pt.onClick }}">{{ pt.label }}</button></sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
     </main>
   </div>
 </div>
@@ -122,6 +151,7 @@ class Component extends DCLogic {
   async componentDidMount() {
     this.app = await import('../assets/app.js');
     this.forms = await import('../assets/forms.js');
+    this.x = await import('../assets/extras.js');
     const shell = await this.app.shell('deals', ['admin', 'branch_manager', 'agent']);
     // Agents reach this page from their portal; keep their nav item highlighted.
     if (shell.me.role === 'agent') shell.navSections = (await import('../shell/nav-config.js')).decorateNav('agent', 'deals');
@@ -134,6 +164,34 @@ class Component extends DCLogic {
     if (!id) { location.replace('./Deals.html'); return; }
     const detail = await this.app.run(() => this.app.api('/deals/' + id));
     if (detail) this.setState({ detail });
+    this.loadNotes();
+  };
+
+  loadNotes = async () => {
+    const id = this.app.param('id');
+    const [c, t] = await Promise.all([
+      this.app.api('/deals/' + id + '/comments').catch(() => null),
+      this.app.api('/tasks?related_type=deal&related_id=' + id).catch(() => null),
+    ]);
+    this.setState({ comments: c ? c.data : [], tasks: t ? t.data : [] });
+  };
+  onDraft = (e) => this.setState({ draft: e.target.value });
+  onPost = async () => {
+    const body = (this.state.draft || '').trim();
+    if (!body) return;
+    const ok = await this.app.run(() => this.app.api('/deals/' + this.state.detail.deal.id + '/comments', { method: 'POST', body: { body } }));
+    if (ok) { this.setState({ draft: '' }); this.loadNotes(); }
+  };
+  onAddTask = async () => {
+    const d = this.state.detail.deal;
+    if (await this.x.quickTask({ related_type: 'deal', related_id: d.id, relatedLabel: d.property })) this.loadNotes();
+  };
+  onAddAppt = async () => {
+    const d = this.state.detail.deal;
+    await this.x.quickAppointment({ type: 'signing', title: d.property, location: d.property, deal_id: d.id, listing_id: this.state.detail.listing ? this.state.detail.listing.id : undefined });
+  };
+  toggleTask = async (t) => {
+    if (await this.app.run(() => this.app.api('/tasks/' + t.id + '/toggle', { method: 'POST' }))) this.loadNotes();
   };
 
   onAdvance = async () => {
@@ -163,7 +221,13 @@ class Component extends DCLogic {
     const app = this.app;
     const s = this.state;
     const x = s.detail;
-    const base = { ...(app ? app.shellVals(s) : {}), onEdit: this.onEdit, onAdvance: this.onAdvance, onUpload: this.onUpload };
+    const base = { ...(app ? app.shellVals(s) : {}), onEdit: this.onEdit, onAdvance: this.onAdvance, onUpload: this.onUpload,
+      draft: s.draft || '', onDraft: this.onDraft, onPost: this.onPost, onAddTask: this.onAddTask, onAddAppt: this.onAddAppt,
+      noComments: !(s.comments || []).length, noTasks: !(s.tasks || []).length,
+      comments: app ? (s.comments || []).map((cm) => ({ by: cm.by || 'System', initials: cm.initials || '•', at: app.when(cm.at), body: cm.body })) : [],
+      tasks: app ? (s.tasks || []).map((t) => ({ title: t.title, titleCls: t.done ? 'done-txt' : '', checkCls: 'check' + (t.done ? ' on' : ''), tick: t.done ? '✓' : '',
+        meta: t.assignee || '', due: t.due_at ? app.due(t.due_at) : '', dueCls: 'small ' + (t.overdue ? 'neg strong' : 'muted'), onToggle: () => this.toggleTask(t) })) : [],
+      hasParties: false, parties: [] };
     if (!app || !x) return { ...base, title: '', stages: [], activity: [], docs: [], c: {} };
 
     const d = x.deal;
@@ -193,6 +257,10 @@ class Component extends DCLogic {
       docs: x.required_documents.length
         ? x.required_documents.map((r) => ({ name: r.name, status: r.received ? 'Received' : 'Pending', badge: docBadge(r.received) }))
         : [{ name: 'No documents required at this stage yet', status: '', badge: {} }],
+      hasParties: !!(x.buyer_phone || x.buyer_email || x.seller_phone || x.seller_email),
+      parties: [['Buyer', x.buyer_name, x.buyer_phone, x.buyer_email], ['Seller', x.seller_name, x.seller_phone, x.seller_email]]
+        .filter((q) => q[2] || q[3]).map(([role, name, phone, email]) => ({ label: role + (name ? ' · ' + name.split(' ')[0] : ''),
+          onClick: () => this.x.message({ name: name || role, phone, email, property: d.property, related_type: 'deal', related_id: d.id }) })),
       c: c ? {
         sale: app.money(d.value), rate: c.rate_percent, amount: app.money(c.commission_amount),
         vatRate: c.vat_rate_percent, vat: app.money(c.vat_amount),

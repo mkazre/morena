@@ -30,6 +30,7 @@ class DailyJobs extends Command
     {
         $steps = [
             'Recurring invoices & bills' => fn () => ExtrasController::runRecurring(),
+            'Lead scores refreshed' => fn () => \App\Services\LeadScoring::rescoreAll(),
             'Overdue invoice reminders' => fn () => $this->overdueReminders($mailer),
             'FFC / CPD alerts' => fn () => $this->ffcAlerts($notify),
             'Contract renewals' => fn () => $this->contractAlerts($notify),
@@ -116,7 +117,7 @@ class DailyJobs extends Command
     {
         $tasks = Task::with('assignee')->whereNull('completed_at')->whereDate('due_at', now()->toDateString())->get();
         foreach ($tasks as $t) {
-            $notify->send($t->assignee, 'task_due', 'Due today: '.$t->title, null, '/portal/Tasks.html', 'task-'.$t->id.'-'.now()->toDateString());
+            $notify->send($t->assignee, 'task_due', 'Due today: '.$t->title, null, '/work/Tasks.html', 'task-'.$t->id.'-'.now()->toDateString());
         }
 
         return $tasks->count();
@@ -126,7 +127,7 @@ class DailyJobs extends Command
     {
         $appts = Appointment::with('user')->where('status', 'scheduled')->whereDate('starts_at', now()->addDay()->toDateString())->get();
         foreach ($appts as $a) {
-            $notify->send($a->user, 'reminder', 'Tomorrow '.$a->starts_at->format('H:i').': '.$a->title, trim($a->location.' '.$a->attendee_name), '/portal/Calendar.html', 'appt-'.$a->id);
+            $notify->send($a->user, 'reminder', 'Tomorrow '.$a->starts_at->format('H:i').': '.$a->title, trim($a->location.' '.$a->attendee_name), '/work/Calendar.html', 'appt-'.$a->id);
         }
 
         return $appts->count();

@@ -34,6 +34,23 @@ class LeadScoring
         return max(1, min(99, $s));
     }
 
+    /** Recompute every lead's score (scores cool off with time, so the daily job refreshes them). Returns rows changed. */
+    public static function rescoreAll(): int
+    {
+        $changed = 0;
+        Lead::query()->chunkById(500, function ($leads) use (&$changed) {
+            foreach ($leads as $l) {
+                $score = self::score($l);
+                if ($score !== (int) $l->score) {
+                    Lead::whereKey($l->id)->update(['score' => $score]); // query update: no audit noise, no saving hook
+                    $changed++;
+                }
+            }
+        });
+
+        return $changed;
+    }
+
     public static function explain(): string
     {
         return 'Source (referral 30, walk-in 24, website 20, portal 18, WhatsApp 16) + phone 15 + email 10 + clear brief 10 '

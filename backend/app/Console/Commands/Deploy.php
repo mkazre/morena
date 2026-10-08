@@ -34,6 +34,7 @@ class Deploy extends Command
                 '--class' => ReferenceDataSeeder::class, '--force' => true,
             ]));
             $this->linkStorage();
+            $this->step('Lead scores', fn () => \App\Services\LeadScoring::rescoreAll());
             $this->step('Clear old caches', fn () => Artisan::call('optimize:clear'));
             if (app()->isProduction()) {
                 $this->step('Cache config, routes and views', fn () => Artisan::call('optimize'));

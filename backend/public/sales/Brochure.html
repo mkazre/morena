@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / Listings / <span style="color:#1c1a19;font-weight:700">Brochure</span></div>
+      <div class="btn-row"><a class="btn no-print" href="{{ cmaHref }}">Run CMA</a>
+<a class="btn no-print" href="{{ shareHref }}" target="_blank" rel="noopener">Share on WhatsApp</a>
+<button class="btn btn-primary no-print" onClick="{{ onPrint }}">Print / save PDF</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<sc-if value="{{ loading }}"><div class="empty">Loading…</div></sc-if>
+<sc-if value="{{ ready }}">
+<div class="sheet" style="padding:0;overflow:hidden;margin:0 auto">
+  <div style="{{ heroStyle }}">
+    <sc-if value="{{ noPhoto }}"><div style="font-size:64px;color:rgba(255,255,255,0.35)">⌂</div></sc-if>
+    <span class="badge" style="position:absolute;top:18px;left:18px;background:#fff;color:#7a1528">{{ statusLabel }}</span>
+  </div>
+  <div style="padding:30px 36px 34px">
+    <div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c23552">{{ suburb }}</div>
+        <h2 style="margin:6px 0 0;font-size:26px">{{ title }}</h2>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:#6b6660;font-weight:600">Asking price</div>
+        <div style="font-size:28px;font-weight:800;color:#7a1528">{{ price }}</div>
+      </div>
+    </div>
+    <div class="grid grid-4" style="margin:24px 0">
+      <div class="kpi"><div class="kpi-label">Bedrooms</div><div class="kpi-value">{{ beds }}</div></div>
+      <div class="kpi"><div class="kpi-label">Bathrooms</div><div class="kpi-value">{{ baths }}</div></div>
+      <div class="kpi"><div class="kpi-label">Type</div><div class="kpi-value" style="font-size:17px">{{ type }}</div></div>
+      <div class="kpi"><div class="kpi-label">Est. bond / month</div><div class="kpi-value" style="font-size:17px">{{ bond }}</div><div class="kpi-sub">{{ bondNote }}</div></div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:center;border-top:1px solid #e8e3e0;padding-top:22px;flex-wrap:wrap">
+      <div role="img" aria-label="Scan to WhatsApp the agent" style="{{ qrStyle }}"></div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:12px;color:#6b6660;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Your agent</div>
+        <div style="font-size:18px;font-weight:700;margin:4px 0">{{ agentName }}</div>
+        <div style="font-size:14px">{{ agentPhone }}</div>
+        <div style="font-size:14px">{{ agentEmail }}</div>
+        <sc-if value="{{ agentFfc }}"><div class="muted small" style="margin-top:6px">PPRA Fidelity Fund Certificate {{ agentFfc }}</div></sc-if>
+        <div class="muted small" style="margin-top:8px">Scan the code to chat on WhatsApp.</div>
+      </div>
+      <div style="text-align:right">
+        <img src="../assets/logo.png" alt="" style="height:44px" />
+        <div class="muted small" style="margin-top:6px">{{ company }}</div>
+      </div>
+    </div>
+    <p class="muted small" style="margin:20px 0 0">Information is believed correct but not guaranteed and does not form part of any offer or contract. Bond estimate assumes 10% deposit over 20 years at prime.</p>
+  </div>
+</div>
+</sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], l: null, qr: '', prime: 10.5 };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.x = await import('../assets/extras.js');
+    const s = await this.app.shell('listings', ['admin', 'branch_manager', 'agent']);
+    this.setState(s);
+    const id = this.app.param('id');
+    const [res, rules] = await Promise.all([this.app.run(() => this.app.api('/listings/' + id)), this.app.api('/tools/rules').catch(() => null)]);
+    if (!res) return;
+    const l = { ...res.data, agent_contact: res.agent_contact, company: res.company };
+    const msg = 'Hi ' + (l.agent_contact ? l.agent_contact.name.split(' ')[0] : '') + ", I'm interested in " + l.title + ' (' + l.suburb + ').';
+    const wa = l.agent_contact && this.x.waUrl(l.agent_contact.phone, msg);
+    this.setState({ l, prime: rules ? rules.prime_rate : 10.5, qr: await this.x.qrDataUrl(wa || location.href, 4) });
+    document.title = l.title + ' — Morena Properties';
+  }
+
+  onPrint = () => window.print();
+
+  renderVals() {
+    const { app } = this;
+    const s = this.state;
+    const l = s.l;
+    const R = (n) => 'R ' + Math.round(n).toLocaleString('en-US');
+    const types = { house: 'House', sectional_title: 'Apartment', townhouse: 'Townhouse', vacant_land: 'Vacant land', commercial: 'Commercial' };
+    const statuses = { active: 'For sale', under_offer: 'Under offer', sold: 'Sold', withdrawn: 'Withdrawn' };
+    let bond = '—';
+    if (l) { const r = s.prime / 1200, n = 240, loan = l.price * 0.9; bond = R(loan * r / (1 - Math.pow(1 + r, -n))); }
+    const share = l ? ('https://wa.me/?text=' + encodeURIComponent(l.title + ', ' + l.suburb + ' — ' + R(l.price) + ' · ' + (l.beds || 0) + ' bed, ' + (l.baths || 0) + ' bath. Contact ' + (l.agent_contact ? l.agent_contact.name + ' ' + (l.agent_contact.phone || '') : 'Morena Properties'))) : '#';
+    return {
+      ...(app ? app.shellVals(s) : {}), loading: !l, ready: !!l, onPrint: this.onPrint,
+      title: l ? l.title : '', suburb: l ? l.suburb : '', price: l ? R(l.price) : '', beds: l ? l.beds ?? '—' : '', baths: l ? l.baths ?? '—' : '',
+      type: l ? types[l.property_type] || l.property_type || '—' : '', statusLabel: l ? statuses[l.status] || l.status : '',
+      bond, bondNote: 'at ' + s.prime + '% prime',
+      noPhoto: !!l && !l.photo_url,
+      heroStyle: { height: 300, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: l && l.photo_url ? `center / cover no-repeat url("${l.photo_url}")` : 'linear-gradient(160deg, #1c1a19, #7a1528)' },
+      qrStyle: { width: 120, height: 120, flexShrink: 0, background: s.qr ? `center / contain no-repeat url("${s.qr}")` : "#faf8f6" },
+      agentName: l && l.agent_contact ? l.agent_contact.name : 'Morena Properties', agentPhone: l && l.agent_contact ? l.agent_contact.phone || '' : '',
+      agentEmail: l && l.agent_contact ? l.agent_contact.email : '', agentFfc: l && l.agent_contact ? l.agent_contact.ffc || '' : '',
+      company: l && l.company ? l.company.company_name : '',
+      shareHref: share,
+      cmaHref: l ? '../work/Tools.html?tab=cma&suburb=' + encodeURIComponent(l.suburb) + '&beds=' + (l.beds || '') + '&price=' + l.price : '#',
+    };
+  }
+}
+</script>
+</body>
+</html>

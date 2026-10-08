@@ -22,6 +22,7 @@ class PaymentController extends Controller
             'id' => $p->id, 'number' => $p->number, 'direction' => $p->direction, 'date' => $p->date->toDateString(),
             'contact' => $p->contact?->name, 'bank_account' => $p->bankAccount->name, 'amount' => $p->amount,
             'method' => $p->method, 'reference' => $p->reference, 'status' => $p->status, 'journal_entry_id' => $p->journal_entry_id,
+            'receipt_url' => $p->receipt_document_id ? '/api/v1/documents/'.$p->receipt_document_id.'/download' : null,
         ])];
     }
 

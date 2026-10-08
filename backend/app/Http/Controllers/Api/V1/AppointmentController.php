@@ -38,7 +38,7 @@ class AppointmentController extends Controller
         $data['ends_at'] ??= Carbon::parse($data['starts_at'])->addHour();
         $appt = Appointment::create($data);
         if ($appt->user_id !== $user->id) {
-            $notifier->send($appt->user_id, 'appointment', 'New '.$appt->type.' booked for you', $appt->title.' · '.$appt->starts_at->format('D j M H:i'), '/portal/Calendar.html');
+            $notifier->send($appt->user_id, 'appointment', 'New '.$appt->type.' booked for you', $appt->title.' · '.$appt->starts_at->format('D j M H:i'), '/work/Calendar.html');
         }
 
         return $this->present($appt->load(['user', 'listing', 'lead']));

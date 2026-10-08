@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
   <style>
     body{margin:0}
     a{color:#7a1528;text-decoration:none}
@@ -48,12 +52,13 @@
     <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
       <div style="font-size:13px;color:#6b6660;font-weight:500">Admin / <span style="color:#1c1a19;font-weight:700">Dashboard</span></div>
       <div style="display:flex;align-items:center;gap:16px">
-        <input type="text" onKeyDown="{{ onSearchKey }}" placeholder="Search deals, agents, documents…" style="width:280px;padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none" />
+        <input type="text" readonly onFocus="{{ onSearchFocus }}" onClick="{{ onSearchFocus }}" placeholder="Search deals, leads, people, invoices… (Ctrl K)" style="width:280px;padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none" />
         <span style="font-size:18px;color:#6b6660;cursor:pointer">◔</span>
       </div>
     </header>
 
     <main style="flex:1;padding:28px 32px;overflow-y:auto">
+      <div class="myday-slot" style="margin-bottom:20px"></div>
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px">
         <div>
           <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">Business Overview</h1>
@@ -169,6 +174,7 @@ class Component extends DCLogic {
   async componentDidMount() {
     this.app = await import('../assets/app.js');
     this.setState(await this.app.shell('dashboard', ['admin']));
+    import('../assets/extras.js').then((x) => x.mountMyDay());
     this.load();
   }
 
@@ -178,9 +184,8 @@ class Component extends DCLogic {
   };
 
   onPeriod = (e) => this.setState({ period: e.target.value }, this.load);
-  onSearchKey = (e) => {
-    if (e.key === 'Enter' && e.target.value.trim()) location.href = '../sales/Deals.html?search=' + encodeURIComponent(e.target.value.trim());
-  };
+  // The header box opens the global command palette (searches deals, leads, people, invoices and documents).
+  onSearchFocus = (e) => { e.target.blur(); import('../assets/extras.js').then((x) => x.openPalette()); };
 
   renderVals() {
     const app = this.app;
@@ -197,7 +202,7 @@ class Component extends DCLogic {
     const texts = { month: 'this month', last_month: 'last month', quarter: 'this quarter', ytd: 'this year' };
     const base = {
       ...(app ? app.shellVals(s) : {}), period: s.period, periodTitle: titles[s.period], periodText: texts[s.period],
-      onPeriod: this.onPeriod, onSearchKey: this.onSearchKey,
+      onPeriod: this.onPeriod, onSearchFocus: this.onSearchFocus,
     };
     if (!app || !d) return { ...base, kpis: [], pipelineStages: [], topAgents: [], recentDeals: [], alerts: [], noAlerts: false };
 

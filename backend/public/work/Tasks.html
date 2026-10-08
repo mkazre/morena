@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Workspace / <span style="color:#1c1a19;font-weight:700">Tasks</span></div>
+      <div class="btn-row"><button class="btn btn-primary" onClick="{{ onNew }}">+ New task</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Tasks &amp; follow-ups</h1><p>Your to-do list. Tasks with a due date also appear in your phone calendar once you subscribe (Calendar page).</p></div>
+</div>
+<div class="grid grid-4" style="margin-bottom:18px">
+  <div class="kpi"><div class="kpi-label">Overdue</div><div class="kpi-value" style="color:#b42318">{{ kOverdue }}</div></div>
+  <div class="kpi"><div class="kpi-label">Due today</div><div class="kpi-value">{{ kToday }}</div></div>
+  <div class="kpi"><div class="kpi-label">Upcoming</div><div class="kpi-value">{{ kLater }}</div></div>
+  <div class="kpi"><div class="kpi-label">Done (last 300)</div><div class="kpi-value" style="color:#2f7d5a">{{ kDone }}</div></div>
+</div>
+<div class="toolbar">
+  <sc-for list="{{ filters }}" as="f"><span class="{{ f.cls }}" onClick="{{ f.onClick }}">{{ f.label }}</span></sc-for>
+  <sc-if value="{{ canTeam }}"><select class="sel" value="{{ scope }}" onChange="{{ onScope }}"><option value="mine">My tasks</option><option value="team">{{ teamLabel }}</option></select></sc-if>
+</div>
+<div class="card">
+  <sc-if value="{{ empty }}"><div class="empty">Nothing here. Add a task with “+ New task” or press Ctrl K → New task from any page.</div></sc-if>
+  <sc-for list="{{ rows }}" as="t" hint-placeholder-count="6">
+    <div class="list-row">
+      <span class="{{ t.checkCls }}" onClick="{{ t.onToggle }}">{{ t.tick }}</span>
+      <div class="grow">
+        <div class="{{ t.titleCls }}" style="font-weight:600;font-size:13.5px">{{ t.title }}</div>
+        <div class="muted small">{{ t.meta }}<sc-if value="{{ t.related }}"> · <a class="link small" href="{{ t.relatedUrl }}">{{ t.related }}</a></sc-if></div>
+        <sc-if value="{{ t.notes }}"><div class="small" style="margin-top:4px;color:#6b6660;white-space:pre-wrap">{{ t.notes }}</div></sc-if>
+      </div>
+      <span class="{{ t.dueCls }}">{{ t.due }}</span>
+      <span class="{{ t.prioCls }}">{{ t.priority }}</span>
+      <a class="link small" onClick="{{ t.onEdit }}">Edit</a>
+      <a class="link small" style="color:#b42318" onClick="{{ t.onDelete }}">Delete</a>
+    </div>
+  </sc-for>
+</div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], rows: [], filter: 'open', scope: 'mine', loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.x = await import('../assets/extras.js');
+    const s = await this.app.shell('tasks', ['admin', 'branch_manager', 'hr', 'finance', 'agent']);
+    this.setState({ ...s, role: s.me.role });
+    this.load();
+  }
+
+  load = async () => {
+    const res = await this.app.run(() => this.app.api('/tasks?scope=' + this.state.scope));
+    if (res) this.setState({ rows: res.data, loaded: true });
+  };
+
+  onNew = async () => { if (this.x && await this.x.quickTask()) this.load(); };
+  onScope = (e) => this.setState({ scope: e.target.value }, this.load);
+
+  edit = async (t) => {
+    const { app } = this;
+    const local = (v) => { if (!v) return ''; const d = new Date(v); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+    const out = await app.form({
+      title: 'Edit task', submitLabel: 'Save',
+      fields: [
+        { name: 'title', label: 'Task', value: t.title, required: true },
+        { name: 'due_at', label: 'Due', type: 'datetime-local', value: local(t.due_at) },
+        { name: 'priority', label: 'Priority', type: 'select', value: t.priority, options: [{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }] },
+        { name: 'notes', label: 'Notes', type: 'textarea', rows: 3, value: t.notes || '' },
+      ],
+      onSubmit: (v) => app.api('/tasks/' + t.id, { method: 'PUT', body: { ...v, due_at: v.due_at ? new Date(v.due_at).toISOString() : null } }),
+    });
+    if (out) { app.toast('Task saved'); this.load(); }
+  };
+
+  toggle = async (t) => {
+    const out = await this.app.run(() => this.app.api('/tasks/' + t.id + '/toggle', { method: 'POST' }));
+    if (out) this.setState({ rows: this.state.rows.map((r) => (r.id === t.id ? out : r)) });
+  };
+
+  remove = async (t) => {
+    if (!confirm('Delete "' + t.title + '"?')) return;
+    if (await this.app.run(() => this.app.api('/tasks/' + t.id, { method: 'DELETE' }), 'Task deleted') !== undefined) this.load();
+  };
+
+  renderVals() {
+    const { app } = this;
+    const s = this.state;
+    const end = new Date(); end.setHours(23, 59, 59, 999);
+    const bucket = (t) => (t.done ? 'done' : t.overdue ? 'overdue' : t.due_at && new Date(t.due_at) <= end ? 'today' : 'later');
+    const count = (b) => s.rows.filter((t) => bucket(t) === b).length;
+    const show = s.rows.filter((t) => s.filter === 'all' || (s.filter === 'open' ? !t.done : bucket(t) === s.filter));
+    const filters = [['open', 'Open'], ['overdue', 'Overdue'], ['today', 'Today'], ['later', 'Upcoming'], ['done', 'Done'], ['all', 'All']];
+    const prio = { high: 'badge b-danger', normal: 'badge', low: 'badge b-info' };
+    return {
+      ...(app ? app.shellVals(s) : {}), onNew: this.onNew, onScope: this.onScope, scope: s.scope,
+      canTeam: ['admin', 'branch_manager', 'hr'].includes(s.role), teamLabel: s.role === 'branch_manager' ? 'My branch' : 'Everyone',
+      kOverdue: count('overdue'), kToday: count('today'), kLater: count('later'), kDone: count('done'),
+      empty: s.loaded && !show.length,
+      filters: filters.map(([k, label]) => ({ label, cls: 'chip' + (s.filter === k ? ' on' : ''), onClick: () => this.setState({ filter: k }) })),
+      rows: app ? show.map((t) => ({
+        title: t.title, notes: t.notes || '', titleCls: t.done ? 'done-txt' : '',
+        checkCls: 'check' + (t.done ? ' on' : ''), tick: t.done ? '✓' : '',
+        meta: s.scope === 'mine' ? (t.done ? 'Completed ' + app.ago(t.completed_at) : 'Open') : 'Assigned to ' + (t.assignee || '—'),
+        related: t.related ? t.related.label : '', relatedUrl: t.related ? t.related.url : '',
+        due: t.due_at ? app.due(t.due_at) : 'No due date', dueCls: 'small ' + (t.overdue ? 'neg strong' : 'muted'),
+        priority: t.priority, prioCls: prio[t.priority] || 'badge',
+        onToggle: () => this.toggle(t), onEdit: () => this.edit(t), onDelete: () => this.remove(t),
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

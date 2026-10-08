@@ -77,6 +77,21 @@ class FeaturesTest extends TestCase
         $this->assertSame(6, \App\Models\LoginEvent::where('email', 'a@example.com')->where('success', false)->count());
     }
 
+    public function test_admin_can_unlock_and_reset_two_factor(): void
+    {
+        $u = $this->makeUser('agent', attrs: ['email' => 'lost@example.com']);
+        $u->forceFill(['failed_logins' => 5, 'locked_until' => now()->addMinutes(15), 'two_factor_secret' => encrypt('ABC'), 'two_factor_confirmed_at' => now()])->save();
+        $this->actingAs($this->makeUser('admin'));
+        $row = collect($this->getJson('/api/v1/users')->json('data'))->firstWhere('id', $u->id);
+        $this->assertTrue($row['locked']);
+        $this->assertTrue($row['two_factor_enabled']);
+        $this->putJson("/api/v1/users/{$u->id}/role", ['unlock' => true, 'reset_two_factor' => true])
+            ->assertOk()->assertJsonPath('locked', false)->assertJsonPath('two_factor_enabled', false);
+        $this->assertSame(2, AuditLog::where('subject_id', $u->id)->whereIn('event', ['unlocked', '2fa_reset'])->count());
+        $this->signOut();
+        $this->postJson('/api/v1/auth/login', ['email' => 'lost@example.com', 'password' => 'password'])->assertOk()->assertJsonMissing(['two_factor_required' => true]);
+    }
+
     public function test_lead_duplicates_scoring_and_import(): void
     {
         $agent = $this->makeAgent();
@@ -134,6 +149,28 @@ class FeaturesTest extends TestCase
         $this->assertNotContains('9 Their Street', $titles);
         $this->getJson('/api/v1/notifications')->assertJsonPath('unread', 1);
         $this->postJson('/api/v1/notifications/read')->assertJsonPath('unread', 0);
+    }
+
+    public function test_deal_tasks_are_shared_and_leads_can_be_marked_contacted(): void
+    {
+        $seller = $this->makeAgent(name: 'Seller Agent');
+        $buyerAgent = $this->makeAgent(name: 'Buyer Agent');
+        $outsider = $this->makeAgent(name: 'Outsider');
+        $lead = Lead::create(['name' => 'Buyer Person', 'phone' => '0821234567', 'email' => 'b@example.com', 'source' => 'website', 'assigned_agent_id' => $buyerAgent->id]);
+        $deal = Deal::create(['property_title' => '3 Shared Rd', 'sale_value' => 1, 'pipeline_stage_id' => PipelineStage::ordered()->value('id'),
+            'listing_agent_id' => $seller->id, 'selling_agent_id' => $buyerAgent->id, 'lead_id' => $lead->id]);
+
+        $this->actingAs($seller->user);
+        $this->postJson('/api/v1/tasks', ['title' => 'Chase OTP', 'related_type' => 'deal', 'related_id' => $deal->id])->assertOk();
+        $this->getJson("/api/v1/deals/{$deal->id}")->assertJsonPath('buyer_phone', '0821234567')->assertJsonPath('buyer_email', 'b@example.com');
+
+        $this->actingAs($buyerAgent->user); // sees the co-agent's task on the shared deal
+        $this->assertSame(['Chase OTP'], collect($this->getJson("/api/v1/tasks?related_type=deal&related_id={$deal->id}")->json('data'))->pluck('title')->all());
+        $this->putJson("/api/v1/leads/{$lead->id}", ['contacted' => true])->assertOk()->assertJsonPath('data.status', 'contacted');
+        $this->assertNotNull($lead->fresh()->last_contacted_at);
+
+        $this->actingAs($outsider->user); // not on the deal → only their own (none)
+        $this->assertSame([], $this->getJson("/api/v1/tasks?related_type=deal&related_id={$deal->id}")->json('data'));
     }
 
     public function test_daily_job_alerts_are_deduplicated(): void

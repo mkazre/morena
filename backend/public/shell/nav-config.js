@@ -13,7 +13,16 @@ const FINANCE_SECTION = { title: 'Finance', items: [
   { key: 'fin-contacts', label: 'Customers & Suppliers', icon: '◎', href: '../finance/Contacts.html' },
   { key: 'fin-payroll', label: 'Payroll', icon: '◔', href: '../finance/Payroll.html' },
   { key: 'fin-reports', label: 'Financial Reports', icon: '▤', href: '../finance/Reports.html' },
+  { key: 'fin-planning', label: 'Budgets & Recurring', icon: '↻', href: '../finance/Planning.html' },
   { key: 'fin-settings', label: 'Finance Settings', icon: '⚙', href: '../finance/Settings.html' },
+]};
+
+// Every staff role gets the same personal workspace.
+const WORK_SECTION = { title: 'Workspace', items: [
+  { key: 'tasks', label: 'Tasks', icon: '☑', href: '../work/Tasks.html' },
+  { key: 'calendar', label: 'Calendar', icon: '▦', href: '../work/Calendar.html' },
+  { key: 'tools', label: 'Calculators & CMA', icon: '∑', href: '../work/Tools.html' },
+  { key: 'security', label: 'Account Security', icon: '⚿', href: '../work/Security.html' },
 ]};
 
 export function getNavForRole(role) {
@@ -23,12 +32,14 @@ export function getNavForRole(role) {
         { key: 'dashboard', label: 'Dashboard', icon: '◧', href: '../admin/Dashboard.html' },
         { key: 'analytics', label: 'Analytics', icon: '◫', href: '../admin/Analytics.html' },
       ]},
+      WORK_SECTION,
       { title: 'Sales', items: [
         { key: 'pipeline', label: 'Pipeline Board', icon: '▤', href: '../sales/Pipeline.html' },
         { key: 'deals', label: 'All Deals', icon: '▥', href: '../sales/Deals.html' },
         { key: 'leads', label: 'Leads', icon: '◎', href: '../sales/Leads.html' },
         { key: 'listings', label: 'Listings', icon: '▦', href: '../sales/Listings.html' },
         { key: 'commissions', label: 'Commissions', icon: '◐', href: '../sales/Commissions.html' },
+        { key: 'targets', label: 'Targets', icon: '◎', href: '../sales/Targets.html' },
         { key: 'pipeline-settings', label: 'Pipeline Settings', icon: '⚙', href: '../sales/PipelineSettings.html' },
         { key: 'commission-settings', label: 'Commission Settings', icon: '⚙', href: '../sales/CommissionSettings.html' },
       ]},
@@ -52,10 +63,11 @@ export function getNavForRole(role) {
       FINANCE_SECTION,
       { title: 'System', items: [
         { key: 'users', label: 'Users & Roles', icon: '◑', href: '../admin/Users.html' },
+        { key: 'audit', label: 'Audit Log', icon: '◷', href: '../admin/Audit.html' },
         { key: 'settings', label: 'Settings', icon: '⚙', href: '../admin/Settings.html' },
       ]},
     ],
-    finance: [FINANCE_SECTION, { title: 'Records', items: [{ key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' }] }],
+    finance: [FINANCE_SECTION, { title: 'Records', items: [{ key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' }] }, WORK_SECTION],
     agent: [
       { title: 'My Workspace', items: [
         { key: 'dashboard', label: 'My Dashboard', icon: '◧', href: '../portal/Dashboard.html' },
@@ -66,8 +78,10 @@ export function getNavForRole(role) {
         { key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' },
         { key: 'upload-links', label: 'Client Upload Links', icon: '🔗', href: '../portal/MyUploadLinks.html' },
         { key: 'training', label: 'My Training', icon: '◈', href: '../portal/MyTraining.html' },
+        { key: 'targets', label: 'My Targets', icon: '◎', href: '../sales/Targets.html' },
         { key: 'profile', label: 'My Profile', icon: '◉', href: '../portal/MyProfile.html' },
       ]},
+      WORK_SECTION,
     ],
     manager: [
       { title: 'Branch', items: [
@@ -75,8 +89,10 @@ export function getNavForRole(role) {
         { key: 'team', label: 'Team Performance', icon: '◫', href: '../manager/Team.html' },
         { key: 'pipeline', label: 'Pipeline Board', icon: '▤', href: '../sales/Pipeline.html' },
         { key: 'leave-approvals', label: 'Leave Approvals', icon: '▨', href: '../manager/LeaveApprovals.html' },
+        { key: 'targets', label: 'Targets', icon: '◎', href: '../sales/Targets.html' },
         { key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' },
       ]},
+      WORK_SECTION,
     ],
     hr: [
       { title: 'HR', items: [
@@ -87,17 +103,20 @@ export function getNavForRole(role) {
         { key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' },
         { key: 'training', label: 'Training Records', icon: '◈', href: '../training/Courses.html' },
       ]},
+      WORK_SECTION,
     ],
     landlord: [
       { title: 'My Properties', items: [
         { key: 'dashboard', label: 'Overview', icon: '◧', href: '../landlord/Dashboard.html' },
         { key: 'documents', label: 'Documents', icon: '▣', href: '../landlord/Documents.html' },
+        { key: 'security', label: 'Account Security', icon: '⚿', href: '../work/Security.html' },
       ]},
     ],
     tenant: [
       { title: 'My Tenancy', items: [
         { key: 'dashboard', label: 'Overview', icon: '◧', href: '../tenant/Dashboard.html' },
         { key: 'documents', label: 'Documents', icon: '▣', href: '../tenant/Documents.html' },
+        { key: 'security', label: 'Account Security', icon: '⚿', href: '../work/Security.html' },
       ]},
     ],
   };

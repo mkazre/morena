@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
   <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
   <script src="../assets/logo-scale.js"></script>
 </helmet>
@@ -51,7 +55,7 @@
       <tr>
         <td class="strong">{{ r.number }}</td><td>{{ r.date }}</td><td>{{ r.contact }}</td><td class="muted">{{ r.bank }}</td><td class="muted">{{ r.method }}</td><td class="muted">{{ r.reference }}</td>
         <td class="num strong" style="color:{{ r.color }}">{{ r.amount }}</td><td><span class="{{ r.statusClass }}">{{ r.status }}</span></td>
-        <td><a class="link small" href="{{ r.journalHref }}">Journal</a><sc-if value="{{ r.canVoid }}"> · <a class="link small" style="color:#b42318" onClick="{{ r.onVoid }}">Void</a></sc-if></td>
+        <td style="white-space:nowrap"><sc-if value="{{ r.receipt }}"><a class="link small" href="{{ r.receipt }}" target="_blank">📎 Receipt</a> · </sc-if><sc-if value="{{ r.noReceipt }}"><a class="link small" onClick="{{ r.onReceipt }}">+ Receipt</a> · </sc-if><a class="link small" href="{{ r.journalHref }}">Journal</a><sc-if value="{{ r.canVoid }}"> · <a class="link small" style="color:#b42318" onClick="{{ r.onVoid }}">Void</a></sc-if></td>
       </tr>
     </sc-for>
   </tbody>
@@ -117,6 +121,15 @@ class Component extends DCLogic {
       tabs: tabs.map(([k, label]) => ({ label, cls: 'tab' + (s.direction === k ? ' on' : ''), onClick: () => this.setState({ direction: k }, this.load) })),
       rows: app ? s.rows.map((p) => ({
         number: p.number, date: app.date(p.date), contact: p.contact || '—', bank: p.bank_account, method: methods[p.method] || p.method,
+        receipt: p.receipt_url || '', noReceipt: !p.receipt_url && p.status !== 'void',
+        onReceipt: async () => {
+          const out = await app.form({
+            title: 'Attach receipt to ' + p.number, intro: 'Photo or PDF of the slip. It is filed in Records Hub → Finance / Invoices & Receipts and kept for 5 years (SARS).', submitLabel: 'Upload',
+            fields: [{ name: 'file', label: 'Receipt', type: 'file', accept: 'image/*,application/pdf', required: true }],
+            onSubmit: (v) => app.api('/finance/payments/' + p.id + '/receipt', { method: 'POST', form: app.formData(v) }),
+          });
+          if (out) { app.toast('Receipt attached'); this.load(); }
+        },
         reference: p.reference || '', amount: (p.direction === 'made' ? '-' : '') + fin.amt(p.amount), color: p.direction === 'made' ? '#1c1a19' : '#2f7d5a',
         status: p.status === 'void' ? 'Void' : 'Posted', statusClass: fin.statusClass(p.status === 'void' ? 'void' : 'posted'),
         journalHref: './Journals.html?id=' + p.journal_entry_id, canVoid: p.status !== 'void',

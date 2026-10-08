@@ -64,6 +64,7 @@ class DealController extends Controller
         return [
             'deal' => new DealResource($deal),
             'listing' => $deal->listing ? [
+                'id' => $deal->listing->id,
                 'suburb' => $deal->listing->suburb,
                 'beds' => $deal->listing->beds,
                 'baths' => $deal->listing->baths,
@@ -71,6 +72,8 @@ class DealController extends Controller
             ] : null,
             'buyer_name' => $deal->buyer_name,
             'seller_name' => $deal->seller_name,
+            'buyer_phone' => $deal->lead?->phone, 'buyer_email' => $deal->lead?->email,
+            'seller_phone' => $deal->seller?->phone, 'seller_email' => $deal->seller?->email,
             'listing_agent' => $deal->listingAgent?->user?->name,
             'selling_agent' => $deal->sellingAgent?->user?->name,
             'mandate_type' => $deal->mandate_type,

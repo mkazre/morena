@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Workspace / <span style="color:#1c1a19;font-weight:700">Calendar</span></div>
+      <div class="btn-row"><button class="btn" onClick="{{ onSubscribe }}">📱 Add to phone calendar</button>
+<button class="btn btn-primary" onClick="{{ onNew }}">+ Book appointment</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>{{ monthLabel }}</h1><p>Viewings, valuations, signings and meetings — plus tasks with a due date (dashed).</p></div>
+  <div class="btn-row">
+    <sc-if value="{{ canTeam }}"><select class="sel" style="width:auto" value="{{ scope }}" onChange="{{ onScope }}"><option value="mine">My calendar</option><option value="team">{{ teamLabel }}</option></select></sc-if>
+    <button class="btn btn-sm" onClick="{{ onPrev }}">‹ Prev</button>
+    <button class="btn btn-sm" onClick="{{ onToday }}">Today</button>
+    <button class="btn btn-sm" onClick="{{ onNext }}">Next ›</button>
+  </div>
+</div>
+<div class="card flush" style="margin-bottom:18px">
+  <div class="cal-grid">
+    <sc-for list="{{ heads }}" as="h"><div class="cal-head">{{ h }}</div></sc-for>
+    <sc-for list="{{ cells }}" as="c">
+      <div class="{{ c.cls }}" onDoubleClick="{{ c.onNew }}">
+        <span class="cal-day">{{ c.day }}</span>
+        <sc-for list="{{ c.events }}" as="e"><span class="{{ e.cls }}" title="{{ e.tip }}" onClick="{{ e.onClick }}">{{ e.label }}</span></sc-for>
+      </div>
+    </sc-for>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">Coming up</div>
+  <sc-if value="{{ noUpcoming }}"><div class="empty">Nothing booked in the next two weeks.</div></sc-if>
+  <sc-for list="{{ upcoming }}" as="a">
+    <div class="list-row">
+      <span class="{{ a.cls }}" style="min-width:86px;text-align:center">{{ a.type }}</span>
+      <div class="grow">
+        <div style="font-weight:600;font-size:13.5px">{{ a.title }}</div>
+        <div class="muted small">{{ a.when }}{{ a.where }}{{ a.who }}</div>
+      </div>
+      <sc-if value="{{ a.wa }}"><a class="wa-btn" href="{{ a.wa }}" target="_blank" rel="noopener">WhatsApp</a></sc-if>
+      <a class="link small" onClick="{{ a.onEdit }}">Edit</a>
+    </div>
+  </sc-for>
+</div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], appts: [], tasks: [], scope: 'mine', month: (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })() };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.x = await import('../assets/extras.js');
+    const s = await this.app.shell('calendar', ['admin', 'branch_manager', 'hr', 'finance', 'agent']);
+    this.setState({ ...s, role: s.me.role });
+    this.load();
+  }
+
+  range() {
+    const m = this.state.month;
+    const start = new Date(m); start.setDate(1 - ((m.getDay() + 6) % 7)); // Monday on/before the 1st
+    const end = new Date(start); end.setDate(start.getDate() + 41);
+    return [start, end];
+  }
+
+  load = async () => {
+    const [start, end] = this.range();
+    const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const [a, t] = await Promise.all([
+      this.app.run(() => this.app.api(`/appointments?scope=${this.state.scope}&from=${ymd(start)}&to=${ymd(end)}`)),
+      this.app.run(() => this.app.api('/tasks?status=open&scope=' + this.state.scope)),
+    ]);
+    this.setState({ appts: a ? a.data : [], tasks: t ? t.data.filter((x) => x.due_at) : [] });
+  };
+
+  shift = (n) => { const m = new Date(this.state.month); m.setMonth(m.getMonth() + n); this.setState({ month: m }, this.load); };
+  onPrev = () => this.shift(-1);
+  onNext = () => this.shift(1);
+  onToday = () => { const d = new Date(); this.setState({ month: new Date(d.getFullYear(), d.getMonth(), 1) }, this.load); };
+  onScope = (e) => this.setState({ scope: e.target.value }, this.load);
+
+  book = async (day) => {
+    if (!this.x) return;
+    const starts = day ? new Date(day.getFullYear(), day.getMonth(), day.getDate(), 10) : undefined;
+    if (await this.x.quickAppointment({ starts })) this.load();
+  };
+  onNew = () => this.book();
+  edit = async (a) => {
+    const out = await this.x.quickAppointment({ existing: a });
+    if (out) this.load();
+  };
+
+  onSubscribe = async () => {
+    const { app } = this;
+    const res = await app.run(() => app.api('/calendar/feed-url'));
+    if (!res) return;
+    const out = await app.form({
+      title: 'Add Morena to your phone calendar',
+      intro: 'Copy this private link. iPhone: Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar. Google Calendar (web): Other calendars → + → From URL. Outlook: Add calendar → Subscribe from web. Anyone with the link can see your appointments, so keep it private.',
+      submitLabel: 'Make a new link', fields: [{ name: 'url', label: 'Private calendar link', value: res.url, hint: '“Make a new link” stops the old one from working.' }],
+      onSubmit: () => app.api('/calendar/feed-url?rotate=1'),
+    });
+    if (out) app.toast('New link created — re-subscribe with it on your devices');
+  };
+
+  renderVals() {
+    const { app, x } = this;
+    const s = this.state;
+    const [start] = this.range();
+    const key = (d) => d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+    const byDay = {};
+    const add = (d, ev) => { (byDay[key(d)] ??= []).push(ev); };
+    for (const a of s.appts) {
+      const d = new Date(a.starts_at);
+      const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      add(d, { at: d, cls: 'cal-ev ev-' + a.type + (a.status === 'cancelled' ? ' done-txt' : ''), label: hm + ' ' + a.title, tip: a.title + (a.agent && s.scope !== 'mine' ? ' · ' + a.agent : '') + (a.location ? ' · ' + a.location : ''), onClick: () => this.edit(a) });
+    }
+    for (const t of s.tasks) {
+      const d = new Date(t.due_at);
+      add(d, { at: d, cls: 'cal-ev ev-task', label: '☐ ' + t.title, tip: 'Task: ' + t.title, onClick: () => { location.href = './Tasks.html'; } });
+    }
+    const today = key(new Date());
+    const cells = [];
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      const evs = (byDay[key(d)] || []).sort((p, q) => p.at - q.at);
+      cells.push({ day: d.getDate(), cls: (d.getMonth() !== s.month.getMonth() ? 'cal-out' : '') + (key(d) === today ? ' cal-today' : ''), events: evs, onNew: () => this.book(d) });
+    }
+    const now = new Date(); const horizon = new Date(now.getTime() + 14 * 864e5);
+    const types = { viewing: 'badge b-brand', valuation: 'badge b-info', signing: 'badge b-ok', inspection: 'badge b-warn' };
+    const upcoming = s.appts.filter((a) => a.status === 'scheduled' && new Date(a.ends_at) >= now && new Date(a.starts_at) <= horizon);
+    return {
+      ...(app ? app.shellVals(s) : {}), onPrev: this.onPrev, onNext: this.onNext, onToday: this.onToday, onNew: this.onNew, onSubscribe: this.onSubscribe,
+      onScope: this.onScope, scope: s.scope, canTeam: ['admin', 'branch_manager'].includes(s.role), teamLabel: s.role === 'branch_manager' ? 'My branch' : 'Everyone',
+      monthLabel: s.month.toLocaleString('en-ZA', { month: 'long', year: 'numeric' }),
+      heads: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], cells,
+      noUpcoming: !upcoming.length,
+      upcoming: app ? upcoming.map((a) => ({
+        type: a.type, cls: types[a.type] || 'badge', title: a.title, when: app.due(a.starts_at),
+        where: a.location ? ' · ' + a.location : '', who: (a.attendee_name ? ' · with ' + a.attendee_name : '') + (s.scope !== 'mine' && a.agent ? ' · ' + a.agent : ''),
+        wa: x && a.attendee_phone ? x.waUrl(a.attendee_phone, 'Hi ' + (a.attendee_name || '').split(' ')[0] + ', confirming our ' + a.type + ' on ' + app.due(a.starts_at) + (a.location ? ' at ' + a.location : '') + '. Please reply YES to confirm.') : '',
+        onEdit: () => this.edit(a),
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

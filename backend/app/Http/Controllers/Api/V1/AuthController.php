@@ -223,7 +223,7 @@ class AuthController extends Controller
             $request->only('email', 'password', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
-                    'password' => $password,
+                    'password' => $password, 'failed_logins' => 0, 'locked_until' => null, // a reset also lifts a lockout
                     'status' => $user->status === 'invited' ? 'active' : $user->status,
                 ])->save();
             }

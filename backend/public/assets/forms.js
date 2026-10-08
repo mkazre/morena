@@ -63,10 +63,21 @@ export async function leadForm(lead) {
       ...(agents.length ? [{ name: 'assigned_agent_id', label: 'Agent', type: 'select', options: [{ value: '', label: 'Unassigned' }, ...agents], value: lead?.agent_id }] : []),
       ...(lead ? [{ name: 'status', label: 'Status', type: 'select', value: lead.status, options: [
         { value: 'new', label: 'New' }, { value: 'contacted', label: 'Contacted' }, { value: 'qualified', label: 'Qualified' }, { value: 'lost', label: 'Lost' }] }] : []),
+      { name: 'marketing_consent', label: 'Client agreed to receive marketing (new listings, newsletters)', type: 'checkbox', value: lead?.marketing_consent,
+        hint: lead?.consent_recorded_at ? 'Consent recorded ' + lead.consent_recorded_at.slice(0, 10) + (lead.consent_source ? ' via ' + lead.consent_source : '') : 'POPIA: only tick this if the client said yes. Service messages about their enquiry don’t need it.' },
     ],
-    onSubmit: (v) => {
+    onSubmit: async (v) => {
       if ('assigned_agent_id' in v && !v.assigned_agent_id) v.assigned_agent_id = null;
-      return lead ? api('/leads/' + lead.id, { method: 'PUT', body: v }) : api('/leads', { method: 'POST', body: v });
+      if (v.marketing_consent && !lead?.marketing_consent) v.consent_source = 'Recorded by agent';
+      if (lead) return api('/leads/' + lead.id, { method: 'PUT', body: v });
+      try {
+        return await api('/leads', { method: 'POST', body: v });
+      } catch (e) {
+        if (e.status !== 409 || !e.data?.duplicates) throw e;
+        const list = e.data.duplicates.map((d) => '• ' + d.name + (d.phone ? ' · ' + d.phone : '') + (d.email ? ' · ' + d.email : '') + ' — ' + (d.agent || 'unassigned') + ', ' + d.status + ', added ' + d.created_at).join('\n');
+        if (!confirm('This client may already be in the CRM:\n\n' + list + '\n\nAdd as a new lead anyway?')) throw new Error('Not added — the client already exists. Search for them instead.');
+        return api('/leads', { method: 'POST', body: { ...v, confirm_duplicate: true } });
+      }
     },
   });
 }
@@ -398,6 +409,8 @@ export async function manageUserForm(u) {
       { name: 'role', label: 'Role', type: 'select', options: ROLE_OPTIONS, value: u.role },
       { name: 'branch_id', label: 'Branch', type: 'select', options: [{ value: '', label: '—' }, ...branches], value: u.branch_id },
       ...(u.status === 'invited' ? [] : [{ name: 'status', label: 'Access', type: 'select', value: u.status, options: [{ value: 'active', label: 'Active' }, { value: 'suspended', label: 'Suspended' }] }]),
+      ...(u.locked ? [{ name: 'unlock', label: 'Unlock account (locked after 5 wrong passwords)', type: 'checkbox' }] : []),
+      ...(u.two_factor_enabled ? [{ name: 'reset_two_factor', label: 'Reset two-factor — use if they lost their phone; they re-enrol after signing in', type: 'checkbox' }] : []),
     ],
     onSubmit: (v) => api('/users/' + u.id + '/role', { method: 'PUT', body: { ...v, branch_id: v.branch_id || null } }),
   });

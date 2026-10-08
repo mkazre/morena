@@ -21,8 +21,10 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        // Everyone on a deal sees all of its tasks (the deal page lists them), not just their own.
+        $dealView = $request->input('related_type') === 'deal' && DealController::scoped($request)->whereKey($request->integer('related_id'))->exists();
         $q = Task::with(['assignee', 'related'])
-            ->when($request->input('scope', 'mine') === 'mine' || ! $this->canSeeOthers($user), fn ($q) => $q->where('assigned_to', $user->id))
+            ->when(! $dealView && ($request->input('scope', 'mine') === 'mine' || ! $this->canSeeOthers($user)), fn ($q) => $q->where('assigned_to', $user->id))
             ->when($user->hasRole('branch_manager') && $request->input('scope') === 'team', fn ($q) => $q->whereHas('assignee', fn ($a) => $a->where('branch_id', $user->branch_id)))
             ->when($request->filled('related_type'), fn ($q) => $q->where('related_type', self::RELATED[$request->input('related_type')] ?? '')->where('related_id', $request->integer('related_id')))
             ->when($request->input('status') === 'open', fn ($q) => $q->whereNull('completed_at'))
@@ -39,7 +41,7 @@ class TaskController extends Controller
         $data['assigned_to'] = $this->canSeeOthers($user) ? ($data['assigned_to'] ?? $user->id) : $user->id;
         $task = Task::create($data + ['created_by' => $user->id]);
         if ($task->assigned_to !== $user->id) {
-            $notifier->send($task->assigned_to, 'task', 'New task from '.$user->name, $task->title, '/portal/Tasks.html');
+            $notifier->send($task->assigned_to, 'task', 'New task from '.$user->name, $task->title, '/work/Tasks.html');
         }
 
         return $this->present($task->load(['assignee', 'related']));

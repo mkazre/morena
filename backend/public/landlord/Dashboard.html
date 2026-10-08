@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
   <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
   <script src="../assets/logo-scale.js"></script>
 </helmet>
@@ -45,6 +49,18 @@
           <div><div style="font-size:14.5px;font-weight:700">{{ sale.property }}</div><div style="font-size:12.5px;color:#6b6660;margin-top:2px">{{ sale.agentLine }}</div></div>
           <span style="{{ sale.badge }}">{{ sale.stage }}</span>
         </div>
+        <sc-if value="{{ hasTracker }}">
+          <div class="grid grid-2" style="margin-top:20px;align-items:start">
+            <div class="timeline">
+              <sc-for list="{{ steps }}" as="st"><div class="{{ st.cls }}"><div style="font-size:13px;font-weight:600">{{ st.name }}</div><sc-if value="{{ st.note }}"><div class="muted small">{{ st.note }}</div></sc-if></div></sc-for>
+            </div>
+            <div class="stack">
+              <div class="kpi"><div class="kpi-label">Progress</div><div class="kpi-value">{{ progress }}</div><div class="progress" style="margin-top:10px"><div style="{{ progressBar }}"></div></div></div>
+              <div class="kpi"><div class="kpi-label">Expected transfer</div><div class="kpi-value" style="font-size:17px">{{ expected }}</div><div class="kpi-sub">Dates depend on the bank, conveyancers and the Deeds Office.</div></div>
+              <sc-if value="{{ agentWa }}"><a class="wa-btn" style="justify-content:center;padding:10px" href="{{ agentWa }}" target="_blank" rel="noopener">WhatsApp {{ agentFirst }}, your agent</a></sc-if>
+            </div>
+          </div>
+        </sc-if>
       </div>
       <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
         <div style="font-size:14px;font-weight:700;margin-bottom:14px">Recent updates</div>
@@ -74,10 +90,24 @@ class Component extends DCLogic {
     const s = this.state;
     const d = s.d;
     const base = { ...(app ? app.shellVals(s) : {}), name: s.userName || '' };
-    if (!app || !d) return { ...base, sale: {}, updates: [] };
+    if (!app || !d) return { ...base, sale: {}, updates: [], hasTracker: false, steps: [] };
+    const stages = (d.sale && d.sale.stages) || [];
+    const idx = stages.findIndex((st) => st.current);
+    const pct = stages.length ? Math.round(((idx < 0 ? 0 : idx) + 1) / stages.length * 100) : 0;
+    let wa = '';
+    if (d.sale && d.sale.agent_phone) {
+      let n = String(d.sale.agent_phone).replace(/\D/g, '');
+      if (n.startsWith('0') && n.length === 10) n = '27' + n.slice(1);
+      wa = 'https://wa.me/' + n + '?text=' + encodeURIComponent('Hi ' + (d.sale.agent || '').split(' ')[0] + ', it’s ' + d.name + ' — a question about the sale of ' + d.sale.property + '.');
+    }
     return {
       ...base,
       name: d.name,
+      hasTracker: stages.length > 0,
+      steps: stages.map((st, i) => ({ name: st.name, cls: 'tl-step' + (st.done ? ' done' : st.current ? ' now' : ''), note: st.current ? 'We are here' : st.done ? 'Done' : i === idx + 1 ? 'Next' : '' })),
+      progress: pct + '%', progressBar: { width: pct + '%' },
+      expected: d.sale && d.sale.expected_close ? app.date(d.sale.expected_close) : 'To be confirmed',
+      agentWa: wa, agentFirst: d.sale && d.sale.agent ? d.sale.agent.split(' ')[0] : '',
       sale: d.sale ? {
         property: d.sale.property, agentLine: d.sale.agent ? 'Listed with ' + d.sale.agent : 'Morena Properties',
         stage: d.sale.stage, badge: app.stageBadge(d.sale.stage_color, { padding: '4px 12px' }),

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -42,6 +43,7 @@ class UserController extends Controller
             'role' => ['sometimes', Rule::in(self::ROLES)],
             'status' => ['sometimes', Rule::in(['active', 'suspended'])],
             'branch_id' => ['nullable', 'exists:branches,id'],
+            'unlock' => ['sometimes', 'boolean'], 'reset_two_factor' => ['sometimes', 'boolean'],
         ]);
         abort_if($user->is($request->user()) && (($data['role'] ?? 'admin') !== 'admin' || ($data['status'] ?? 'active') !== 'active'),
             422, 'You cannot remove your own admin access.');
@@ -50,6 +52,14 @@ class UserController extends Controller
             $user->syncRoles([$data['role']]);
         }
         $user->update(collect($data)->only(['status', 'branch_id'])->all());
+        if ($request->boolean('unlock')) {
+            $user->forceFill(['failed_logins' => 0, 'locked_until' => null])->save();
+            AuditLog::write('unlocked', 'Account unlocked by '.$request->user()->name, $user);
+        }
+        if ($request->boolean('reset_two_factor')) { // lost phone: they sign in with the password and enrol again
+            $user->forceFill(['two_factor_secret' => null, 'two_factor_confirmed_at' => null, 'two_factor_recovery_codes' => null])->save();
+            AuditLog::write('2fa_reset', 'Two-factor reset by '.$request->user()->name, $user);
+        }
 
         return $this->present($user->fresh(['roles', 'branch']));
     }
@@ -65,6 +75,8 @@ class UserController extends Controller
             'branch_id' => $u->branch_id,
             'last_login_at' => $u->last_login_at?->toIso8601String(),
             'status' => $u->status,
+            'two_factor_enabled' => (bool) $u->two_factor_confirmed_at,
+            'locked' => (bool) $u->locked_until?->isFuture(),
         ];
     }
 }

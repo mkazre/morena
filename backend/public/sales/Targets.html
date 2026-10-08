@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7a1528">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / <span style="color:#1c1a19;font-weight:700">Targets</span></div>
+      <div class="btn-row"><input class="inp" type="month" value="{{ period }}" onChange="{{ onPeriod }}" style="width:auto" /></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>{{ heading }}</h1><p>Closed deals, sales value and new listings against the monthly goal. {{ editHint }}</p></div>
+</div>
+<div class="grid grid-3" style="margin-bottom:18px">
+  <div class="kpi"><div class="kpi-label">Deals closed</div><div class="kpi-value">{{ tDeals }}</div><div class="progress" style="margin-top:10px"><div style="{{ tDealsBar }}"></div></div></div>
+  <div class="kpi"><div class="kpi-label">Sales value</div><div class="kpi-value">{{ tValue }}</div><div class="progress" style="margin-top:10px"><div style="{{ tValueBar }}"></div></div></div>
+  <div class="kpi"><div class="kpi-label">New listings</div><div class="kpi-value">{{ tListings }}</div><div class="progress" style="margin-top:10px"><div style="{{ tListingsBar }}"></div></div></div>
+</div>
+<div class="card flush"><div class="tbl-wrap"><table class="tbl">
+  <thead><tr><th>Agent</th><th>Deals</th><th>Sales value</th><th>Listings</th><th class="num">Overall</th><th></th></tr></thead>
+  <tbody>
+    <sc-if value="{{ empty }}"><tr><td colspan="6" class="empty">No sales agents.</td></tr></sc-if>
+    <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+      <tr>
+        <td class="strong">{{ r.name }}</td>
+        <td style="min-width:150px"><div class="small">{{ r.deals }}</div><div class="progress"><div style="{{ r.dealsBar }}"></div></div></td>
+        <td style="min-width:170px"><div class="small">{{ r.value }}</div><div class="progress"><div style="{{ r.valueBar }}"></div></div></td>
+        <td style="min-width:150px"><div class="small">{{ r.listings }}</div><div class="progress"><div style="{{ r.listingsBar }}"></div></div></td>
+        <td class="num"><span class="{{ r.overallCls }}">{{ r.overall }}</span></td>
+        <td><sc-if value="{{ canEdit }}"><a class="link small" onClick="{{ r.onEdit }}">Set target</a></sc-if></td>
+      </tr>
+    </sc-for>
+  </tbody>
+</table></div></div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], rows: [], canEdit: false, period: new Date().toISOString().slice(0, 7), loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    const s = await this.app.shell('targets', ['admin', 'branch_manager', 'agent']);
+    this.setState({ ...s, role: s.me.role });
+    this.load();
+  }
+
+  load = async () => {
+    const res = await this.app.run(() => this.app.api('/targets?period=' + this.state.period));
+    if (res) this.setState({ rows: res.data, canEdit: res.can_edit, loaded: true });
+  };
+  onPeriod = (e) => { if (e.target.value) this.setState({ period: e.target.value }, this.load); };
+
+  edit = async (r) => {
+    const { app } = this;
+    const out = await app.form({
+      title: 'Target for ' + r.name, intro: 'For ' + this.monthLabel() + '. Leave a field at 0 to not track it.', submitLabel: 'Save target',
+      fields: [
+        { name: 'deals_target', label: 'Deals to close', type: 'number', value: r.deals_target },
+        { name: 'value_target', label: 'Sales value (R)', type: 'number', value: r.value_target },
+        { name: 'listings_target', label: 'New listings', type: 'number', value: r.listings_target },
+      ],
+      onSubmit: (v) => app.api('/targets', { method: 'PUT', body: { staff_id: r.staff_id, period: this.state.period, deals_target: v.deals_target || 0, value_target: v.value_target || 0, listings_target: v.listings_target || 0 } }),
+    });
+    if (out) { app.toast('Target saved'); this.load(); }
+  };
+
+  monthLabel() { const [y, m] = this.state.period.split('-'); return new Date(+y, +m - 1, 1).toLocaleString('en-ZA', { month: 'long', year: 'numeric' }); }
+
+  renderVals() {
+    const { app } = this;
+    const s = this.state;
+    const pct = (a, t) => (t ? Math.min(100, Math.round(a / t * 100)) : null);
+    const bar = (p) => ({ width: (p ?? 0) + '%', background: p == null ? '#e8e3e0' : p >= 100 ? '#2f7d5a' : p >= 60 ? '#c07c1e' : '#7a1528' });
+    const of = (a, t, fmt = (x) => x) => fmt(a) + (t ? ' of ' + fmt(t) : ' · no target');
+    const sum = (k) => s.rows.reduce((n, r) => n + Number(r[k] || 0), 0);
+    const R = (n) => (app ? app.randShort(n) : '');
+    return {
+      ...(app ? app.shellVals(s) : {}), period: s.period, onPeriod: this.onPeriod, canEdit: s.canEdit,
+      heading: (s.role === 'agent' ? 'My targets — ' : 'Targets — ') + this.monthLabel(),
+      editHint: s.canEdit ? 'Click “Set target” to change an agent’s goals.' : 'Targets are set by your branch manager.',
+      tDeals: of(sum('deals'), sum('deals_target')), tDealsBar: bar(pct(sum('deals'), sum('deals_target'))),
+      tValue: of(sum('value'), sum('value_target'), R), tValueBar: bar(pct(sum('value'), sum('value_target'))),
+      tListings: of(sum('listings'), sum('listings_target')), tListingsBar: bar(pct(sum('listings'), sum('listings_target'))),
+      empty: s.loaded && !s.rows.length,
+      rows: s.rows.map((r) => {
+        const ps = [pct(r.deals, r.deals_target), pct(r.value, r.value_target), pct(r.listings, r.listings_target)].filter((p) => p != null);
+        const overall = ps.length ? Math.round(ps.reduce((a, b) => a + b, 0) / ps.length) : null;
+        return {
+          name: r.name, deals: of(r.deals, r.deals_target), value: of(r.value, r.value_target, R), listings: of(r.listings, r.listings_target),
+          dealsBar: bar(pct(r.deals, r.deals_target)), valueBar: bar(pct(r.value, r.value_target)), listingsBar: bar(pct(r.listings, r.listings_target)),
+          overall: overall == null ? '—' : overall + '%', overallCls: 'badge ' + (overall == null ? '' : overall >= 100 ? 'b-ok' : overall >= 60 ? 'b-warn' : 'b-danger'),
+          onEdit: () => this.edit(r),
+        };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

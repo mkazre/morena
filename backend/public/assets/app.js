@@ -4,6 +4,9 @@
 
 const API = '/api/v1';
 
+// Installable app (PWA): the service worker caches only static files, never API data.
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('/sw.js').catch(() => {});
+
 // ---- API ------------------------------------------------------------------------------------
 
 export class ApiError extends Error {
@@ -53,7 +56,9 @@ export async function api(path, { method = 'GET', body, form, retry = true, redi
   const data = await res.json().catch(() => null);
   if (!res.ok) {
     const first = data && data.errors ? Object.values(data.errors)[0] : null;
-    throw new ApiError(res.status, (first && first[0]) || (data && data.message) || 'Something went wrong', data && data.errors);
+    const err = new ApiError(res.status, (first && first[0]) || (data && data.message) || 'Something went wrong', data && data.errors);
+    err.data = data;
+    throw err;
   }
   return data;
 }
@@ -89,9 +94,11 @@ export async function shell(activeKey, roles) {
   }
   applyLogoWidth(session.settings.sidebar_logo_width);
   mobileNav();
+  const navSections = nav.decorateNav(u.nav_role, activeKey);
+  import('./extras.js').then((x) => x.install(session, navSections)).catch(() => {});
   return {
     me: u,
-    navSections: nav.decorateNav(u.nav_role, activeKey),
+    navSections,
     roleLabel: nav.roleLabels[u.nav_role],
     userName: u.name,
     userInitials: u.initials,
@@ -217,6 +224,20 @@ export function when(v) {
   if (n <= 0) return 'Today, ' + hm;
   if (n === 1) return 'Yesterday, ' + hm;
   return ago(v);
+}
+
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/** Future-aware: "Today 09:00", "Tomorrow 10:30", "Fri 12 Oct 14:00", "Yesterday 16:00", "3 Oct 09:00". */
+export function due(v) {
+  const d = toDate(v);
+  if (!d) return '—';
+  const n = daysAgo(d);
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  if (n === 0) return 'Today ' + hm;
+  if (n === -1) return 'Tomorrow ' + hm;
+  if (n === 1) return 'Yesterday ' + hm;
+  if (n < 0 && n > -7) return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + hm;
+  return d.getDate() + ' ' + MONTHS[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '') + ' ' + hm;
 }
 
 // ---- Badges & tones -------------------------------------------------------------------------

@@ -124,6 +124,10 @@ class LeadController extends Controller
         if ($request->user()->hasRole('agent')) {
             unset($data['assigned_agent_id']);
         }
+        if ($request->boolean('contacted')) { // "WhatsApp" / "Call" tapped on the list
+            $data['last_contacted_at'] = now();
+            $data['status'] ??= $lead->status === 'new' ? 'contacted' : $lead->status;
+        }
         $lead->update($data);
 
         return new LeadResource($lead->load('agent.user'));
