@@ -99,6 +99,7 @@ Build a new zip → upload into `morena-crm` → Extract (overwrite) → run the
 | Sign-in loops back to login | HTTPS not active yet, or `SESSION_DOMAIN` / `SANCTUM_STATEFUL_DOMAINS` not `app.morenagroup.co.za`. |
 | "Storage link" warning | Host blocks symlinks; listing photos won't display — ask the host to allow `symlink()`, everything else works. |
 | Uploads fail over ~2MB | Step 3 INI limits not applied to the subdomain. |
+| Extract shows `checkdir error: cannot create … Permission denied` | Folders on the server are read-only (`555`), left by zips built before 8 Oct 2026. Run once via cron: `cd /home/morenau6r4c3/morena-crm && find . -type d -perm 555 -exec chmod 755 {} +` then extract again. New zips set 755/644 themselves. |
 | No daily alerts / recurring bills not raised | The step-8b `schedule:run` cron is missing, or uses the wrong PHP path. Test once: replace `>> /dev/null` with `>> storage/logs/schedule.log` and check the file. |
 | Staff locked out ("Too many failed attempts") | Wait 15 minutes, use **Forgot password?** (a reset lifts the lock), or Admin: **Users & Roles → Manage → Unlock account**. |
 | Someone lost their 2FA phone | They sign in with a recovery code and turn 2FA off/on under Account Security. No codes left? Admin: **Users & Roles → Manage → Reset two-factor**, then they re-enrol. |
