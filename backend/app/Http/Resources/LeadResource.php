@@ -23,6 +23,11 @@ class LeadResource extends JsonResource
             'agent_id' => $this->assigned_agent_id,
             'status' => $this->status,
             'created_at' => $this->created_at?->toIso8601String(),
+            'score' => $this->score,
+            'marketing_consent' => (bool) $this->marketing_consent,
+            'consent_recorded_at' => $this->consent_recorded_at?->toIso8601String(),
+            'consent_source' => $this->consent_source,
+            'last_contacted_at' => $this->last_contacted_at?->toIso8601String(),
         ];
     }
 }

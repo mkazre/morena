@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PipelineStage extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     protected function casts(): array
@@ -47,5 +49,10 @@ class PipelineStage extends Model
     public static function finalStage(): ?self
     {
         return static::ordered()->get()->last();
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Pipeline stage '.$this->name;
     }
 }

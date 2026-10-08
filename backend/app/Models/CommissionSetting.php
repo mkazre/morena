@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CommissionSetting extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     protected function casts(): array

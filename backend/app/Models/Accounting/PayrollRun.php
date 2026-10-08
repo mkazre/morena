@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollRun extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     protected function casts(): array

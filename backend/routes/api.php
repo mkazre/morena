@@ -16,6 +16,7 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
 
     // ---- Public ---------------------------------------------------------------
     Route::post('auth/login', [V1\AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('auth/two-factor-challenge', [V1\AuthController::class, 'twoFactorChallenge'])->middleware('throttle:10,1');
     Route::post('auth/forgot-password', [V1\AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
     Route::post('auth/reset-password', [V1\AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 
@@ -30,6 +31,10 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
         Route::post('auth/logout', [V1\AuthController::class, 'logout']);
         Route::get('auth/me', [V1\AuthController::class, 'me']);
         Route::put('auth/password', [V1\AuthController::class, 'updatePassword']);
+        Route::post('auth/two-factor/setup', [V1\AuthController::class, 'twoFactorSetup']);
+        Route::post('auth/two-factor/confirm', [V1\AuthController::class, 'twoFactorConfirm']);
+        Route::post('auth/two-factor/disable', [V1\AuthController::class, 'twoFactorDisable']);
+        Route::get('auth/login-history', [V1\AuthController::class, 'loginHistory']);
 
         // Dashboards
         Route::get('dashboard/admin', [V1\DashboardController::class, 'admin'])->middleware('role:admin');
@@ -107,6 +112,43 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
         Route::post('documents', [V1\DocumentController::class, 'store'])->middleware($staffRoles);
         Route::get('documents/{document}/download', [V1\DocumentController::class, 'download']);
         Route::get('document-categories', [V1\DocumentController::class, 'categories'])->middleware($staffRoles);
+
+        // Workspace: notifications, tasks, calendar, My Day, search, comments, targets, tools, comms
+        Route::get('notifications', [V1\NotificationController::class, 'index']);
+        Route::get('notifications/unread-count', [V1\NotificationController::class, 'unreadCount']);
+        Route::post('notifications/read', [V1\NotificationController::class, 'markRead']);
+        Route::middleware($staffRoles)->group(function () {
+            Route::get('my-day', [V1\WorkspaceController::class, 'myDay']);
+            Route::get('search', [V1\WorkspaceController::class, 'search']);
+            Route::get('tasks', [V1\TaskController::class, 'index']);
+            Route::post('tasks', [V1\TaskController::class, 'store']);
+            Route::put('tasks/{task}', [V1\TaskController::class, 'update']);
+            Route::post('tasks/{task}/toggle', [V1\TaskController::class, 'toggle']);
+            Route::delete('tasks/{task}', [V1\TaskController::class, 'destroy']);
+            Route::get('appointments', [V1\AppointmentController::class, 'index']);
+            Route::post('appointments', [V1\AppointmentController::class, 'store']);
+            Route::put('appointments/{appointment}', [V1\AppointmentController::class, 'update']);
+            Route::delete('appointments/{appointment}', [V1\AppointmentController::class, 'destroy']);
+            Route::get('calendar/feed-url', [V1\AppointmentController::class, 'feedUrl']);
+            Route::get('message-templates', [V1\CommsController::class, 'templates']);
+            Route::post('emails', [V1\CommsController::class, 'send']);
+            Route::get('emails', [V1\CommsController::class, 'history']);
+            Route::get('tools/rules', [V1\ToolsController::class, 'rules']);
+            Route::get('listings/{listing}', [V1\ToolsController::class, 'listing']);
+            Route::get('cma', [V1\ToolsController::class, 'cma']);
+        });
+        Route::middleware($sales)->group(function () {
+            Route::get('deals/{deal}/comments', [V1\WorkspaceController::class, 'comments']);
+            Route::post('deals/{deal}/comments', [V1\WorkspaceController::class, 'addComment']);
+            Route::get('targets', [V1\WorkspaceController::class, 'targets']);
+            Route::post('leads/import', [V1\LeadController::class, 'import']);
+            Route::post('listings/import', [V1\ToolsController::class, 'importListings']);
+        });
+        Route::put('targets', [V1\WorkspaceController::class, 'saveTarget'])->middleware('role:admin|branch_manager');
+        Route::middleware('role:admin')->group(function () {
+            Route::get('audit', [V1\AuditController::class, 'index']);
+            Route::get('audit/logins', [V1\AuditController::class, 'logins']);
+        });
 
         // Records hub (SharePoint-style folders, versions, metadata)
         Route::prefix('records')->middleware('role:admin|branch_manager|hr|finance|agent')->group(function () {
@@ -193,7 +235,16 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
             Route::get('reconciliations', [V1\Finance\BankController::class, 'reconciliations']);
             Route::post('reconciliations', [V1\Finance\BankController::class, 'reconcile']);
 
+            Route::get('reports/budget-vs-actual', [V1\Finance\ExtrasController::class, 'budgetVsActual']);
             Route::get('reports/{report}', [V1\Finance\ReportController::class, 'show']);
+            Route::post('invoices/{id}/email', [V1\CommsController::class, 'emailInvoice'])->whereNumber('id');
+            Route::get('recurring', [V1\Finance\ExtrasController::class, 'recurring']);
+            Route::post('recurring', [V1\Finance\ExtrasController::class, 'saveRecurring']);
+            Route::put('recurring/{recurring}', [V1\Finance\ExtrasController::class, 'saveRecurring']);
+            Route::delete('recurring/{recurring}', [V1\Finance\ExtrasController::class, 'deleteRecurring']);
+            Route::get('budgets', [V1\Finance\ExtrasController::class, 'budgets']);
+            Route::put('budgets', [V1\Finance\ExtrasController::class, 'saveBudget']);
+            Route::post('payments/{payment}/receipt', [V1\Finance\ExtrasController::class, 'attachReceipt']);
 
             Route::get('payroll/employees', [V1\Finance\PayrollController::class, 'employees']);
             Route::put('payroll/employees/{staff}', [V1\Finance\PayrollController::class, 'saveProfile']);

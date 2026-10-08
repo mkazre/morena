@@ -6,6 +6,7 @@ use App\Models\Deal;
 use App\Models\PipelineStage;
 use App\Models\User;
 use App\Services\Accounting\Automation;
+use App\Services\Notifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -75,6 +76,9 @@ class DealService
         }
 
         $this->log($deal, $by, 'Moved to '.$stage->name);
+        $agents = \App\Models\Staff::whereIn('id', array_filter([$deal->selling_agent_id, $deal->listing_agent_id]))->pluck('user_id');
+        app(Notifier::class)->send(\App\Models\User::whereIn('id', $agents)->get(), 'deal_stage', $deal->property_title.' → '.$stage->name,
+            $by ? 'Moved by '.$by->name : null, '/sales/DealDetail.html?id='.$deal->id);
     }
 
     /** Recalculate commission; when the deal has just closed, raise the commission invoice in the books. */

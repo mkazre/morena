@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Listing extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     public const PROPERTY_TYPES = [
@@ -37,5 +39,10 @@ class Listing extends Model
     public function documents()
     {
         return $this->morphMany(Document::class, 'linked_model');
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Listing '.$this->title;
     }
 }

@@ -52,6 +52,12 @@ class CommissionController extends Controller
         DB::transaction(function () use ($request, $commission, $accounting) {
             $commission->update(['status' => 'paid', 'paid_at' => now()]);
             $accounting->postCommissionPayout($commission->load('deal'), $request->user());
+            $paidTo = \App\Models\Staff::whereIn('id', array_filter([$commission->agent_id, $commission->co_agent_id, $commission->referral_agent_id]))->pluck('user_id');
+            foreach ($paidTo as $userId) {
+                $staffId = \App\Models\Staff::where('user_id', $userId)->value('id');
+                app(\App\Services\Notifier::class)->send($userId, 'commission_paid', 'Commission paid: R '.number_format($commission->shareFor($staffId), 2),
+                    $commission->deal->property_title, '/portal/MyCommission.html', 'commission-paid-'.$commission->id);
+            }
         });
 
         return new CommissionResource($commission->load(['deal', 'agent.user', 'coAgent.user', 'tier']));

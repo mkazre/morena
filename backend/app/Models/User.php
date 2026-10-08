@@ -13,6 +13,8 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+    use \App\Models\Concerns\Audited;
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
@@ -34,6 +36,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'calendar_token',
     ];
 
     protected function casts(): array
@@ -41,6 +46,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'locked_until' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -77,5 +84,10 @@ class User extends Authenticatable
             ->map(fn ($w) => $w[0])
             ->take(2)
             ->implode('') ?: strtoupper(substr($this->name, 0, 2));
+    }
+
+    public function auditLabel(): string
+    {
+        return 'User '.$this->name;
     }
 }

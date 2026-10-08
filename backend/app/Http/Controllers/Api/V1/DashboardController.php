@@ -170,8 +170,13 @@ class DashboardController extends Controller
             'sale' => $deal ? [
                 'property' => $deal->property_title,
                 'agent' => $deal->listingAgent?->user?->name,
+                'agent_phone' => $deal->listingAgent?->user?->phone,
                 'stage' => $deal->stage->name,
                 'stage_color' => $deal->stage->color_hex,
+                // Progress tracker: every stage, so the seller can see how far the sale has come.
+                'stages' => PipelineStage::ordered()->get()->map(fn ($s) => ['name' => $s->name, 'position' => $s->position,
+                    'done' => $s->position < $deal->stage->position, 'current' => $s->id === $deal->pipeline_stage_id])->values(),
+                'expected_close' => $deal->expected_close_date?->toDateString(),
             ] : null,
             'updates' => $deal ? $deal->activity->take(5)->map(fn ($a) => ['text' => $a->text, 'at' => $a->created_at->toIso8601String()])->values() : [],
         ];

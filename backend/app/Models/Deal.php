@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Deal extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     protected function casts(): array
@@ -106,5 +108,10 @@ class Deal extends Model
             ?? $this->updated_at;
 
         return (int) $entered->diffInDays(now());
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Deal '.$this->property_title;
     }
 }

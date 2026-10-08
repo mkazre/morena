@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Staff extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $table = 'staff';
 
     protected $guarded = ['id'];
@@ -98,5 +100,10 @@ class Staff extends Model
     public function isAgent(): bool
     {
         return $this->department === 'sales';
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Staff '.($this->user?->name ?? '#'.$this->id);
     }
 }

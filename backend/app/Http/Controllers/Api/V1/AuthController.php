@@ -14,23 +14,136 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public const MAX_ATTEMPTS = 5;
+
+    public const LOCK_MINUTES = 15;
+
+    /**
+     * Password step. Five wrong passwords lock the account for 15 minutes. If the user has two-factor
+     * authentication on, the session only remembers who passed the password step until the code is given.
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+        abort_unless($request->hasSession(), 400, 'Sign in from the Morena web app (first-party origin required).');
+        $user = User::where('email', $credentials['email'])->first();
 
-        if (! Auth::guard('web')->attempt([...$credentials, 'status' => 'active'], $request->boolean('remember'))) {
+        if ($user?->locked_until?->isFuture()) {
+            $this->event($request, $credentials['email'], $user, false, 'locked');
+            throw ValidationException::withMessages(['email' => 'Too many failed attempts. Try again after '.$user->locked_until->format('H:i').' or reset your password.']);
+        }
+        if (! $user || $user->status !== 'active' || ! Auth::guard('web')->validate($credentials)) {
+            if ($user) {
+                $fails = $user->failed_logins + 1;
+                $user->forceFill(['failed_logins' => $fails, 'locked_until' => $fails >= self::MAX_ATTEMPTS ? now()->addMinutes(self::LOCK_MINUTES) : null])->save();
+            }
+            $this->event($request, $credentials['email'], $user, false, $user && $user->status !== 'active' ? 'inactive' : 'bad_password');
             throw ValidationException::withMessages(['email' => 'These credentials do not match an active account.']);
         }
 
-        abort_unless($request->hasSession(), 400, 'Sign in from the Morena web app (first-party origin required).');
+        if ($user->two_factor_confirmed_at) {
+            $request->session()->put('two_factor', ['user_id' => $user->id, 'remember' => $request->boolean('remember'), 'at' => now()->timestamp]);
+
+            return ['two_factor_required' => true];
+        }
+
+        return $this->completeLogin($request, $user, $request->boolean('remember'));
+    }
+
+    /** Second step: 6-digit authenticator code, or one of the single-use recovery codes. */
+    public function twoFactorChallenge(Request $request)
+    {
+        $code = $request->validate(['code' => ['required', 'string', 'max:20']])['code'];
+        $pending = $request->session()->get('two_factor');
+        if (! $pending || now()->timestamp - $pending['at'] > 300) {
+            $request->session()->forget('two_factor');
+            throw ValidationException::withMessages(['code' => 'Your sign-in timed out. Enter your password again.']);
+        }
+        $user = User::findOrFail($pending['user_id']);
+        $ok = \App\Services\Totp::verify(decrypt($user->two_factor_secret), $code);
+        if (! $ok) {
+            $codes = $user->two_factor_recovery_codes ? json_decode(decrypt($user->two_factor_recovery_codes), true) : [];
+            $normal = strtoupper(preg_replace('/\s/', '', $code));
+            if (in_array($normal, $codes, true)) {
+                $ok = true;
+                $user->forceFill(['two_factor_recovery_codes' => encrypt(json_encode(array_values(array_diff($codes, [$normal]))))])->save();
+            }
+        }
+        if (! $ok) {
+            $this->event($request, $user->email, $user, false, '2fa_failed');
+            throw ValidationException::withMessages(['code' => 'That code is not valid. Check your authenticator app (codes change every 30 seconds).']);
+        }
+        $request->session()->forget('two_factor');
+
+        return $this->completeLogin($request, $user, $pending['remember']);
+    }
+
+    private function completeLogin(Request $request, User $user, bool $remember)
+    {
+        Auth::guard('web')->login($user, $remember);
         $request->session()->regenerate();
-        $user = $request->user();
-        $user->forceFill(['last_login_at' => now()])->save();
+        $user->forceFill(['last_login_at' => now(), 'failed_logins' => 0, 'locked_until' => null])->save();
+        $this->event($request, $user->email, $user, true);
 
         return $this->me($request);
+    }
+
+    private function event(Request $request, string $email, ?User $user, bool $success, ?string $reason = null): void
+    {
+        \App\Models\LoginEvent::create([
+            'user_id' => $user?->id, 'email' => $email, 'success' => $success, 'reason' => $reason,
+            'ip' => $request->ip(), 'user_agent' => mb_substr((string) $request->userAgent(), 0, 250), 'created_at' => now(),
+        ]);
+    }
+
+    // ---- two-factor setup (signed-in user) ----------------------------------------------------
+
+    public function twoFactorSetup(Request $request)
+    {
+        $user = $request->user();
+        abort_if($user->two_factor_confirmed_at, 422, 'Two-factor authentication is already on.');
+        $secret = \App\Services\Totp::secret();
+        $user->forceFill(['two_factor_secret' => encrypt($secret)])->save();
+
+        return ['secret' => trim(chunk_split($secret, 4, ' ')), 'uri' => \App\Services\Totp::uri($secret, $user->email)];
+    }
+
+    public function twoFactorConfirm(Request $request)
+    {
+        $code = $request->validate(['code' => ['required', 'string']])['code'];
+        $user = $request->user();
+        abort_unless($user->two_factor_secret, 422, 'Start the setup first.');
+        if (! \App\Services\Totp::verify(decrypt($user->two_factor_secret), $code)) {
+            throw ValidationException::withMessages(['code' => 'That code is not valid — make sure the phone\'s clock is set automatically.']);
+        }
+        $codes = collect(range(1, 8))->map(fn () => strtoupper(\Illuminate\Support\Str::random(5).'-'.\Illuminate\Support\Str::random(5)))->all();
+        $user->forceFill(['two_factor_confirmed_at' => now(), 'two_factor_recovery_codes' => encrypt(json_encode($codes))])->save();
+        \App\Models\AuditLog::write('2fa_enabled', 'Two-factor authentication turned on', $user);
+
+        return ['recovery_codes' => $codes];
+    }
+
+    public function twoFactorDisable(Request $request)
+    {
+        $request->validate(['password' => ['required', 'string']]);
+        $user = $request->user();
+        if (! Hash::check($request->input('password'), $user->password)) {
+            throw ValidationException::withMessages(['password' => 'Your password is incorrect.']);
+        }
+        $user->forceFill(['two_factor_secret' => null, 'two_factor_confirmed_at' => null, 'two_factor_recovery_codes' => null])->save();
+        \App\Models\AuditLog::write('2fa_disabled', 'Two-factor authentication turned off', $user);
+
+        return response()->noContent();
+    }
+
+    /** Recent sign-ins for the signed-in user (security page). */
+    public function loginHistory(Request $request)
+    {
+        return ['data' => \App\Models\LoginEvent::where('user_id', $request->user()->id)->latest('created_at')->limit(20)->get()
+            ->map(fn ($e) => ['at' => $e->created_at->toIso8601String(), 'success' => $e->success, 'reason' => $e->reason, 'ip' => $e->ip, 'device' => $e->user_agent])];
     }
 
     public function logout(Request $request)
@@ -62,6 +175,7 @@ class AuthController extends Controller
                 'nav_role' => $user->navRole(),
                 'branch' => $user->branch?->name,
                 'staff_id' => $user->staff?->id,
+                'two_factor_enabled' => (bool) $user->two_factor_confirmed_at,
             ],
             'home' => self::homeFor($user),
             'settings' => [

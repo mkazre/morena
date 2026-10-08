@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payment extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     protected function casts(): array
@@ -34,5 +36,10 @@ class Payment extends Model
     public function journal(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class, 'journal_entry_id');
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Payment '.$this->number;
     }
 }

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CommissionTier extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     protected function casts(): array
@@ -21,5 +23,10 @@ class CommissionTier extends Model
     public function splitLabel(): string
     {
         return strtok($this->name, ' /').' ('.(int) $this->agent_split_percent.'/'.(int) $this->agency_split_percent.')';
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Commission tier '.$this->name;
     }
 }

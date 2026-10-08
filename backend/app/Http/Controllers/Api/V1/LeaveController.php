@@ -55,6 +55,13 @@ class LeaveController extends Controller
         $data['days'] ??= self::workingDays(Carbon::parse($data['start_date']), Carbon::parse($data['end_date']));
 
         $leave = LeaveRequest::create($data);
+        if (! ($isHr && $request->boolean('approved'))) {
+            $staff = $leave->staff()->with('user')->first();
+            $notifier = app(\App\Services\Notifier::class);
+            $notifier->send($notifier->role(['hr', 'admin'])->concat($notifier->role(['branch_manager'], $staff->branch_id)), 'leave_request',
+                $staff->user->name.' requested '.strtolower(LeaveRequest::TYPES[$leave->type]), $leave->start_date->format('j M').' – '.$leave->end_date->format('j M Y').' · '.$leave->days.' days',
+                '/hr/Leave.html', 'leave-req-'.$leave->id);
+        }
         // Leave captured directly by HR is already approved.
         if ($isHr && $request->boolean('approved')) {
             $this->decide($leave, 'approved', $user);
@@ -101,6 +108,8 @@ class LeaveController extends Controller
     {
         DB::transaction(function () use ($leave, $status, $by) {
             $leave->update(['status' => $status, 'approved_by' => $by->id, 'decided_at' => now()]);
+            app(\App\Services\Notifier::class)->send($leave->staff->user_id, 'leave_decision', 'Your leave was '.$status,
+                $leave->start_date->format('j M').' – '.$leave->end_date->format('j M Y').' · by '.$by->name, null, 'leave-dec-'.$leave->id);
             if ($status === 'approved') {
                 $balance = LeaveBalance::firstOrCreate(['staff_id' => $leave->staff_id, 'year' => $leave->start_date->year]);
                 $column = $leave->type === 'sick' ? 'sick_days' : 'annual_days';

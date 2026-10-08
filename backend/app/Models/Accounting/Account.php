@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Account extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     /** Debit-normal types increase with debits; the rest with credits. */
@@ -36,5 +38,10 @@ class Account extends Model
     public function scopeBank($q)
     {
         return $q->where('subtype', 'bank');
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Account '.$this->code.' '.$this->name;
     }
 }

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Commission extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     protected function casts(): array
@@ -63,5 +65,10 @@ class Commission extends Model
         return ($this->agent_id === $staffId ? $this->agent_share : 0)
             + ($this->co_agent_id === $staffId ? $this->co_agent_share : 0)
             + ($this->referral_agent_id === $staffId ? $this->referral_fee_amount : 0);
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Commission on deal #'.$this->deal_id;
     }
 }

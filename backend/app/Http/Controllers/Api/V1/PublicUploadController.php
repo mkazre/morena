@@ -69,6 +69,8 @@ class PublicUploadController extends Controller
             $outstanding = $link->items()->where('is_required', true)->where('status', 'required')->exists();
             if (! $outstanding) {
                 $link->update(['status' => 'uploaded']);
+                app(\App\Services\Notifier::class)->send($link->agent->user_id, 'upload_submitted', $link->client_name.' uploaded their documents',
+                    'Review and file them into the records hub.', '/portal/MyUploadLinks.html', 'upload-'.$link->id.'-'.$link->token);
             }
         });
 

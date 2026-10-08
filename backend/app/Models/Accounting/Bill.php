@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** A supplier invoice (accounts payable). */
 class Bill extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     use AccountingDocument;
 
     protected $guarded = ['id'];
@@ -15,5 +17,10 @@ class Bill extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(BillLine::class)->orderBy('position');
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Bill '.$this->number;
     }
 }

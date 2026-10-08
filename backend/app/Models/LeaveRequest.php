@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveRequest extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     public const TYPES = ['annual' => 'Annual Leave', 'sick' => 'Sick Leave', 'other' => 'Other Leave'];
@@ -29,5 +31,10 @@ class LeaveRequest extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Leave request #'.$this->id;
     }
 }

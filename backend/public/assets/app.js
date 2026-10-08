@@ -88,6 +88,7 @@ export async function shell(activeKey, roles) {
     return new Promise(() => {}); // never resolves; page is navigating away
   }
   applyLogoWidth(session.settings.sidebar_logo_width);
+  mobileNav();
   return {
     me: u,
     navSections: nav.decorateNav(u.nav_role, activeKey),
@@ -96,6 +97,27 @@ export async function shell(activeKey, roles) {
     userInitials: u.initials,
     onSignOut: signOut,
   };
+}
+
+/**
+ * Phone/tablet navigation: a ☰ button (outside the React tree, so re-renders never remove it) toggles the
+ * sidebar drawer styled in ui.css. Tapping the backdrop or a link closes it.
+ */
+function mobileNav() {
+  if (document.querySelector('.mnav-btn')) return;
+  const btn = document.createElement('button');
+  btn.className = 'mnav-btn';
+  btn.type = 'button';
+  btn.setAttribute('aria-label', 'Menu');
+  btn.textContent = '☰';
+  const set = (open) => { document.body.classList.toggle('mnav-open', open); btn.textContent = open ? '✕' : '☰'; };
+  btn.onclick = () => set(!document.body.classList.contains('mnav-open'));
+  document.body.appendChild(btn);
+  document.addEventListener('click', (e) => {
+    if (!document.body.classList.contains('mnav-open') || e.target === btn) return;
+    const aside = document.querySelector('aside');
+    if (!aside || !aside.contains(e.target) || e.target.closest('a')) set(false);
+  });
 }
 
 /** The sidebar/topbar values every page's renderVals() passes through from state. */

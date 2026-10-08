@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     use AccountingDocument;
 
     protected $guarded = ['id'];
@@ -21,5 +23,10 @@ class Invoice extends Model
     public function deal(): BelongsTo
     {
         return $this->belongsTo(Deal::class);
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Invoice '.$this->number;
     }
 }

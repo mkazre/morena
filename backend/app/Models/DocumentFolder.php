@@ -9,6 +9,8 @@ use Illuminate\Support\Collection;
 
 class DocumentFolder extends Model
 {
+    use \App\Models\Concerns\Audited;
+
     protected $guarded = ['id'];
 
     protected function casts(): array
@@ -90,5 +92,10 @@ class DocumentFolder extends Model
         }
 
         return ['visible' => $visible, 'shared' => $shared];
+    }
+
+    public function auditLabel(): string
+    {
+        return 'Folder '.$this->name;
     }
 }
