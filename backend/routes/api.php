@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 $sales = 'role:admin|branch_manager|agent';
-$staffRoles = 'role:admin|branch_manager|hr|agent';
+$staffRoles = 'role:admin|branch_manager|hr|finance|agent';
 $hr = 'role:admin|hr';
 
 Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
@@ -107,6 +107,23 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
         Route::post('documents', [V1\DocumentController::class, 'store'])->middleware($staffRoles);
         Route::get('documents/{document}/download', [V1\DocumentController::class, 'download']);
         Route::get('document-categories', [V1\DocumentController::class, 'categories'])->middleware($staffRoles);
+
+        // Records hub (SharePoint-style folders, versions, metadata)
+        Route::prefix('records')->middleware('role:admin|branch_manager|hr|finance|agent')->group(function () {
+            Route::get('folders', [V1\RecordsController::class, 'folders']);
+            Route::get('documents', [V1\RecordsController::class, 'index']);
+            Route::post('documents', [V1\RecordsController::class, 'store']);
+            Route::get('documents/{document}', [V1\RecordsController::class, 'show']);
+            Route::put('documents/{document}', [V1\RecordsController::class, 'update']);
+            Route::post('documents/{document}/versions', [V1\RecordsController::class, 'newVersion']);
+            Route::get('versions/{version}/download', [V1\RecordsController::class, 'downloadVersion']);
+            Route::post('versions/{version}/restore', [V1\RecordsController::class, 'restore']);
+            Route::middleware('role:admin')->group(function () {
+                Route::post('folders', [V1\RecordsController::class, 'storeFolder']);
+                Route::put('folders/{folder}', [V1\RecordsController::class, 'updateFolder']);
+                Route::delete('folders/{folder}', [V1\RecordsController::class, 'destroyFolder']);
+            });
+        });
 
         Route::get('document-templates', [V1\TemplateController::class, 'index'])->middleware($staffRoles);
         Route::get('document-templates/{template}/download', [V1\TemplateController::class, 'download'])->middleware($staffRoles);

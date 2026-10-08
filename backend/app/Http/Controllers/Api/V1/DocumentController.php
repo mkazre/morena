@@ -7,6 +7,7 @@ use App\Http\Resources\DocumentResource;
 use App\Models\Deal;
 use App\Models\Document;
 use App\Models\DocumentCategory;
+use App\Models\DocumentFolder;
 use App\Models\Lead;
 use App\Models\Listing;
 use App\Models\Staff;
@@ -28,14 +29,22 @@ class DocumentController extends Controller
     public static function scoped(User $user): Builder
     {
         $q = Document::query();
-        if ($user->hasAnyRole(['admin', 'hr'])) {
-            return $q;
-        }
+        // Portal users only ever see what is filed against their own sale or lease (folders don't apply).
         if ($user->hasRole('landlord')) {
             return $q->whereHasMorph('linkedModel', [Deal::class], fn ($d) => $d->where('seller_user_id', $user->id));
         }
         if ($user->hasRole('tenant')) {
             return $q->whereHasMorph('linkedModel', [Tenancy::class], fn ($t) => $t->where('tenant_user_id', $user->id));
+        }
+        if ($user->hasRole('admin')) {
+            return $q;
+        }
+
+        // Records hub permissions: a folder the role can't open hides its documents, whoever they belong to.
+        $access = DocumentFolder::accessFor($user);
+        $q->where(fn ($w) => $w->whereNull('folder_id')->orWhereIn('folder_id', $access['visible']));
+        if ($user->hasAnyRole(['hr', 'finance'])) {
+            return $q;
         }
 
         $staffId = $user->staff?->id ?? 0;
@@ -43,8 +52,10 @@ class DocumentController extends Controller
             ? $d->where('branch_id', $user->branch_id)
             : $d->forAgent($staffId);
 
-        // Agents / managers: their own uploads plus anything filed against their deals, leads, listings or themselves.
-        return $q->where(fn ($w) => $w->where('uploaded_by', $user->id)
+        // Agents / managers: shared folders (policies, templates, training) plus their own uploads and anything filed
+        // against their deals, leads, listings or themselves.
+        return $q->where(fn ($w) => $w->whereIn('folder_id', $access['shared'])
+            ->orWhere('uploaded_by', $user->id)
             ->orWhereHasMorph('linkedModel', [Deal::class], $dealScope)
             ->orWhereHasMorph('linkedModel', [Lead::class], fn ($l) => $l->where('assigned_agent_id', $staffId))
             ->orWhereHasMorph('linkedModel', [Listing::class], fn ($l) => $l->where('agent_id', $staffId))
@@ -115,6 +126,7 @@ class DocumentController extends Controller
     public function download(Request $request, Document $document, FileStore $files)
     {
         abort_unless(self::scoped($request->user())->whereKey($document->id)->exists(), 404);
+        \App\Models\DocumentAccessLog::record($document, 'downloaded', $request->user(), 'v'.$document->version);
 
         return $files->download($document->file_path, $document->name);
     }

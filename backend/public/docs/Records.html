@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Documents / <span style="color:#1c1a19;font-weight:700">Records Hub</span></div>
+      <div class="btn-row"><sc-if value="{{ canManage }}"><button class="btn" onClick="{{ onNewFolder }}">+ New folder</button></sc-if>
+<button class="btn btn-primary" onClick="{{ onUpload }}">+ Upload</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Records hub</h1><p>Every mandate, lease, certificate and policy in one place — folder permissions, full version history and an access log for POPIA.</p></div>
+</div>
+<div class="grid" style="grid-template-columns:minmax(0,260px) minmax(0,1fr);align-items:start" id="records-grid">
+  <div class="card" style="padding:12px 10px">
+    <div onClick="{{ onAll }}" style="{{ allStyle }}">All documents <span class="muted small">{{ allCount }}</span></div>
+    <sc-for list="{{ tree }}" as="f">
+      <div onClick="{{ f.onSelect }}" style="{{ f.style }}" title="{{ f.access }}">
+        <span><span onClick="{{ f.onToggle }}" style="display:inline-block;width:14px;color:#6b6660">{{ f.caret }}</span>{{ f.name }}<sc-if value="{{ f.locked }}"> <span title="{{ f.access }}">🔒</span></sc-if></span>
+        <span class="muted small">{{ f.total }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="min-width:0">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div><div class="muted small">{{ crumb }}</div><div style="font-size:17px;font-weight:700">{{ folderName }}</div><div class="muted small">{{ folderAccess }}</div></div>
+      <sc-if value="{{ folderEditable }}"><div class="btn-row"><button class="btn btn-sm" onClick="{{ onEditFolder }}">Folder settings</button></div></sc-if>
+    </div>
+    <div class="toolbar">
+      <input class="inp" style="max-width:340px" value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search names, descriptions, property, client tags…" />
+      <span class="muted small">{{ resultCount }}</span>
+    </div>
+
+    <sc-if value="{{ selected }}">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title"><span>{{ sel.name }} <span class="badge">v{{ sel.version }}</span></span>
+          <span class="btn-row"><a class="btn btn-sm btn-primary" href="{{ sel.download }}">Download</a><button class="btn btn-sm" onClick="{{ onNewVersion }}">Upload new version</button><button class="btn btn-sm" onClick="{{ onEditDoc }}">Edit details</button><button class="btn btn-sm" onClick="{{ onCloseDoc }}">Close</button></span></div>
+        <div class="grid grid-2">
+          <div class="small" style="line-height:1.9">
+            <div><span class="muted">Folder:</span> {{ sel.folder }}</div>
+            <div><span class="muted">Category:</span> {{ sel.category }} · <span class="muted">keep until</span> {{ sel.retention }}</div>
+            <div><span class="muted">Linked to:</span> {{ sel.linked }}</div>
+            <div><span class="muted">Tags:</span> <sc-for list="{{ sel.tags }}" as="t"><span class="badge b-brand" style="margin-right:4px">{{ t }}</span></sc-for><sc-if value="{{ sel.noTags }}"><span class="muted">none</span></sc-if></div>
+            <sc-if value="{{ sel.description }}"><div><span class="muted">Description:</span> {{ sel.description }}</div></sc-if>
+            <sc-if value="{{ sel.renameHint }}"><div class="muted">Naming convention: <b>{{ sel.suggested }}</b> <a class="link small" onClick="{{ onApplyName }}">Use this name</a></div></sc-if>
+          </div>
+          <div>
+            <div class="small strong" style="margin-bottom:6px">Version history</div>
+            <sc-for list="{{ sel.versions }}" as="v">
+              <div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #f1ede9;font-size:12.5px">
+                <span><b>v{{ v.version }}</b> · {{ v.when }} · {{ v.by }}<sc-if value="{{ v.note }}"> · <span class="muted">{{ v.note }}</span></sc-if></span>
+                <span style="white-space:nowrap"><a class="link small" href="{{ v.download }}">Open</a><sc-if value="{{ v.canRestore }}"> · <a class="link small" onClick="{{ v.onRestore }}">Restore</a></sc-if><sc-if value="{{ v.current }}"> <span class="badge b-ok">current</span></sc-if></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ sel.hasActivity }}">
+          <div class="small strong" style="margin:14px 0 6px">Access log</div>
+          <sc-for list="{{ sel.activity }}" as="a"><div class="small" style="padding:4px 0;border-top:1px solid #f1ede9"><span class="muted">{{ a.when }}</span> · {{ a.by }} · {{ a.action }}<sc-if value="{{ a.detail }}"> — <span class="muted">{{ a.detail }}</span></sc-if></div></sc-for>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <div class="card flush"><div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Name</th><th>Folder</th><th>Tags</th><th>Version</th><th>Updated</th><th></th></tr></thead>
+      <tbody>
+        <sc-if value="{{ empty }}"><tr><td colspan="6" class="empty">{{ emptyText }}</td></tr></sc-if>
+        <sc-for list="{{ docs }}" as="d" hint-placeholder-count="10">
+          <tr class="click" onClick="{{ d.onOpen }}">
+            <td><span class="badge" style="margin-right:6px">{{ d.type }}</span><span class="strong">{{ d.name }}</span><div class="muted small">{{ d.linked }}</div></td>
+            <td class="muted small">{{ d.folder }}</td>
+            <td><sc-for list="{{ d.tags }}" as="t"><span class="badge b-brand" style="margin:0 4px 2px 0">{{ t }}</span></sc-for></td>
+            <td>v{{ d.version }}</td><td class="muted" style="white-space:nowrap">{{ d.updated }}</td>
+            <td><a class="link small" href="{{ d.download }}" onClick="{{ d.stop }}">Download</a></td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table></div></div>
+    <sc-if value="{{ more }}"><div class="btn-row" style="margin-top:12px"><button class="btn btn-sm" onClick="{{ onMore }}">Load more</button><span class="muted small">{{ more }}</span></div></sc-if>
+  </div>
+</div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], folders: [], unfiled: 0, folderId: null, open: {}, docs: [], meta: null, page: 1, search: '', selected: null, loaded: false, agents: [] };
+  ROLE_NAMES = { admin: 'Admin', branch_manager: 'Managers', hr: 'HR', finance: 'Finance', agent: 'Agents' };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    const shell = await this.app.shell('records', ['admin', 'branch_manager', 'hr', 'finance', 'agent']);
+    this.setState(shell);
+    if (['admin', 'hr', 'branch_manager'].includes(shell.me.role)) this.app.options('agents').then((agents) => this.setState({ agents }));
+    await this.loadFolders();
+    const fid = this.app.param('folder');
+    this.setState({ folderId: fid ? Number(fid) : null }, this.loadDocs);
+    if (this.app.param('doc')) this.openDoc(this.app.param('doc'));
+  }
+
+  loadFolders = async () => {
+    const res = await this.app.api('/records/folders');
+    const open = { ...this.state.open };
+    res.data.forEach((f) => { if (open[f.id] === undefined) open[f.id] = false; });
+    this.setState({ folders: res.data, unfiled: res.unfiled, open });
+  };
+
+  loadDocs = async (append = false) => {
+    const s = this.state;
+    const page = append ? s.page + 1 : 1;
+    const q = new URLSearchParams({ per_page: 50, page });
+    if (s.folderId) q.set('folder_id', s.folderId);
+    if (s.search) q.set('search', s.search);
+    const seq = (this.seq = (this.seq || 0) + 1);
+    const res = await this.app.run(() => this.app.api('/records/documents?' + q));
+    if (res && seq === this.seq) this.setState({ docs: append ? [...s.docs, ...res.data] : res.data, meta: res.meta, page, loaded: true });
+  };
+
+  flat() {
+    const out = [];
+    const walk = (nodes, depth, parents) => nodes.forEach((f) => { out.push({ ...f, depth, parents }); if (this.state.open[f.id]) walk(f.children, depth + 1, [...parents, f]); });
+    walk(this.state.folders, 0, []);
+    return out;
+  }
+
+  findFolder(id, nodes = this.state.folders, parents = []) {
+    for (const f of nodes) {
+      if (f.id === id) return { folder: f, parents };
+      const hit = this.findFolder(id, f.children, [...parents, f]);
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  allFolderOptions() {
+    const out = [];
+    const walk = (nodes, prefix) => nodes.forEach((f) => { out.push({ value: f.id, label: prefix + f.name }); walk(f.children, prefix + f.name + ' / '); });
+    walk(this.state.folders, '');
+    return out;
+  }
+
+  select = (id) => {
+    const open = { ...this.state.open };
+    if (id) { const hit = this.findFolder(id); if (hit) { hit.parents.forEach((p) => { open[p.id] = true; }); open[id] = true; } }
+    this.setState({ folderId: id, selected: null, open }, this.loadDocs);
+    history.replaceState(null, '', id ? '?folder=' + id : location.pathname);
+  };
+
+  openDoc = async (id) => {
+    const selected = await this.app.run(() => this.app.api('/records/documents/' + id));
+    if (selected) this.setState({ selected });
+  };
+
+  tagFields(tags = {}) {
+    const agentField = this.state.agents.length
+      ? [{ name: 'agent_id', label: 'Agent', type: 'select', options: [{ value: '', label: '—' }, ...this.state.agents], value: tags.agent_id }] : [];
+    return [
+      { name: 'property', label: 'Property', value: tags.property, hint: 'e.g. 12 Joan Road, Unit 4' },
+      { name: 'client', label: 'Client', value: tags.client },
+      ...agentField,
+      { name: 'year', label: 'Year', type: 'number', value: tags.year || new Date().getFullYear() },
+      { name: 'keywords', label: 'Keywords', value: tags.keywords, hint: 'Comma separated — searchable' },
+    ];
+  }
+  tagsFrom(v) { return { property: v.property, client: v.client, agent_id: v.agent_id || null, year: v.year, keywords: v.keywords }; }
+
+  onUpload = async () => {
+    const { app } = this;
+    const folders = this.allFolderOptions();
+    const doc = await app.form({
+      title: 'Upload to the records hub', intro: 'Name files clearly, e.g. Lease_Unit12_JoanRd_2026.pdf — tags make them findable later.',
+      submitLabel: 'Upload',
+      fields: [
+        { name: 'folder_id', label: 'Folder', type: 'select', options: folders, value: this.state.folderId || (folders[0] && folders[0].value), required: true },
+        { name: 'file', label: 'File (PDF, Office, images — max 20MB)', type: 'file', required: true },
+        { name: 'name', label: 'Document name', hint: 'Leave blank to keep the file name' },
+        { name: 'description', label: 'Description' },
+        ...this.tagFields(),
+      ],
+      onSubmit: (v) => {
+        const fd = app.formData({ folder_id: v.folder_id, file: v.file, name: v.name, description: v.description });
+        Object.entries(this.tagsFrom(v)).forEach(([k, val]) => { if (val !== null && val !== undefined && val !== '') fd.append('tags[' + k + ']', val); });
+        return app.api('/records/documents', { method: 'POST', form: fd });
+      },
+    });
+    if (doc) { app.toast('Uploaded'); this.setState({ selected: doc }); this.loadFolders(); this.loadDocs(); }
+  };
+
+  onNewVersion = async () => {
+    const { app } = this;
+    const d = this.state.selected;
+    const res = await app.form({
+      title: 'New version of ' + d.name, intro: 'The current file (v' + d.version + ') stays in the version history.',
+      submitLabel: 'Upload v' + (d.version + 1),
+      fields: [{ name: 'file', label: 'File', type: 'file', required: true }, { name: 'note', label: 'What changed?' }],
+      onSubmit: (v) => app.api('/records/documents/' + d.id + '/versions', { method: 'POST', form: app.formData(v) }),
+    });
+    if (res) { app.toast('Version ' + res.version + ' uploaded'); this.setState({ selected: res }); this.loadDocs(); }
+  };
+
+  onEditDoc = async () => {
+    const { app } = this;
+    const d = this.state.selected;
+    const res = await app.form({
+      title: 'Edit details', submitLabel: 'Save',
+      fields: [
+        { name: 'name', label: 'Name', value: d.name, required: true },
+        { name: 'folder_id', label: 'Folder', type: 'select', options: this.allFolderOptions(), value: d.folder_id },
+        { name: 'description', label: 'Description', value: d.description },
+        ...this.tagFields(d.tags || {}),
+      ],
+      onSubmit: (v) => app.api('/records/documents/' + d.id, { method: 'PUT', body: { name: v.name, folder_id: v.folder_id, description: v.description, tags: this.tagsFrom(v) } }),
+    });
+    if (res) { app.toast('Saved'); this.setState({ selected: res }); this.loadFolders(); this.loadDocs(); }
+  };
+
+  onApplyName = async () => {
+    const d = this.state.selected;
+    const res = await this.app.run(() => this.app.api('/records/documents/' + d.id, { method: 'PUT', body: { name: d.suggested_name } }), 'Renamed');
+    if (res) { this.setState({ selected: res }); this.loadDocs(); }
+  };
+
+  folderForm = async (folder, parentId) => {
+    const { app } = this;
+    const roles = folder ? folder.roles || [] : [];
+    const res = await app.form({
+      title: folder ? 'Folder settings — ' + folder.name : 'New folder',
+      intro: 'Admins always have access. Leave every role unticked to inherit the parent folder\'s access.',
+      submitLabel: 'Save folder',
+      fields: [
+        { name: 'name', label: 'Name', value: folder && folder.name, required: true },
+        ...(folder ? [] : [{ name: 'parent_id', label: 'Inside', type: 'select', options: [{ value: '', label: '(top level)' }, ...this.allFolderOptions()], value: parentId || '' }]),
+        ...['branch_manager', 'hr', 'finance', 'agent'].map((r) => ({ name: 'role_' + r, label: 'Open to ' + this.ROLE_NAMES[r], type: 'checkbox', value: folder && !folder.inherits && roles.includes(r) })),
+        { name: 'shared_with_agents', label: 'Agents see everyone\'s documents here (policies, templates, training)', type: 'checkbox', value: folder && folder.shared_with_agents },
+        ...(folder && !folder.is_system ? [{ name: 'delete', label: 'Delete this folder (must be empty)', type: 'checkbox' }] : []),
+      ],
+      onSubmit: (v) => {
+        if (v.delete) return app.api('/records/folders/' + folder.id, { method: 'DELETE' }).then(() => ({ deleted: true }));
+        const picked = ['branch_manager', 'hr', 'finance', 'agent'].filter((r) => v['role_' + r]);
+        const body = { name: v.name, roles: picked.length ? picked : null, shared_with_agents: !!v.shared_with_agents };
+        if (!folder) body.parent_id = v.parent_id || null;
+        return folder ? app.api('/records/folders/' + folder.id, { method: 'PUT', body }) : app.api('/records/folders', { method: 'POST', body });
+      },
+    });
+    if (res) { app.toast(res.deleted ? 'Folder deleted' : 'Folder saved'); if (res.deleted) this.select(null); this.loadFolders(); }
+  };
+  onNewFolder = () => this.folderForm(null, this.state.folderId);
+  onEditFolder = () => { const hit = this.findFolder(this.state.folderId); if (hit) this.folderForm(hit.folder); };
+
+  onSearch = (e) => { this.setState({ search: e.target.value, selected: null }); clearTimeout(this.t); this.t = setTimeout(() => this.loadDocs(), 250); };
+  onAll = () => this.select(null);
+  onMore = () => this.loadDocs(true);
+  onCloseDoc = () => this.setState({ selected: null });
+
+  renderVals() {
+    const { app } = this;
+    const s = this.state;
+    const me = s.me || {};
+    const canManage = me.role === 'admin';
+    const rowStyle = (active, depth) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer',
+      padding: '7px 8px 7px ' + (8 + depth * 14) + 'px', borderRadius: 8, fontWeight: active ? 700 : 500, background: active ? '#f1ede9' : 'transparent', color: active ? '#7a1528' : '#1c1a19' });
+    const accessText = (f) => (f.roles ? 'Open to: Admin, ' + f.roles.filter((r) => r !== 'admin').map((r) => this.ROLE_NAMES[r]).join(', ') : 'Open to all staff') + (f.shared_with_agents ? ' · shared with all agents' : '');
+    const hit = s.folderId ? this.findFolder(s.folderId) : null;
+    const total = s.folders.reduce((t, f) => t + f.total, 0) + s.unfiled;
+    const tagList = (tags) => {
+      const out = [];
+      if (!tags) return out;
+      if (tags.property) out.push(tags.property);
+      if (tags.client) out.push(tags.client);
+      if (tags.agent_id) { const a = s.agents.find((x) => String(x.value) === String(tags.agent_id)); out.push(a ? a.label : String(tags.agent_id) === String(me.staff_id) ? s.userName : 'Agent'); }
+      if (tags.year) out.push(String(tags.year));
+      if (tags.keywords) String(tags.keywords).split(',').map((k) => k.trim()).filter(Boolean).forEach((k) => out.push(k));
+      return out;
+    };
+    const d = s.selected;
+    const actions = { uploaded: 'uploaded', new_version: 'uploaded a new version', downloaded: 'downloaded', renamed: 'renamed', moved: 'moved', tagged: 'updated tags', restored: 'restored a version' };
+    return {
+      ...(app ? app.shellVals(s) : {}), canManage, onUpload: this.onUpload, onNewFolder: this.onNewFolder, onEditFolder: this.onEditFolder,
+      onAll: this.onAll, onSearch: this.onSearch, onMore: this.onMore, onNewVersion: this.onNewVersion, onEditDoc: this.onEditDoc,
+      onCloseDoc: this.onCloseDoc, onApplyName: this.onApplyName, search: s.search,
+      allStyle: rowStyle(!s.folderId, 0), allCount: total,
+      tree: this.flat().map((f) => ({
+        name: f.name, total: f.total, caret: f.children.length ? (s.open[f.id] ? '▾' : '▸') : '', style: rowStyle(f.id === s.folderId, f.depth),
+        locked: !!f.roles && !f.roles.includes('agent'), access: accessText(f),
+        onSelect: () => this.select(f.id),
+        onToggle: (e) => { e.stopPropagation(); this.setState({ open: { ...s.open, [f.id]: !s.open[f.id] } }); },
+      })),
+      crumb: hit ? ['Records', ...hit.parents.map((p) => p.name)].join(' / ') : 'Records',
+      folderName: hit ? hit.folder.name : 'All documents', folderAccess: hit ? accessText(hit.folder) : 'Everything you have access to',
+      folderEditable: canManage && !!hit,
+      resultCount: s.meta ? s.meta.total + ' document' + (s.meta.total === 1 ? '' : 's') : '',
+      empty: s.loaded && !s.docs.length, emptyText: s.search ? 'No documents match "' + s.search + '".' : 'This folder is empty — use Upload to add documents.',
+      more: s.meta && s.docs.length < s.meta.total ? 'Showing ' + s.docs.length + ' of ' + s.meta.total : null,
+      docs: app ? s.docs.map((x) => ({
+        name: x.name, type: x.type, folder: x.folder, linked: x.linked_to !== '—' ? x.linked_to : '', tags: tagList(x.tags), version: x.version,
+        updated: app.ago(x.updated_at), download: x.download_url, stop: (e) => e.stopPropagation(), onOpen: () => this.openDoc(x.id),
+      })) : [],
+      selected: !!d,
+      sel: d && app ? {
+        name: d.name, version: d.version, folder: d.folder, category: d.category || '—', retention: app.date(d.retention_expires_at), linked: d.linked_to,
+        tags: tagList(d.tags), noTags: !tagList(d.tags).length, description: d.description, download: d.download_url,
+        suggested: d.suggested_name, renameHint: d.suggested_name && d.suggested_name !== d.name,
+        versions: d.versions.map((v) => ({
+          version: v.version, when: app.when(v.at), by: v.by || 'system', note: v.note, download: v.download_url, current: v.current, canRestore: !v.current,
+          onRestore: async () => {
+            if (!confirm('Make v' + v.version + ' the current version? (Saved as a new version — nothing is lost.)')) return;
+            const res = await app.run(() => app.api('/records/versions/' + v.id + '/restore', { method: 'POST' }), 'Restored v' + v.version);
+            if (res) { this.setState({ selected: res }); this.loadDocs(); }
+          },
+        })),
+        hasActivity: d.activity.length > 0,
+        activity: d.activity.map((a) => ({ when: app.when(a.at), by: a.by || 'someone', action: actions[a.action] || a.action, detail: a.detail })),
+      } : { versions: [], activity: [], tags: [] },
+    };
+  }
+}
+</script>
+</body>
+</html>

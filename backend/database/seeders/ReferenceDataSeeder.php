@@ -57,5 +57,6 @@ class ReferenceDataSeeder extends Seeder
         }
 
         $this->call(ChartOfAccountsSeeder::class);
+        $this->call(RecordsFolderSeeder::class);
     }
 }

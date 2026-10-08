@@ -39,7 +39,8 @@ export function getNavForRole(role) {
         { key: 'onboarding', label: 'Onboarding', icon: '◆', href: '../hr/Onboarding.html' },
       ]},
       { title: 'Documents', items: [
-        { key: 'doc-library', label: 'Document Library', icon: '▣', href: '../docs/Library.html' },
+        { key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' },
+        { key: 'doc-library', label: 'By Category', icon: '▣', href: '../docs/Library.html' },
         { key: 'doc-templates', label: 'Templates', icon: '▢', href: '../docs/Templates.html' },
         { key: 'upload-links', label: 'Client Upload Links', icon: '🔗', href: '../docs/UploadLinks.html' },
         { key: 'retention', label: 'Retention & Compliance', icon: '◍', href: '../docs/Retention.html' },
@@ -54,7 +55,7 @@ export function getNavForRole(role) {
         { key: 'settings', label: 'Settings', icon: '⚙', href: '../admin/Settings.html' },
       ]},
     ],
-    finance: [FINANCE_SECTION],
+    finance: [FINANCE_SECTION, { title: 'Records', items: [{ key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' }] }],
     agent: [
       { title: 'My Workspace', items: [
         { key: 'dashboard', label: 'My Dashboard', icon: '◧', href: '../portal/Dashboard.html' },
@@ -62,6 +63,7 @@ export function getNavForRole(role) {
         { key: 'leads', label: 'My Leads', icon: '◎', href: '../portal/MyLeads.html' },
         { key: 'commission', label: 'My Commission', icon: '◐', href: '../portal/MyCommission.html' },
         { key: 'documents', label: 'My Documents', icon: '▣', href: '../portal/MyDocuments.html' },
+        { key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' },
         { key: 'upload-links', label: 'Client Upload Links', icon: '🔗', href: '../portal/MyUploadLinks.html' },
         { key: 'training', label: 'My Training', icon: '◈', href: '../portal/MyTraining.html' },
         { key: 'profile', label: 'My Profile', icon: '◉', href: '../portal/MyProfile.html' },
@@ -73,6 +75,7 @@ export function getNavForRole(role) {
         { key: 'team', label: 'Team Performance', icon: '◫', href: '../manager/Team.html' },
         { key: 'pipeline', label: 'Pipeline Board', icon: '▤', href: '../sales/Pipeline.html' },
         { key: 'leave-approvals', label: 'Leave Approvals', icon: '▨', href: '../manager/LeaveApprovals.html' },
+        { key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' },
       ]},
     ],
     hr: [
@@ -81,6 +84,7 @@ export function getNavForRole(role) {
         { key: 'contracts', label: 'Contracts', icon: '▧', href: '../hr/Contracts.html' },
         { key: 'leave', label: 'Leave Management', icon: '▨', href: '../hr/Leave.html' },
         { key: 'onboarding', label: 'Onboarding', icon: '◆', href: '../hr/Onboarding.html' },
+        { key: 'records', label: 'Records Hub', icon: '▦', href: '../docs/Records.html' },
         { key: 'training', label: 'Training Records', icon: '◈', href: '../training/Courses.html' },
       ]},
     ],

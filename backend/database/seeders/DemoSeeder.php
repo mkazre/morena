@@ -88,6 +88,7 @@ class DemoSeeder extends Seeder
             $this->hr();
             $this->training();
             $this->accounting();
+            $this->records();
         });
     }
 
@@ -563,6 +564,42 @@ class DemoSeeder extends Seeder
                     'status' => $complete ? 'complete' : 'in_progress', 'completed_at' => $complete ? $completedAt : null]);
             }
         }
+    }
+
+    /** Shared policies, branding and training material in the Records hub, plus tags on the named documents. */
+    private function records(): void
+    {
+        $by = $this->staff['thandiwe']->user_id;
+        $files = [
+            ['Corporate/Policies & Procedures', 'POPIA Privacy Policy 2026.pdf', 'FICA / Compliance'],
+            ['Compliance/POPIA Policies', 'PAIA Manual — Morena Properties.pdf', 'FICA / Compliance'],
+            ['Compliance/PPRA Certificates', 'Morena Properties FFC 2026 (firm).pdf', 'FICA / Compliance'],
+            ['Corporate/Morena Group Branding', 'Morena Brand Guidelines v3.pdf', 'Staff / HR'],
+            ['Corporate/Board Resolutions', 'Board Resolution — Mackenzie Bonds launch.pdf', 'Staff / HR'],
+            ['Training & Resources/Agent Guides', 'Agent Sales Script — Listing Presentation.pdf', 'Staff / HR'],
+            ['Training & Resources/Agent Guides', 'FICA Compliance Checklist.pdf', 'FICA / Compliance'],
+            ['Training & Resources/Best Practice Manuals', 'Mandate Best Practice Manual.pdf', 'Mandates'],
+            ['Finance/Management Reports', 'Management Accounts — Q2 FY2026.pdf', 'Commission Invoices'],
+            ['Finance/Tax Returns', 'VAT201 Jul–Aug 2026 submission.pdf', 'Commission Invoices'],
+            ['HR/Performance Reviews', 'Performance Review — Lerato Dlamini 2026.pdf', 'Staff / HR'],
+        ];
+        foreach ($files as [$path, $name, $cat]) {
+            $doc = $this->document($name, $cat, null, 1, now()->subDays(mt_rand(3, 120)), $by);
+            $doc->update(['folder_id' => RecordsFolderSeeder::byPath($path)?->id]);
+        }
+        // Tags on the live deal's documents (property / client / agent / year).
+        Document::where('name', 'like', '%14 Rivonia Views%')->each(fn ($d) => $d->update(['tags' => [
+            'property' => '14 Rivonia Views', 'client' => 'Precious Nkosi', 'agent_id' => $this->staff['naledi']->id, 'year' => 2026,
+        ]]));
+        // A second version of the OTP, so version history has something to show.
+        $otp = Document::where('name', 'Offer to Purchase — 14 Rivonia Views.pdf')->first();
+        if ($otp) {
+            $path = 'documents/demo/otp-14-rivonia-views-v1.pdf';
+            Storage::put($path, self::pdf('Offer to Purchase - 14 Rivonia Views (first draft)'));
+            $otp->versions()->update(['version' => 2]);
+            $otp->versions()->create(['version' => 1, 'file_path' => $path, 'original_name' => $otp->name, 'note' => 'First draft before price amendment', 'uploaded_by' => $by, 'created_at' => now()->subDays(4)]);
+        }
+        (new RecordsFolderSeeder)->run(); // files everything else by category
     }
 
     // ---------------------------------------------------------------------------------------------
