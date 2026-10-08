@@ -39,17 +39,12 @@ if ($LASTEXITCODE -ne 0) { Pop-Location; throw 'composer install failed' }
 cmd /c "composer dump-autoload --optimize --no-dev --no-scripts 2>&1" | Out-Null
 Pop-Location
 
-# Manifest of every file, so `morena:deploy` can refuse to run on a half-extracted upload.
-$files = Get-ChildItem -Path $stage -Recurse -File | ForEach-Object { $_.FullName.Substring($stage.Length + 1).Replace('\', '/') } | Sort-Object
-$lines = @("# $stamp") + $files
-[IO.File]::WriteAllLines((Join-Path $stage 'release-manifest.txt'), $lines)
-Write-Host "Manifest: $($files.Count) files"
-
 Write-Host "Zipping to $zip ..."
 if (Test-Path $zip) { Remove-Item -Force $zip }
 # Our own zipper sets Linux permissions explicitly (folders 755, files 644) and keeps dotfiles like public/.htaccess.
 # Don't use Windows' tar here: it copies read-only folder attributes into the zip, which breaks updates on cPanel.
-node (Join-Path $PSScriptRoot 'zip-release.js') $stage $zip
+# It also writes release-manifest.txt (every file's path), so `morena:deploy` can refuse a half-extracted upload.
+node (Join-Path $PSScriptRoot 'zip-release.js') $stage $zip $stamp
 if ($LASTEXITCODE -ne 0) { throw 'zip failed' }
 
 Remove-Item -Recurse -Force $stage

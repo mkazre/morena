@@ -6,8 +6,20 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const [stage, out] = process.argv.slice(2);
-if (!stage || !out) { console.error('usage: node zip-release.js <stageDir> <out.zip>'); process.exit(1); }
+const [stage, out, stamp = new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-')] = process.argv.slice(2);
+if (!stage || !out) { console.error('usage: node zip-release.js <stageDir> <out.zip> [releaseStamp]'); process.exit(1); }
+
+// release-manifest.txt: every file's path exactly as stored in the zip, so `morena:deploy` can verify the upload.
+const listed = [];
+(function list(dir, rel) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const r = rel ? rel + '/' + e.name : e.name;
+    if (e.isDirectory()) list(path.join(dir, e.name), r);
+    else if (e.isFile() && r !== 'release-manifest.txt') listed.push(r);
+  }
+})(stage, '');
+listed.sort();
+fs.writeFileSync(path.join(stage, 'release-manifest.txt'), ['# ' + stamp, ...listed].join('\n') + '\n');
 
 const fd = fs.openSync(out, 'w');
 let offset = 0;
