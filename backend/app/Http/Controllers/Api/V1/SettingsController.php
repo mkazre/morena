@@ -31,7 +31,7 @@ class SettingsController extends Controller
         $data = $request->validate([
             'company_name' => ['sometimes', 'string', 'max:255'],
             'vat_number' => ['nullable', 'string', 'max:30'],
-            'sidebar_logo_width' => ['sometimes', 'integer', 'between:100,260'],
+            'sidebar_logo_width' => ['sometimes', 'integer', 'between:100,200'],
             'branches' => ['sometimes', 'array', 'min:1'],
             'branches.*' => ['string', 'max:100'],
         ]);
