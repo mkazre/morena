@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0}
+    a{color:#7a1528}
+    a:hover{color:#561020}
+  </style>
+</helmet>
+<div style="min-height:100vh;display:flex;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px">
+    <div style="width:100%;max-width:380px">
+      <img src="../assets/logo.png" alt="Morena Properties" style="width:220px;height:auto;margin-bottom:36px" />
+      <div style="font-size:13px;font-weight:600;letter-spacing:0.04em;color:#6b6660;text-transform:uppercase;margin-bottom:8px">{{ eyebrow }}</div>
+      <h1 style="font-size:28px;font-weight:700;margin:0 0 28px;color:#1c1a19">{{ heading }}</h1>
+      <form onSubmit="{{ onSubmit }}" style="display:flex;flex-direction:column;gap:16px">
+        <sc-if value="{{ error }}">
+          <div style="font-size:13px;font-weight:600;color:#b42318;background:#f5e9e9;border-radius:10px;padding:10px 14px">{{ error }}</div>
+        </sc-if>
+        <sc-if value="{{ notice }}">
+          <div style="font-size:13px;font-weight:600;color:#2f7d5a;background:#eaf3ee;border-radius:10px;padding:10px 14px">{{ notice }}</div>
+        </sc-if>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;color:#1c1a19;margin-bottom:6px">Email address</label>
+          <input type="email" name="email" value="{{ email }}" onChange="{{ onField }}" autocomplete="username" placeholder="you@morenaproperties.co.za" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e8e3e0;border-radius:10px;font-size:14px;font-family:inherit;outline:none" />
+        </div>
+        <sc-if value="{{ showPassword }}">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:#1c1a19;margin-bottom:6px">{{ passwordLabel }}</label>
+            <input type="password" name="password" value="{{ password }}" onChange="{{ onField }}" autocomplete="{{ passwordAutocomplete }}" placeholder="••••••••" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e8e3e0;border-radius:10px;font-size:14px;font-family:inherit;outline:none" />
+          </div>
+        </sc-if>
+        <sc-if value="{{ isLogin }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+            <label style="display:flex;align-items:center;gap:8px;color:#6b6660"><input type="checkbox" name="remember" checked="{{ remember }}" onChange="{{ onRemember }}" /> Remember me</label>
+            <a href="#" onClick="{{ onForgot }}" style="text-decoration:none;font-weight:600">Forgot password?</a>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isForgot }}">
+          <div style="font-size:13px"><a href="#" onClick="{{ onBack }}" style="text-decoration:none;font-weight:600">← Back to sign in</a></div>
+        </sc-if>
+        <button type="submit" disabled="{{ busy }}" style="margin-top:8px;padding:13px;border:none;border-radius:10px;background:#7a1528;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;opacity:{{ buttonOpacity }}">{{ buttonLabel }}</button>
+        <div style="text-align:center;font-size:12px;color:#6b6660;margin-top:8px">Accounts are created by your administrator. Contact HR if you need access.</div>
+      </form>
+    </div>
+  </div>
+  <div style="flex:1;background:linear-gradient(160deg,#1c1a19,#3a1420 70%);position:relative;display:flex;align-items:flex-end;padding:56px;box-sizing:border-box">
+    <div style="color:#fff;max-width:420px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#e2607e;margin-bottom:14px">People · Property · Passion</div>
+      <div style="font-size:26px;font-weight:600;line-height:1.4">One system for sales, people, documents and training — everything your team needs, nothing on WhatsApp.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { mode: 'login', email: '', password: '', remember: true, error: null, notice: null, busy: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    const p = new URLSearchParams(location.search);
+    if (p.get('token')) {
+      // Invite / reset link from email: set a password.
+      this.setState({ mode: 'reset', token: p.get('token'), email: p.get('email') || '' });
+      return;
+    }
+    // Already signed in? Go straight to the right home page.
+    try {
+      const me = await this.app.api('/auth/me', { redirectOn401: false });
+      location.replace(this.next() || me.home);
+    } catch (e) { /* not signed in */ }
+  }
+
+  next() {
+    const n = new URLSearchParams(location.search).get('next');
+    return n && n.startsWith('/') && !n.startsWith('//') ? n : null;
+  }
+
+  onField = (e) => this.setState({ [e.target.name]: e.target.value, error: null });
+  onRemember = (e) => this.setState({ remember: e.target.checked });
+  onForgot = (e) => { e.preventDefault(); this.setState({ mode: 'forgot', error: null, notice: null }); };
+  onBack = (e) => { e.preventDefault(); this.setState({ mode: 'login', error: null, notice: null }); };
+
+  onSubmit = async (e) => {
+    e.preventDefault();
+    const { api, csrf } = this.app;
+    const s = this.state;
+    this.setState({ busy: true, error: null, notice: null });
+    try {
+      await csrf();
+      if (s.mode === 'login') {
+        const me = await api('/auth/login', { method: 'POST', body: { email: s.email, password: s.password, remember: s.remember }, redirectOn401: false });
+        location.replace(this.next() || me.home);
+        return;
+      }
+      if (s.mode === 'forgot') {
+        await api('/auth/forgot-password', { method: 'POST', body: { email: s.email } });
+        this.setState({ mode: 'login', notice: 'If that address has an account, a reset link is on its way.' });
+      } else {
+        await api('/auth/reset-password', { method: 'POST', body: { token: s.token, email: s.email, password: s.password } });
+        history.replaceState(null, '', location.pathname);
+        this.setState({ mode: 'login', password: '', notice: 'Password set — you can sign in now.' });
+      }
+    } catch (err) {
+      this.setState({ error: err.message });
+    }
+    this.setState({ busy: false });
+  };
+
+  renderVals() {
+    const s = this.state;
+    const copy = {
+      login: ['Welcome back', 'Sign in to your workspace', 'Sign in', 'Password'],
+      forgot: ['Forgot password', 'Reset your password', 'Email me a reset link', ''],
+      reset: ['Welcome', 'Set your password', 'Save password', 'New password (min. 8 characters)'],
+    }[s.mode];
+    return {
+      eyebrow: copy[0], heading: copy[1], buttonLabel: s.busy ? 'Please wait…' : copy[2], passwordLabel: copy[3],
+      passwordAutocomplete: s.mode === 'login' ? 'current-password' : 'new-password',
+      isLogin: s.mode === 'login', isForgot: s.mode === 'forgot', showPassword: s.mode !== 'forgot',
+      email: s.email, password: s.password, remember: s.remember, error: s.error, notice: s.notice,
+      busy: s.busy, buttonOpacity: s.busy ? 0.7 : 1,
+      onField: this.onField, onRemember: this.onRemember, onForgot: this.onForgot, onBack: this.onBack, onSubmit: this.onSubmit,
+    };
+  }
+}
+</script>
+</body>
+</html>

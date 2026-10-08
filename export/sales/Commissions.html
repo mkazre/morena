@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">Thandiwe Morena</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / <span style="color:#1c1a19;font-weight:700">Commissions</span></div>
+      <a href="./CommissionSettings.html" style="font-size:13px;font-weight:600">⚙ Commission rules</a>
+    </header>
+    <main style="flex:1;padding:28px 32px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:22px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Payable this month</div><div style="font-size:22px;font-weight:700">R1,360,900</div></div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Paid this month</div><div style="font-size:22px;font-weight:700;color:#2f7d5a">R894,200</div></div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Pending</div><div style="font-size:22px;font-weight:700;color:#c07c1e">R466,700</div></div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Agency share</div><div style="font-size:22px;font-weight:700">R583,250</div></div>
+      </div>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="text-align:left;color:#6b6660;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;background:#faf8f6">
+            <th style="padding:12px 20px;font-weight:600">Deal</th><th style="padding:12px 0;font-weight:600">Agent</th><th style="padding:12px 0;font-weight:600;text-align:right">Sale value</th><th style="padding:12px 0;font-weight:600;text-align:right">Commission</th><th style="padding:12px 0;font-weight:600;text-align:right">Agent share</th><th style="padding:12px 0;font-weight:600">Status</th><th style="padding:12px 20px;font-weight:600">Date</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
+              <tr style="border-top:1px solid #f1ede9">
+                <td style="padding:14px 20px;font-weight:700">{{ row.property }}</td>
+                <td style="padding:14px 0;color:#6b6660">{{ row.agent }}</td>
+                <td style="padding:14px 0;text-align:right">R{{ row.value }}</td>
+                <td style="padding:14px 0;text-align:right;font-weight:600">R{{ row.commission }}</td>
+                <td style="padding:14px 0;text-align:right;font-weight:700;color:#7a1528">R{{ row.agentShare }}</td>
+                <td style="padding:14px 0"><span style="{{ row.badge }}">{{ row.status }}</span></td>
+                <td style="padding:14px 20px;color:#6b6660">{{ row.date }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [] };
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'commissions'), roleLabel: mod.roleLabels.admin });
+  }
+  renderVals() {
+    const badge = (bg, color) => ({ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: bg, color });
+    return {
+      navSections: this.state.navSections, roleLabel: this.state.roleLabel,
+      rows: [
+        { property: '22 Sandton Heights', agent: 'Riaan Pretorius', value: '5,200,000', commission: '358,800', agentShare: '251,160', status: 'Paid', badge: badge('#eaf3ee', '#2f7d5a'), date: '2 Oct 2026' },
+        { property: 'Unit 6, Oakfield Estate', agent: 'Sipho Khumalo', value: '1,890,000', commission: '130,410', agentShare: '71,725', status: 'Paid', badge: badge('#eaf3ee', '#2f7d5a'), date: '28 Sept 2026' },
+        { property: '14 Rivonia Views', agent: 'Naledi Mokoena', value: '2,450,000', commission: '169,050', agentShare: '118,335', status: 'Pending', badge: badge('#fbf3e3', '#c07c1e'), date: 'Awaiting registration' },
+        { property: '41 Bryanston Road', agent: 'Sipho Khumalo', value: '3,400,000', commission: '234,600', agentShare: '129,030', status: 'Pending', badge: badge('#fbf3e3', '#c07c1e'), date: 'Awaiting registration' },
+        { property: '9 Dainfern Close', agent: 'Lerato Dlamini', value: '2,750,000', commission: '189,750', agentShare: '104,363', status: 'Paid', badge: badge('#eaf3ee', '#2f7d5a'), date: '14 Sept 2026' },
+        { property: '5 Edenvale Terrace', agent: 'Johan van der Merwe', value: '1,200,000', commission: '82,800', agentShare: '33,120', status: 'Paid', badge: badge('#eaf3ee', '#2f7d5a'), date: '5 Sept 2026' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

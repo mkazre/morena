@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" />
+    </div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}">
+              <span style="{{ item.iconStyle }}">{{ item.icon }}</span>
+              {{ item.label }}
+            </a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">Thandiwe Morena</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div></div>
+    </div>
+  </aside>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / <span style="color:#1c1a19;font-weight:700">Pipeline Settings</span></div>
+      <a href="./Pipeline.html" style="font-size:13px;font-weight:600">← Back to board</a>
+    </header>
+
+    <main style="flex:1;padding:28px 32px;max-width:900px">
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 6px">Pipeline stages</h1>
+      <p style="font-size:13.5px;color:#6b6660;margin:0 0 24px;max-width:620px">Define the stages every sales deal moves through. Reorder, rename, recolor, or attach required documents and milestones per stage — changes apply immediately to the live pipeline board for all agents.</p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <sc-for list="{{ stages }}" as="stage" hint-placeholder-count="8">
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:12px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px">
+            <span style="cursor:grab;color:#c4bfba;font-size:16px;padding-top:4px">⠿</span>
+            <span style="{{ stage.dotStyle }}"></span>
+            <div style="flex:1;min-width:0">
+              <input type="text" value="{{ stage.name }}" style="font-size:14.5px;font-weight:700;border:none;background:transparent;width:100%;font-family:inherit;outline:none;padding:0 0 8px" />
+              <div style="font-size:12px;color:#6b6660;margin-bottom:6px">Required documents</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <sc-for list="{{ stage.docs }}" as="doc" hint-placeholder-count="2">
+                  <span style="font-size:11.5px;background:#f1ede9;color:#1c1a19;padding:4px 10px;border-radius:999px;font-weight:600">{{ doc }}</span>
+                </sc-for>
+                <span style="font-size:11.5px;border:1px dashed #d8d2cd;color:#6b6660;padding:4px 10px;border-radius:999px;cursor:pointer">+ add</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;padding-top:2px">
+              <span style="font-size:13px;color:#6b6660;cursor:pointer">↑</span>
+              <span style="font-size:13px;color:#6b6660;cursor:pointer">↓</span>
+              <span style="font-size:13px;color:#b42318;cursor:pointer">✕</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <button style="padding:11px 18px;border:1px dashed #d8d2cd;border-radius:10px;background:transparent;color:#1c1a19;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:28px">+ Add new stage</button>
+
+      <div style="display:flex;gap:12px">
+        <button style="padding:12px 22px;border:none;border-radius:10px;background:#7a1528;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">Save pipeline</button>
+        <button style="padding:12px 22px;border:1px solid #e8e3e0;border-radius:10px;background:#fff;color:#1c1a19;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer">Reset to default</button>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [] };
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'pipeline-settings'), roleLabel: mod.roleLabels.admin });
+  }
+  renderVals() {
+    const dot = (c) => ({ width: 10, height: 10, borderRadius: '50%', background: c, marginTop: 6, flexShrink: 0 });
+    return {
+      navSections: this.state.navSections, roleLabel: this.state.roleLabel,
+      stages: [
+        { name: 'Lead', dotStyle: dot('#e8c3cc'), docs: [] },
+        { name: 'Qualified', dotStyle: dot('#dba9b6'), docs: ['FICA form'] },
+        { name: 'Viewing Scheduled', dotStyle: dot('#d79aab'), docs: [] },
+        { name: 'Offer Made', dotStyle: dot('#c23552'), docs: ['Offer to Purchase'] },
+        { name: 'Offer Accepted', dotStyle: dot('#b22c47'), docs: ['Signed OTP'] },
+        { name: 'FICA / Due Diligence', dotStyle: dot('#a3233f'), docs: ['ID copy', 'Proof of address', 'Proof of funds'] },
+        { name: 'Bond Approved', dotStyle: dot('#7a1528'), docs: ['Bond grant letter'] },
+        { name: 'Deed of Sale Signed', dotStyle: dot('#6a1222'), docs: ['Deed of Sale'] },
+        { name: 'Registration (Transfer)', dotStyle: dot('#561020'), docs: ['Transfer documents'] },
+        { name: 'Deal Closed', dotStyle: dot('#3d0b17'), docs: ['Commission invoice'] },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

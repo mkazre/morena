@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" />
+    </div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}">
+              <span style="{{ item.iconStyle }}">{{ item.icon }}</span>
+              {{ item.label }}
+            </a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / <span style="color:#1c1a19;font-weight:700">Commission Settings</span></div>
+      <a href="./Commissions.html" style="font-size:13px;font-weight:600">View commission ledger →</a>
+    </header>
+
+    <main style="flex:1;padding:28px 32px;max-width:820px">
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 6px">Commission rules</h1>
+      <p style="font-size:13.5px;color:#6b6660;margin:0 0 26px">These settings control how commission is calculated and split for every closed deal. Based on South African market norms — adjust to match your agency's agreements.</p>
+
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:18px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:16px">Base commission</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:600;color:#6b6660;margin-bottom:6px">Standard commission rate</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="text" name="base_rate_percent" value="{{ f.base_rate_percent }}" onChange="{{ onField }}" style="width:80px;padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:14px" />
+              <span style="font-size:14px;color:#6b6660">% of sale price</span>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:600;color:#6b6660;margin-bottom:6px">VAT handling</label>
+            <select name="vat_registered" value="{{ f.vat_registered }}" onChange="{{ onField }}" style="width:100%;padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:14px;background:#fff">
+              <option value="1">Agency is a VAT vendor — add {{ f.vat_rate }}% VAT on commission</option>
+              <option value="0">Not VAT registered — no VAT applied</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:14px;font-size:12px;color:#6b6660">Commission is paid by the seller, on registration of transfer. Standard SA market range is 5%–7.5% of sale price.</div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div style="font-size:15px;font-weight:700">Agent split tiers</div>
+          <span onClick="{{ onAddTier }}" style="font-size:12.5px;font-weight:600;color:#7a1528;cursor:pointer">+ Add tier</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="text-align:left;color:#6b6660;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em">
+              <th style="padding:0 0 10px;font-weight:600">Tier name</th>
+              <th style="padding:0 0 10px;font-weight:600">Qualifying threshold</th>
+              <th style="padding:0 0 10px;font-weight:600;text-align:right">Agent split</th>
+              <th style="padding:0 0 10px;font-weight:600;text-align:right">Agency split</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{ tiers }}" as="tier" hint-placeholder-count="3">
+              <tr onClick="{{ tier.onEdit }}" style="border-top:1px solid #f1ede9;cursor:pointer">
+                <td style="padding:12px 0;font-weight:600">{{ tier.name }}</td>
+                <td style="padding:12px 0;color:#6b6660">{{ tier.threshold }}</td>
+                <td style="padding:12px 0;text-align:right;font-weight:700;color:#7a1528">{{ tier.agentSplit }}%</td>
+                <td style="padding:12px 0;text-align:right;color:#6b6660">{{ tier.agencySplit }}%</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:18px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:14px">Co-listing &amp; referral splits</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:600;color:#6b6660;margin-bottom:6px">Co-listing agent split (default)</label>
+            <div style="display:flex;align-items:center;gap:8px"><input type="text" name="co_listing_split_default_percent" value="{{ f.co_listing_split_default_percent }}" onChange="{{ onField }}" style="width:70px;padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:14px" /><span style="font-size:14px;color:#6b6660">/ {{ coRest }} between listing and selling agent</span></div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12.5px;font-weight:600;color:#6b6660;margin-bottom:6px">Referral fee</label>
+            <div style="display:flex;align-items:center;gap:8px"><input type="text" name="referral_fee_percent" value="{{ f.referral_fee_percent }}" onChange="{{ onField }}" style="width:70px;padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:14px" /><span style="font-size:14px;color:#6b6660">% of agent's commission to referrer</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px">
+        <button onClick="{{ onSave }}" style="padding:12px 22px;border:none;border-radius:10px;background:#7a1528;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">Save commission rules</button>
+        <button onClick="{{ onCancel }}" style="padding:12px 22px;border:1px solid #e8e3e0;border-radius:10px;background:#fff;color:#1c1a19;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer">Cancel</button>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], f: {}, tiers: [] };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.setState(await this.app.shell('commission-settings', ['admin']));
+    this.load();
+  }
+
+  load = async () => {
+    const [settings, tiers] = await Promise.all([this.app.api('/commission-settings'), this.app.api('/commission-tiers')]);
+    this.setState({ f: { ...settings, vat_registered: settings.vat_registered ? '1' : '0' }, tiers: tiers.data });
+  };
+
+  onField = (e) => this.setState({ f: { ...this.state.f, [e.target.name]: e.target.value } });
+
+  onSave = async () => {
+    const f = this.state.f;
+    const num = (v) => (v === '' || v == null ? undefined : Number(String(v).replace(',', '.')));
+    const body = {
+      base_rate_percent: num(f.base_rate_percent), vat_registered: f.vat_registered === '1' || f.vat_registered === true,
+      co_listing_split_default_percent: num(f.co_listing_split_default_percent), referral_fee_percent: num(f.referral_fee_percent),
+    };
+    const saved = await this.app.run(() => this.app.api('/commission-settings', { method: 'PUT', body }), 'Commission rules saved — pending commissions recalculated');
+    if (saved) this.load();
+  };
+
+  onCancel = () => this.load();
+
+  tierForm = async (tier) => {
+    const app = this.app;
+    const saved = await app.form({
+      title: tier ? 'Edit tier' : 'Add tier',
+      intro: 'An agent qualifies when they meet either threshold over the trailing 12 months. Leave both blank for the entry tier.',
+      submitLabel: tier ? 'Save tier' : 'Add tier',
+      fields: [
+        { name: 'name', label: 'Tier name', required: true, value: tier?.name },
+        { name: 'min_deals', label: 'Minimum deals (12 months)', type: 'number', value: tier?.min_deals },
+        { name: 'min_volume', label: 'Or minimum sales volume (R)', type: 'number', value: tier?.min_volume },
+        { name: 'agent_split_percent', label: 'Agent split %', type: 'number', required: true, value: tier?.agent_split_percent, hint: 'Agency receives the remainder.' },
+        ...(tier ? [{ name: 'delete', label: 'Delete this tier', type: 'checkbox' }] : []),
+      ],
+      onSubmit: (v) => {
+        if (v.delete) return app.api('/commission-tiers/' + tier.id, { method: 'DELETE' }).then(() => true);
+        const { delete: _, ...body } = v;
+        return tier ? app.api('/commission-tiers/' + tier.id, { method: 'PUT', body }) : app.api('/commission-tiers', { method: 'POST', body });
+      },
+    });
+    if (saved) { app.toast('Tiers updated'); this.load(); }
+  };
+
+  onAddTier = () => this.tierForm();
+
+  renderVals() {
+    const app = this.app;
+    const s = this.state;
+    const threshold = (t) => {
+      const parts = [];
+      if (t.min_deals != null) parts.push(t.min_deals + '+ deals');
+      if (t.min_volume != null) parts.push(app.randShort(t.min_volume, false) + ' volume');
+      return parts.length ? parts.join(' or ') + ' / 12 months' : 'Entry tier';
+    };
+    const tiers = app ? s.tiers.map((t) => ({
+      name: t.name, threshold: threshold(t), agentSplit: Math.round(t.agent_split_percent), agencySplit: Math.round(t.agency_split_percent),
+      onEdit: () => this.tierForm(t),
+    })) : [];
+    return {
+      ...(app ? app.shellVals(s) : {}), tiers, f: s.f,
+      coRest: s.f.co_listing_split_default_percent != null ? 100 - Number(s.f.co_listing_split_default_percent || 0) : 50,
+      onField: this.onField, onSave: this.onSave, onCancel: this.onCancel, onAddTier: this.onAddTier,
+    };
+  }
+}
+</script>
+</body>
+</html>

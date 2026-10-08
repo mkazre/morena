@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / <span style="color:#1c1a19;font-weight:700">Commissions</span></div>
+      <a href="./CommissionSettings.html" style="font-size:13px;font-weight:600">⚙ Commission rules</a>
+    </header>
+    <main style="flex:1;padding:28px 32px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:22px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Payable this month</div><div style="font-size:22px;font-weight:700">R{{ sum.payable }}</div></div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Paid this month</div><div style="font-size:22px;font-weight:700;color:#2f7d5a">R{{ sum.paid }}</div></div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Pending</div><div style="font-size:22px;font-weight:700;color:#c07c1e">R{{ sum.pending }}</div></div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Agency share</div><div style="font-size:22px;font-weight:700">R{{ sum.agency }}</div></div>
+      </div>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="text-align:left;color:#6b6660;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;background:#faf8f6">
+            <th style="padding:12px 20px;font-weight:600">Deal</th><th style="padding:12px 0;font-weight:600">Agent</th><th style="padding:12px 0;font-weight:600;text-align:right">Sale value</th><th style="padding:12px 0;font-weight:600;text-align:right">Commission</th><th style="padding:12px 0;font-weight:600;text-align:right">Agent share</th><th style="padding:12px 0;font-weight:600">Status</th><th style="padding:12px 20px;font-weight:600">Date</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
+              <tr style="border-top:1px solid #f1ede9">
+                <td style="padding:14px 20px;font-weight:700">{{ row.property }}</td>
+                <td style="padding:14px 0;color:#6b6660">{{ row.agent }}</td>
+                <td style="padding:14px 0;text-align:right">R{{ row.value }}</td>
+                <td style="padding:14px 0;text-align:right;font-weight:600">R{{ row.commission }}</td>
+                <td style="padding:14px 0;text-align:right;font-weight:700;color:#7a1528">R{{ row.agentShare }}</td>
+                <td style="padding:14px 0"><span style="{{ row.badge }}">{{ row.status }}</span></td>
+                <td style="padding:14px 20px;color:#6b6660">{{ row.date }}<sc-if value="{{ row.canPay }}"> · <a href="#" onClick="{{ row.onPay }}" style="font-weight:600;font-size:12.5px">Mark paid</a></sc-if></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], rows: [], summary: null };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.setState(await this.app.shell('commissions', ['admin']));
+    this.load();
+  }
+
+  load = async () => {
+    const res = await this.app.run(() => this.app.api('/commissions'));
+    if (res) this.setState({ rows: res.data, summary: res.summary });
+  };
+
+  renderVals() {
+    const app = this.app;
+    const s = this.state;
+    const rows = app ? s.rows.slice(0, 100).map((c) => {
+      const st = app.status('commission', c.status);
+      const closed = c.status === 'pending' && c.closed;
+      return {
+        property: c.property + (c.co_listed ? ' (co-listed)' : ''), agent: c.agent || '—',
+        value: app.money(c.sale_value), commission: app.money(c.gross_amount),
+        agentShare: app.money(c.agent_share + c.co_agent_share), status: st.label, badge: st.style,
+        date: c.status === 'paid' ? app.date(c.paid_at) : c.deal_closed ? 'Registered — payable' : 'Awaiting registration',
+        canPay: c.status === 'pending' && c.deal_closed,
+        onPay: async (e) => {
+          e.preventDefault();
+          if (!confirm('Mark R' + app.money(c.gross_amount) + ' for ' + c.property + ' as paid?')) return;
+          if (await app.run(() => app.api('/commissions/' + c.id + '/mark-paid', { method: 'POST' }), 'Marked as paid')) this.load();
+        },
+      };
+    }) : [];
+    const sum = s.summary && app ? {
+      payable: app.money(s.summary.payable_this_month), paid: app.money(s.summary.paid_this_month),
+      pending: app.money(s.summary.pending), agency: app.money(s.summary.agency_share),
+    } : { payable: '—', paid: '—', pending: '—', agency: '—' };
+    return { ...(app ? app.shellVals(s) : {}), rows, sum };
+  }
+}
+</script>
+</body>
+</html>

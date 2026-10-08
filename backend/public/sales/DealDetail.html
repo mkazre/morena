@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500"><a href="./Deals.html">Deals</a> / <span style="color:#1c1a19;font-weight:700">{{ title }}</span></div>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ onEdit }}" style="padding:9px 16px;border:1px solid #e8e3e0;border-radius:8px;background:#fff;color:#1c1a19;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer">Edit deal</button>
+        <sc-if value="{{ canAdvance }}"><button onClick="{{ onAdvance }}" style="padding:9px 16px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">Advance stage →</button></sc-if>
+      </div>
+    </header>
+    <main style="flex:1;padding:28px 32px">
+      <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:22px">
+        <div>
+          <h1 style="font-size:24px;font-weight:700;margin:0 0 6px">{{ title }}</h1>
+          <div style="font-size:13.5px;color:#6b6660">{{ subtitle }}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:26px;font-weight:700;color:#7a1528">R{{ value }}</div>
+          <div style="font-size:12.5px;color:#6b6660">{{ closeLabel }}</div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:18px">
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:16px">Pipeline progress</div>
+        <div style="display:flex;align-items:center">
+          <sc-for list="{{ stages }}" as="stage" hint-placeholder-count="6">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative">
+              <div style="{{ stage.circleStyle }}">{{ stage.icon }}</div>
+              <div style="font-size:11px;font-weight:600;text-align:center;margin-top:8px;color:#6b6660;max-width:90px">{{ stage.name }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:14px;font-weight:700;margin-bottom:16px">Client & deal info</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13.5px">
+            <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Buyer</div><div style="font-weight:600">{{ buyer }}</div></div>
+            <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Seller</div><div style="font-weight:600">{{ seller }}</div></div>
+            <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Listing agent</div><div style="font-weight:600">{{ listingAgent }}</div></div>
+            <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Selling agent</div><div style="font-weight:600">{{ sellingAgent }}</div></div>
+            <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Mandate type</div><div style="font-weight:600">{{ mandate }}</div></div>
+            <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Bond required</div><div style="font-weight:600">{{ bond }}</div></div>
+          </div>
+          <div style="font-size:14px;font-weight:700;margin:22px 0 12px">Activity log</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ activity }}" as="log" hint-placeholder-count="4">
+              <div style="display:flex;gap:10px;font-size:13px">
+                <div style="width:6px;height:6px;border-radius:50%;background:#7a1528;margin-top:6px;flex-shrink:0"></div>
+                <div><span style="font-weight:600">{{ log.text }}</span><div style="font-size:11.5px;color:#6b6660;margin-top:2px">{{ log.when }}</div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+            <div style="font-size:14px;font-weight:700;margin-bottom:14px">Commission breakdown</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+              <div style="display:flex;justify-content:space-between"><span style="color:#6b6660">Sale price</span><span style="font-weight:600">R{{ c.sale }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6b6660">Commission ({{ c.rate }}%)</span><span style="font-weight:600">R{{ c.amount }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6b6660">VAT ({{ c.vatRate }}%)</span><span style="font-weight:600">R{{ c.vat }}</span></div>
+              <div style="height:1px;background:#f1ede9;margin:6px 0"></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6b6660">Agent split ({{ c.tierLabel }})</span><span style="font-weight:700;color:#7a1528">R{{ c.agentShare }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#6b6660">Agency share ({{ c.agencyPct }}%)</span><span style="font-weight:600">R{{ c.agencyShare }}</span></div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-size:14px;font-weight:700">Required documents</div><a href="#" onClick="{{ onUpload }}" style="font-size:12.5px;font-weight:600">+ Upload</a></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ docs }}" as="doc" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+                  <span>{{ doc.name }}</span>
+                  <span style="{{ doc.badge }}">{{ doc.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], detail: null };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.forms = await import('../assets/forms.js');
+    const shell = await this.app.shell('deals', ['admin', 'branch_manager', 'agent']);
+    // Agents reach this page from their portal; keep their nav item highlighted.
+    if (shell.me.role === 'agent') shell.navSections = (await import('../shell/nav-config.js')).decorateNav('agent', 'deals');
+    this.setState(shell);
+    this.load();
+  }
+
+  load = async () => {
+    const id = this.app.param('id');
+    if (!id) { location.replace('./Deals.html'); return; }
+    const detail = await this.app.run(() => this.app.api('/deals/' + id));
+    if (detail) this.setState({ detail });
+  };
+
+  onAdvance = async () => {
+    const d = this.state.detail.deal;
+    const next = this.state.detail.stages.find((st, i, all) => all[i - 1] && all[i - 1].active);
+    if (!confirm('Move ' + d.property + ' to "' + (next ? next.name : 'the next stage') + '"?')) return;
+    const ok = await this.app.run(() => this.app.api('/deals/' + d.id + '/advance-stage', { method: 'POST' }), 'Stage updated');
+    if (ok) this.load();
+  };
+
+  onEdit = async () => {
+    const x = this.state.detail;
+    const saved = await this.forms.dealForm({
+      ...x.deal, buyer_name: x.buyer_name, seller_name: x.seller_name, mandate_type: x.mandate_type,
+      bond_required: x.bond_required, bond_ltv_percent: x.bond_ltv_percent, lost_reason: x.lost_reason,
+    });
+    if (saved) { this.app.toast('Deal saved'); this.load(); }
+  };
+
+  onUpload = async (e) => {
+    e.preventDefault();
+    const saved = await this.forms.documentForm({ linkedType: 'deal', linkedId: this.state.detail.deal.id });
+    if (saved) { this.app.toast('Document uploaded'); this.load(); }
+  };
+
+  renderVals() {
+    const app = this.app;
+    const s = this.state;
+    const x = s.detail;
+    const base = { ...(app ? app.shellVals(s) : {}), onEdit: this.onEdit, onAdvance: this.onAdvance, onUpload: this.onUpload };
+    if (!app || !x) return { ...base, title: '', stages: [], activity: [], docs: [], c: {} };
+
+    const d = x.deal;
+    const circle = (done, active) => ({
+      width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 13, fontWeight: 700, color: done || active ? '#fff' : '#6b6660',
+      background: active ? '#7a1528' : done ? '#c23552' : '#f1ede9',
+    });
+    const docBadge = (ok) => ({ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: ok ? '#eaf3ee' : '#fbf3e3', color: ok ? '#2f7d5a' : '#c07c1e' });
+    const l = x.listing;
+    const c = x.commission;
+    const status = d.status === 'closed' ? 'Closed' : d.status === 'lost' ? 'Lost' : null;
+
+    return {
+      ...base,
+      title: d.property,
+      subtitle: [l && l.suburb, l && l.beds + ' bed', l && l.baths + ' bath', l && l.listed_at && 'Listed ' + app.date(l.listed_at)].filter(Boolean).join(' · ') || d.stage,
+      value: app.money(d.value),
+      closeLabel: status ? status : d.expected_close_date ? 'Expected close ' + app.date(d.expected_close_date) : 'Close date TBC',
+      buyer: x.buyer_name || '—', seller: x.seller_name || '—',
+      listingAgent: x.listing_agent || '—', sellingAgent: x.selling_agent || '—',
+      mandate: x.mandate_type === 'open' ? 'Open mandate' : 'Sole mandate',
+      bond: x.bond_required ? 'Yes' + (x.bond_ltv_percent ? ' — ' + x.bond_ltv_percent + '% LTV' : '') : 'No — cash',
+      canAdvance: d.status === 'open' && !x.is_final_stage,
+      stages: x.stages.map((st, i) => ({ name: st.name, icon: st.done ? '✓' : st.active ? '●' : String(i + 1), circleStyle: circle(st.done, st.active) })),
+      activity: x.activity.map((a) => ({ text: a.text, when: app.when(a.at) })),
+      docs: x.required_documents.length
+        ? x.required_documents.map((r) => ({ name: r.name, status: r.received ? 'Received' : 'Pending', badge: docBadge(r.received) }))
+        : [{ name: 'No documents required at this stage yet', status: '', badge: {} }],
+      c: c ? {
+        sale: app.money(d.value), rate: c.rate_percent, amount: app.money(c.commission_amount),
+        vatRate: c.vat_rate_percent, vat: app.money(c.vat_amount),
+        tierLabel: (c.tier ? c.tier.split(' ')[0] + ' — ' : '') + (c.agent_split_percent ?? '') + '%',
+        agentShare: app.money(c.agent_share), agencyPct: c.agent_split_percent != null ? 100 - c.agent_split_percent : '',
+        agencyShare: app.money(c.agency_share),
+      } : { sale: app.money(d.value), rate: '—', amount: '—', vatRate: '—', vat: '—', tierLabel: 'no agent', agentShare: '—', agencyPct: '—', agencyShare: '—' },
+    };
+  }
+}
+</script>
+</body>
+</html>

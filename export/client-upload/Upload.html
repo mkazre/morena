@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+</helmet>
+<div style="min-height:100vh;background:#faf8f6;font-family:'Plus Jakarta Sans',sans-serif;color:#1c1a19;display:flex;justify-content:center;padding:48px 20px;box-sizing:border-box">
+  <div style="width:100%;max-width:560px">
+    <img src="../assets/logo.png" alt="Morena Properties" style="width:200px;height:auto;margin-bottom:28px" />
+    <div style="background:#fff;border:1px solid #e8e3e0;border-radius:16px;padding:32px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#7a1528;margin-bottom:8px">Secure document upload</div>
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 6px">Documents for 14 Rivonia Views</h1>
+      <p style="font-size:13.5px;color:#6b6660;margin:0 0 24px">Requested by Naledi Mokoena. Upload each document below — your agent will review and file them once submitted. This link is unique to you and expires after completion.</p>
+
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
+        <sc-for list="{{ items }}" as="item" hint-placeholder-count="4">
+          <div style="border:1px dashed #d8d2cd;border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:13.5px;font-weight:700">{{ item.name }}</div>
+              <div style="font-size:12px;color:#6b6660;margin-top:2px">{{ item.hint }}</div>
+            </div>
+            <span style="{{ item.badge }}">{{ item.status }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="border:2px dashed #e8c3cc;border-radius:12px;padding:28px;text-align:center;margin-bottom:20px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Drop files here or click to browse</div>
+        <div style="font-size:12px;color:#6b6660">PDF, JPG or PNG — max 10MB per file</div>
+      </div>
+
+      <button style="width:100%;padding:13px;border:none;border-radius:10px;background:#7a1528;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer">Submit documents</button>
+      <div style="text-align:center;font-size:12px;color:#6b6660;margin-top:14px">Having trouble? WhatsApp your agent at 082 334 1120</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const badge = (bg, color) => ({ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: bg, color, flexShrink: 0 });
+    return {
+      items: [
+        { name: 'Copy of ID document', hint: 'Certified or clear photo', status: 'Uploaded', badge: badge('#eaf3ee', '#2f7d5a') },
+        { name: 'Proof of address', hint: 'Not older than 3 months', status: 'Uploaded', badge: badge('#eaf3ee', '#2f7d5a') },
+        { name: 'Proof of funds / bond pre-approval', hint: 'Bank statement or bond letter', status: 'Required', badge: badge('#fbf3e3', '#c07c1e') },
+        { name: 'Signed Offer to Purchase', hint: 'Sent to you separately for signature', status: 'Required', badge: badge('#fbf3e3', '#c07c1e') },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

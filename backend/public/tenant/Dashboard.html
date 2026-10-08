@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:220px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="1">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="2">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Tenant Portal / <span style="color:#1c1a19;font-weight:700">Overview</span></div>
+    </header>
+    <main style="flex:1;padding:28px 32px">
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 4px">Welcome, {{ name }}</h1>
+      <div style="font-size:13px;color:#6b6660;margin-bottom:22px">{{ leaseLine }}</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Lease ends</div><div style="font-size:18px;font-weight:700">{{ leaseEnd }}</div></div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px"><div style="font-size:12px;color:#6b6660;font-weight:600;margin-bottom:8px">Rent payments</div><div style="font-size:18px;font-weight:700">Managed via PayProp</div></div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], d: null };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.setState(await this.app.shell('dashboard', ['tenant']));
+    const d = await this.app.run(() => this.app.api('/dashboard/tenant'));
+    if (d) this.setState({ d });
+  }
+
+  renderVals() {
+    const app = this.app;
+    const s = this.state;
+    const d = s.d;
+    const t = d && d.tenancy;
+    return {
+      ...(app ? app.shellVals(s) : {}),
+      name: d ? d.name : s.userName || '',
+      leaseLine: t ? 'Your lease at ' + t.property + '.' : d ? 'No active lease on record.' : '',
+      leaseEnd: t && app ? app.date(t.lease_end) : '—',
+    };
+  }
+}
+</script>
+</body>
+</html>

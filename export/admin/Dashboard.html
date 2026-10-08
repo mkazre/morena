@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0}
+    a{color:#7a1528;text-decoration:none}
+    a:hover{color:#561020}
+  </style>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" />
+    </div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}">
+              <span style="{{ item.iconStyle }}">{{ item.icon }}</span>
+              {{ item.label }}
+            </a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Thandiwe Morena</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Admin / <span style="color:#1c1a19;font-weight:700">Dashboard</span></div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <input type="text" placeholder="Search deals, agents, documents…" style="width:280px;padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none" />
+        <span style="font-size:18px;color:#6b6660;cursor:pointer">◔</span>
+      </div>
+    </header>
+
+    <main style="flex:1;padding:28px 32px;overflow-y:auto">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px">
+        <div>
+          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">Business Overview</h1>
+          <div style="font-size:13px;color:#6b6660">October 2026 · Updated hourly</div>
+        </div>
+        <select style="padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-size:13px;font-family:inherit;background:#fff">
+          <option>This month</option>
+          <option>Last month</option>
+          <option>This quarter</option>
+          <option>Year to date</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px">
+        <sc-for list="{{ kpis }}" as="kpi" hint-placeholder-count="4">
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px 20px">
+            <div style="font-size:12px;font-weight:600;color:#6b6660;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">{{ kpi.label }}</div>
+            <div style="font-size:26px;font-weight:700;margin-bottom:6px">{{ kpi.value }}</div>
+            <div style="font-size:12px;font-weight:600;color:{{ kpi.deltaColor }}">{{ kpi.delta }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div style="font-size:15px;font-weight:700">Sales pipeline value by stage</div>
+            <a href="../sales/Pipeline.html" style="font-size:13px;font-weight:600">Open pipeline →</a>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ pipelineStages }}" as="stage" hint-placeholder-count="6">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">
+                  <span style="font-weight:600">{{ stage.name }}</span>
+                  <span style="color:#6b6660">{{ stage.valueLabel }} · {{ stage.count }} deals</span>
+                </div>
+                <div style="height:8px;border-radius:4px;background:#f1ede9">
+                  <div style="{{ stage.barStyle }}"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Top agents this month</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ topAgents }}" as="agent" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:30px;height:30px;border-radius:50%;background:#f1ede9;color:#7a1528;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">{{ agent.initials }}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ agent.name }}</div>
+                  <div style="font-size:12px;color:#6b6660">{{ agent.deals }} deals · R{{ agent.commission }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="font-size:15px;font-weight:700">Recent deal activity</div>
+            <a href="../sales/Deals.html" style="font-size:13px;font-weight:600">View all deals →</a>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="text-align:left;color:#6b6660;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em">
+                <th style="padding:0 0 10px;font-weight:600">Property</th>
+                <th style="padding:0 0 10px;font-weight:600">Agent</th>
+                <th style="padding:0 0 10px;font-weight:600">Stage</th>
+                <th style="padding:0 0 10px;font-weight:600;text-align:right">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ recentDeals }}" as="deal" hint-placeholder-count="5">
+                <tr style="border-top:1px solid #f1ede9">
+                  <td style="padding:11px 0;font-weight:600">{{ deal.property }}</td>
+                  <td style="padding:11px 0;color:#6b6660">{{ deal.agent }}</td>
+                  <td style="padding:11px 0"><span style="{{ deal.stageBadge }}">{{ deal.stage }}</span></td>
+                  <td style="padding:11px 0;text-align:right;font-weight:600">R{{ deal.value }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:14px">Needs attention</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ alerts }}" as="alert" hint-placeholder-count="4">
+              <div style="display:flex;gap:10px;padding:12px;border:1px solid #f1ede9;border-radius:10px">
+                <span style="{{ alert.dotStyle }}"></span>
+                <div>
+                  <div style="font-size:13px;font-weight:600">{{ alert.title }}</div>
+                  <div style="font-size:12px;color:#6b6660;margin-top:2px">{{ alert.subtitle }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], roleLabel: 'Administrator' };
+
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'dashboard'), roleLabel: mod.roleLabels.admin });
+  }
+
+  renderVals() {
+    const barStyle = (pct, color) => ({ width: pct + '%', height: '100%', borderRadius: 4, background: color });
+    const badge = (bg, color) => ({ fontSize: 11.5, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: bg, color });
+
+    return {
+      navSections: this.state.navSections,
+      roleLabel: this.state.roleLabel,
+      kpis: [
+        { label: 'Deals closed (MTD)', value: '14', delta: '+3 vs last month', deltaColor: '#2f7d5a' },
+        { label: 'Pipeline value', value: 'R 48.2m', delta: '62 active deals', deltaColor: '#6b6660' },
+        { label: 'Commission payable', value: 'R 1.36m', delta: 'Due this Friday', deltaColor: '#c07c1e' },
+        { label: 'Active listings', value: '89', delta: '+7 this week', deltaColor: '#2f7d5a' },
+      ],
+      pipelineStages: [
+        { name: 'Lead', valueLabel: 'R 6.1m', count: 24, barStyle: barStyle(28, '#e8c3cc') },
+        { name: 'Viewing Scheduled', valueLabel: 'R 9.4m', count: 18, barStyle: barStyle(44, '#d79aab') },
+        { name: 'Offer Made', valueLabel: 'R 11.2m', count: 9, barStyle: barStyle(55, '#c23552') },
+        { name: 'FICA / Due Diligence', valueLabel: 'R 8.6m', count: 6, barStyle: barStyle(40, '#a3233f') },
+        { name: 'Bond Approved', valueLabel: 'R 7.3m', count: 3, barStyle: barStyle(34, '#7a1528') },
+        { name: 'Registration', valueLabel: 'R 5.6m', count: 2, barStyle: barStyle(26, '#561020') },
+      ],
+      topAgents: [
+        { initials: 'NM', name: 'Naledi Mokoena', deals: 5, commission: '184,200' },
+        { initials: 'SK', name: 'Sipho Khumalo', deals: 4, commission: '156,900' },
+        { initials: 'RP', name: 'Riaan Pretorius', deals: 3, commission: '121,500' },
+        { initials: 'LD', name: 'Lerato Dlamini', deals: 3, commission: '98,750' },
+        { initials: 'JV', name: 'Johan van der Merwe', deals: 2, commission: '76,300' },
+      ],
+      recentDeals: [
+        { property: '14 Rivonia Views', agent: 'Naledi Mokoena', stage: 'Offer Accepted', stageBadge: badge('#f1ede9', '#7a1528'), value: '2,450,000' },
+        { property: 'Unit 6, Oakfield Estate', agent: 'Sipho Khumalo', stage: 'Bond Approved', stageBadge: badge('#eaf3ee', '#2f7d5a'), value: '1,890,000' },
+        { property: '22 Sandton Heights', agent: 'Riaan Pretorius', stage: 'Registration', stageBadge: badge('#f5e9ea', '#561020'), value: '5,200,000' },
+        { property: '8 Melrose Close', agent: 'Lerato Dlamini', stage: 'Viewing Scheduled', stageBadge: badge('#f6eef0', '#c23552'), value: '990,000' },
+        { property: '3 Fourways Gardens', agent: 'Johan van der Merwe', stage: 'Lead', stageBadge: badge('#f1ede9', '#6b6660'), value: '1,350,000' },
+      ],
+      alerts: [
+        { title: '3 FICA documents expiring', subtitle: 'Client due-diligence packs need renewal', dotStyle: { width: 8, height: 8, borderRadius: '50%', background: '#c07c1e', marginTop: 5, flexShrink: 0 } },
+        { title: '2 leave requests pending', subtitle: 'Awaiting manager approval', dotStyle: { width: 8, height: 8, borderRadius: '50%', background: '#7a1528', marginTop: 5, flexShrink: 0 } },
+        { title: 'Commission run due Friday', subtitle: 'R 1.36m across 11 agents', dotStyle: { width: 8, height: 8, borderRadius: '50%', background: '#2f7d5a', marginTop: 5, flexShrink: 0 } },
+        { title: '1 contract missing signature', subtitle: 'Offer to Purchase — 14 Rivonia Views', dotStyle: { width: 8, height: 8, borderRadius: '50%', background: '#b42318', marginTop: 5, flexShrink: 0 } },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

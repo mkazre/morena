@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">Thandiwe Morena</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">People / <span style="color:#1c1a19;font-weight:700">Staff Directory</span></div>
+      <button style="padding:9px 16px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ Add staff member</button>
+    </header>
+    <main style="flex:1;padding:28px 32px">
+      <div style="display:flex;gap:10px;margin-bottom:18px">
+        <input type="text" placeholder="Search staff…" style="flex:1;max-width:320px;padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13px" />
+        <select style="padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13px;background:#fff"><option>All departments</option><option>Sales</option><option>HR</option><option>Admin</option><option>Finance</option></select>
+        <select style="padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13px;background:#fff"><option>All branches</option><option>Sandton</option><option>Pretoria</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
+        <sc-for list="{{ staff }}" as="person" hint-placeholder-count="8">
+          <a href="./StaffProfile.html" style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:18px;display:block">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+              <div style="width:42px;height:42px;border-radius:50%;background:#f1ede9;color:#7a1528;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">{{ person.initials }}</div>
+              <div style="min-width:0">
+                <div style="font-size:14px;font-weight:700;color:#1c1a19">{{ person.name }}</div>
+                <div style="font-size:12px;color:#6b6660">{{ person.role }}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px">
+              <span style="color:#6b6660">{{ person.branch }}</span>
+              <span style="{{ person.badge }}">{{ person.status }}</span>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [] };
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'staff'), roleLabel: mod.roleLabels.admin });
+  }
+  renderVals() {
+    const badge = (bg, color) => ({ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: bg, color });
+    return {
+      navSections: this.state.navSections, roleLabel: this.state.roleLabel,
+      staff: [
+        { initials: 'NM', name: 'Naledi Mokoena', role: 'Senior Sales Agent', branch: 'Sandton', status: 'Active', badge: badge('#eaf3ee', '#2f7d5a') },
+        { initials: 'SK', name: 'Sipho Khumalo', role: 'Senior Sales Agent', branch: 'Sandton', status: 'Active', badge: badge('#eaf3ee', '#2f7d5a') },
+        { initials: 'RP', name: 'Riaan Pretorius', role: 'Senior Sales Agent', branch: 'Pretoria', status: 'Active', badge: badge('#eaf3ee', '#2f7d5a') },
+        { initials: 'LD', name: 'Lerato Dlamini', role: 'Sales Agent', branch: 'Sandton', status: 'Active', badge: badge('#eaf3ee', '#2f7d5a') },
+        { initials: 'JV', name: 'Johan van der Merwe', role: 'Junior Sales Agent', branch: 'Pretoria', status: 'Active', badge: badge('#eaf3ee', '#2f7d5a') },
+        { initials: 'TM', name: 'Thandiwe Morena', role: 'Managing Director', branch: 'Sandton', status: 'Active', badge: badge('#eaf3ee', '#2f7d5a') },
+        { initials: 'BN', name: 'Busisiwe Nkosi', role: 'HR Manager', branch: 'Sandton', status: 'Active', badge: badge('#eaf3ee', '#2f7d5a') },
+        { initials: 'KM', name: 'Kagiso Molefe', role: 'Branch Manager', branch: 'Pretoria', status: 'On Leave', badge: badge('#fbf3e3', '#c07c1e') },
+        { initials: 'AS', name: 'Anita Singh', role: 'Finance Administrator', branch: 'Sandton', status: 'Active', badge: badge('#eaf3ee', '#2f7d5a') },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

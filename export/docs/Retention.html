@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">Thandiwe Morena</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Documents / <span style="color:#1c1a19;font-weight:700">Retention & Compliance</span></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;max-width:900px">
+      <p style="font-size:13.5px;color:#6b6660;margin:0 0 22px">South African FICA and property-practitioner regulations require transaction records to be kept for 5 years. The system flags documents nearing their retention deadline and tracks compliance status per category.</p>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;overflow:hidden;margin-bottom:22px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="text-align:left;color:#6b6660;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;background:#faf8f6">
+            <th style="padding:12px 20px;font-weight:600">Document category</th><th style="padding:12px 0;font-weight:600">Retention period</th><th style="padding:12px 0;font-weight:600;text-align:right">Total records</th><th style="padding:12px 0;font-weight:600;text-align:right">Nearing expiry</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ categories }}" as="c" hint-placeholder-count="5">
+              <tr style="border-top:1px solid #f1ede9">
+                <td style="padding:14px 20px;font-weight:700">{{ c.name }}</td>
+                <td style="padding:14px 0;color:#6b6660">{{ c.period }}</td>
+                <td style="padding:14px 0;text-align:right">{{ c.total }}</td>
+                <td style="padding:14px 0;text-align:right"><span style="{{ c.badge }}">{{ c.expiring }}</span></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">Expiring in the next 90 days</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ expiring }}" as="e" hint-placeholder-count="3">
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:12px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:13.5px;font-weight:700">{{ e.name }}</div><div style="font-size:12px;color:#6b6660;margin-top:2px">{{ e.category }}</div></div>
+            <span style="{{ e.badge }}">Expires {{ e.date }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [] };
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'retention'), roleLabel: mod.roleLabels.admin });
+  }
+  renderVals() {
+    const badge = (bg, color) => ({ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: bg, color });
+    return {
+      navSections: this.state.navSections, roleLabel: this.state.roleLabel,
+      categories: [
+        { name: 'Sale transaction records', period: '5 years from registration', total: 412, expiring: 6, badge: badge('#fbf3e3', '#c07c1e') },
+        { name: 'Rental transaction records', period: '5 years from lease end', total: 268, expiring: 2, badge: badge('#eaf3ee', '#2f7d5a') },
+        { name: 'FICA / client due diligence', period: '5 years from relationship end', total: 190, expiring: 11, badge: badge('#f5e9e9', '#b42318') },
+        { name: 'Mandates', period: '5 years from expiry', total: 76, expiring: 0, badge: badge('#eaf3ee', '#2f7d5a') },
+        { name: 'Staff / HR records', period: '5 years post-employment', total: 34, expiring: 1, badge: badge('#eaf3ee', '#2f7d5a') },
+      ],
+      expiring: [
+        { name: 'FICA Pack — J. Radebe', category: 'FICA / client due diligence', date: '2 Nov 2026', badge: badge('#f5e9e9', '#b42318') },
+        { name: 'Sale file — 7 Benmore Gardens', category: 'Sale transaction records', date: '18 Nov 2026', badge: badge('#fbf3e3', '#c07c1e') },
+        { name: 'FICA Pack — T. Sithole', category: 'FICA / client due diligence', date: '29 Dec 2026', badge: badge('#fbf3e3', '#c07c1e') },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

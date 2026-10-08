@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="2">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="4">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Branch / <span style="color:#1c1a19;font-weight:700">Leave Approvals</span></div>
+    </header>
+    <main style="flex:1;padding:28px 32px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-if value="{{ empty }}"><div style="font-size:13px;color:#6b6660">No leave requests waiting for your approval.</div></sc-if>
+        <sc-for list="{{ requests }}" as="req" hint-placeholder-count="3">
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:12px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+            <div><div style="font-size:13.5px;font-weight:700">{{ req.name }} — {{ req.type }}</div><div style="font-size:12.5px;color:#6b6660;margin-top:2px">{{ req.dates }} · {{ req.days }} days</div></div>
+            <div style="display:flex;gap:8px">
+              <button onClick="{{ req.onApprove }}" style="padding:8px 14px;border:none;border-radius:8px;background:#2f7d5a;color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer">Approve</button>
+              <button onClick="{{ req.onDecline }}" style="padding:8px 14px;border:1px solid #e8e3e0;border-radius:8px;background:#fff;color:#b42318;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer">Decline</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], requests: [], loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.setState(await this.app.shell('leave-approvals', ['branch_manager']));
+    this.load();
+  }
+
+  // Scoped server-side to the manager's branch.
+  load = async () => {
+    const res = await this.app.run(() => this.app.api('/leave-requests?status=pending'));
+    if (res) this.setState({ requests: res.data, loaded: true });
+  };
+
+  decide = async (r, action) => {
+    const done = await this.app.run(() => this.app.api('/leave-requests/' + r.id + '/' + action, { method: 'POST' }),
+      r.name + "'s leave " + (action === 'approve' ? 'approved' : 'declined'));
+    if (done) this.load();
+  };
+
+  renderVals() {
+    const app = this.app;
+    const s = this.state;
+    const fmt = (n) => (Number(n) % 1 ? Number(n).toFixed(1) : Number(n));
+    return {
+      ...(app ? app.shellVals(s) : {}), empty: s.loaded && !s.requests.length,
+      requests: app ? s.requests.map((r) => ({
+        name: r.name, type: r.type_label, dates: app.dateRange(r.start_date, r.end_date), days: fmt(r.days),
+        onApprove: () => this.decide(r, 'approve'), onDecline: () => this.decide(r, 'decline'),
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

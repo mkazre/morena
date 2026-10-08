@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">Thandiwe Morena</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">People / <span style="color:#1c1a19;font-weight:700">Leave Management</span></div>
+      <button style="padding:9px 16px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ Capture leave</button>
+    </header>
+    <main style="flex:1;padding:28px 32px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:14px">Pending approvals</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px">
+        <sc-for list="{{ pending }}" as="req" hint-placeholder-count="2">
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:12px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:13.5px;font-weight:700">{{ req.name }} — {{ req.type }}</div>
+              <div style="font-size:12.5px;color:#6b6660;margin-top:2px">{{ req.dates }} · {{ req.days }} days</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button style="padding:8px 14px;border:none;border-radius:8px;background:#2f7d5a;color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer">Approve</button>
+              <button style="padding:8px 14px;border:1px solid #e8e3e0;border-radius:8px;background:#fff;color:#b42318;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer">Decline</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="font-size:14px;font-weight:700;margin-bottom:14px">Leave balances</div>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="text-align:left;color:#6b6660;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;background:#faf8f6">
+            <th style="padding:12px 20px;font-weight:600">Staff member</th><th style="padding:12px 0;font-weight:600;text-align:right">Annual leave</th><th style="padding:12px 0;font-weight:600;text-align:right">Sick leave</th><th style="padding:12px 0;font-weight:600;text-align:right">Taken (YTD)</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ balances }}" as="b" hint-placeholder-count="6">
+              <tr style="border-top:1px solid #f1ede9">
+                <td style="padding:14px 20px;font-weight:700">{{ b.name }}</td>
+                <td style="padding:14px 0;text-align:right">{{ b.annual }} days</td>
+                <td style="padding:14px 0;text-align:right">{{ b.sick }} days</td>
+                <td style="padding:14px 0;text-align:right;color:#6b6660">{{ b.taken }} days</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [] };
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'leave'), roleLabel: mod.roleLabels.admin });
+  }
+  renderVals() {
+    return {
+      navSections: this.state.navSections, roleLabel: this.state.roleLabel,
+      pending: [
+        { name: 'Kagiso Molefe', type: 'Annual Leave', dates: '20–24 Oct 2026', days: 5 },
+        { name: 'Anita Singh', type: 'Sick Leave', dates: '9 Oct 2026', days: 1 },
+      ],
+      balances: [
+        { name: 'Naledi Mokoena', annual: 12, sick: 8, taken: 9 },
+        { name: 'Sipho Khumalo', annual: 15, sick: 10, taken: 6 },
+        { name: 'Busisiwe Nkosi', annual: 9, sick: 7, taken: 12 },
+        { name: 'Kagiso Molefe', annual: 6, sick: 9, taken: 15 },
+        { name: 'Johan van der Merwe', annual: 18, sick: 10, taken: 1 },
+        { name: 'Anita Singh', annual: 11, sick: 5, taken: 10 },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

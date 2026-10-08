@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+</helmet>
+<div style="min-height:100vh;background:#faf8f6;font-family:'Plus Jakarta Sans',sans-serif;color:#1c1a19;display:flex;justify-content:center;padding:48px 20px;box-sizing:border-box">
+  <div style="width:100%;max-width:560px">
+    <img src="../assets/logo.png" alt="Morena Properties" style="width:200px;height:auto;margin-bottom:28px" />
+    <div style="background:#fff;border:1px solid #e8e3e0;border-radius:16px;padding:32px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#7a1528;margin-bottom:8px">Secure document upload</div>
+
+      <sc-if value="{{ closed }}">
+        <h1 style="font-size:22px;font-weight:700;margin:0 0 6px">{{ closedTitle }}</h1>
+        <p style="font-size:13.5px;color:#6b6660;margin:0">{{ closedMessage }}</p>
+      </sc-if>
+
+      <sc-if value="{{ open }}">
+        <h1 style="font-size:22px;font-weight:700;margin:0 0 6px">{{ heading }}</h1>
+        <p style="font-size:13.5px;color:#6b6660;margin:0 0 24px">Requested by {{ agent }}. Upload each document below — your agent will review and file them once submitted. This link is unique to you and expires after completion.</p>
+
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
+          <sc-for list="{{ items }}" as="item" hint-placeholder-count="4">
+            <div onClick="{{ item.onPick }}" style="{{ item.rowStyle }}">
+              <div>
+                <div style="font-size:13.5px;font-weight:700">{{ item.name }}</div>
+                <div style="font-size:12px;color:#6b6660;margin-top:2px">{{ item.hint }}</div>
+              </div>
+              <span style="{{ item.badge }}">{{ item.status }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div onClick="{{ onBrowse }}" onDragOver="{{ onDragOver }}" onDrop="{{ onDrop }}" style="border:2px dashed #e8c3cc;border-radius:12px;padding:28px;text-align:center;margin-bottom:20px;cursor:pointer">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">Drop files here or click to browse</div>
+          <div style="font-size:12px;color:#6b6660">PDF, JPG or PNG — max 10MB per file. Files fill the outstanding items in order, or click an item to choose its file.</div>
+        </div>
+
+        <sc-if value="{{ error }}">
+          <div style="font-size:13px;font-weight:600;color:#b42318;background:#f5e9e9;border-radius:10px;padding:10px 14px;margin-bottom:14px">{{ error }}</div>
+        </sc-if>
+        <sc-if value="{{ notice }}">
+          <div style="font-size:13px;font-weight:600;color:#2f7d5a;background:#eaf3ee;border-radius:10px;padding:10px 14px;margin-bottom:14px">{{ notice }}</div>
+        </sc-if>
+
+        <button onClick="{{ onSubmit }}" disabled="{{ busy }}" style="width:100%;padding:13px;border:none;border-radius:10px;background:#7a1528;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;opacity:{{ buttonOpacity }}">{{ buttonLabel }}</button>
+        <sc-if value="{{ agentPhone }}">
+          <div style="text-align:center;font-size:12px;color:#6b6660;margin-top:14px">Having trouble? WhatsApp your agent at {{ agentPhone }}</div>
+        </sc-if>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  // Public page — no login. The token comes from /u/{token} → ?t={token}.
+  state = { link: null, chosen: {}, busy: false, error: null, notice: null, closed: null };
+
+  async componentDidMount() {
+    this.token = new URLSearchParams(location.search).get('t') || '';
+    this.app = await import('../assets/app.js');
+    try {
+      this.setState({ link: await this.app.api('/upload-links/' + encodeURIComponent(this.token), { redirectOn401: false }) });
+    } catch (e) {
+      this.setState({ closed: e.message });
+    }
+  }
+
+  outstanding = () => (this.state.link ? this.state.link.items.filter((i) => i.status === 'required' && !this.state.chosen[i.id]) : []);
+
+  pickFor = (item) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png';
+    input.onchange = () => input.files[0] && this.assign([[item.id, input.files[0]]]);
+    input.click();
+  };
+
+  assign = (pairs) => {
+    const tooBig = pairs.find(([, f]) => f.size > 10 * 1024 * 1024);
+    if (tooBig) { this.setState({ error: tooBig[1].name + ' is larger than 10MB.' }); return; }
+    const chosen = { ...this.state.chosen };
+    for (const [id, f] of pairs) chosen[id] = f;
+    this.setState({ chosen, error: null, notice: null });
+  };
+
+  // Dropped / browsed files fill outstanding items in order.
+  fill = (files) => {
+    const slots = this.outstanding();
+    if (!slots.length) { this.setState({ error: 'Every item already has a file — click an item to replace its file.' }); return; }
+    this.assign(Array.from(files).slice(0, slots.length).map((f, i) => [slots[i].id, f]));
+  };
+
+  onBrowse = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.pdf,.jpg,.jpeg,.png';
+    input.onchange = () => this.fill(input.files);
+    input.click();
+  };
+  onDragOver = (e) => e.preventDefault();
+  onDrop = (e) => { e.preventDefault(); this.fill(e.dataTransfer.files); };
+
+  onSubmit = async () => {
+    const entries = Object.entries(this.state.chosen);
+    if (!entries.length) { this.setState({ error: 'Choose at least one file to upload.' }); return; }
+    const fd = new FormData();
+    for (const [id, f] of entries) fd.append('files[' + id + ']', f);
+    this.setState({ busy: true, error: null });
+    try {
+      const body = await this.app.api('/upload-links/' + encodeURIComponent(this.token) + '/submit', { method: 'POST', form: fd, redirectOn401: false });
+      const done = body.status === 'uploaded';
+      this.setState({ link: body, chosen: {}, notice: done ? 'Thank you — all your documents have been received. Your agent will be in touch.' : 'Received. Please upload the remaining required documents.' });
+    } catch (e) {
+      this.setState({ error: e.message });
+    }
+    this.setState({ busy: false });
+  };
+
+  renderVals() {
+    const s = this.state;
+    const l = s.link;
+    const badge = (bg, color) => ({ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: bg, color, flexShrink: 0 });
+    const expired = s.closed && /expired/i.test(s.closed);
+    const row = (clickable) => ({ border: '1px dashed #d8d2cd', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, cursor: clickable ? 'pointer' : 'default' });
+    return {
+      closed: !!s.closed, open: !!l && !s.closed,
+      closedTitle: expired ? 'This link has expired' : 'Link unavailable', closedMessage: s.closed,
+      heading: l ? (l.property ? 'Documents for ' + l.property : 'Documents for ' + l.client_name) : '',
+      agent: l ? l.agent : '', agentPhone: l ? l.agent_phone : null,
+      items: l ? l.items.map((i) => {
+        const file = s.chosen[i.id];
+        const status = file ? 'Ready to send' : i.status === 'required' ? (i.required ? 'Required' : 'Optional') : 'Uploaded';
+        const tone = file ? badge('#f1ede9', '#7a1528') : i.status === 'required' ? badge('#fbf3e3', '#c07c1e') : badge('#eaf3ee', '#2f7d5a');
+        return {
+          name: i.label, hint: file ? file.name : (i.hint || ''), status, badge: tone,
+          rowStyle: row(i.status === 'required'), onPick: () => i.status === 'required' && this.pickFor(i),
+        };
+      }) : [],
+      error: s.error, notice: s.notice, busy: s.busy, buttonOpacity: s.busy ? 0.7 : 1,
+      buttonLabel: s.busy ? 'Uploading…' : 'Submit documents',
+      onBrowse: this.onBrowse, onDragOver: this.onDragOver, onDrop: this.onDrop, onSubmit: this.onSubmit,
+    };
+  }
+}
+</script>
+</body>
+</html>

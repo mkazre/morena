@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">Thandiwe Morena</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">System / <span style="color:#1c1a19;font-weight:700">Settings</span></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;max-width:720px">
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">Company details</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="display:block;font-size:12px;font-weight:600;color:#6b6660;margin-bottom:5px">Company name</label><input type="text" value="Morena Properties" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13.5px" /></div>
+          <div><label style="display:block;font-size:12px;font-weight:600;color:#6b6660;margin-bottom:5px">VAT number</label><input type="text" value="4230198765" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13.5px" /></div>
+          <div><label style="display:block;font-size:12px;font-weight:600;color:#6b6660;margin-bottom:5px">Branches</label><input type="text" value="Sandton, Pretoria" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13.5px" /></div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">Branding</div>
+        <label style="display:block;font-size:12px;font-weight:600;color:#6b6660;margin-bottom:5px">Sidebar logo size — {{ logoWidth }}px</label>
+        <input type="range" min="100" max="260" step="10" value="{{ logoWidth }}" onInput="{{ onLogoWidthChange }}" style="width:100%" />
+        <div style="font-size:11.5px;color:#6b6660;margin-top:8px">Applies to the sidebar logo on every page. Saved immediately.</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">Integrations</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ integrations }}" as="i" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid #f1ede9">
+              <div><div style="font-size:13.5px;font-weight:700">{{ i.name }}</div><div style="font-size:12px;color:#6b6660;margin-top:2px">{{ i.desc }}</div></div>
+              <span style="{{ i.badge }}">{{ i.status }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button style="padding:12px 22px;border:none;border-radius:10px;background:#7a1528;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">Save settings</button>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], logoWidth: parseInt(localStorage.getItem('morena_logo_width')) || 170 };
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'settings'), roleLabel: mod.roleLabels.admin });
+  }
+  onLogoWidthChange = (e) => {
+    const w = parseInt(e.target.value);
+    localStorage.setItem('morena_logo_width', w);
+    window.dispatchEvent(new Event('storage'));
+    this.setState({ logoWidth: w });
+  };
+  renderVals() {
+    const badge = (bg, color) => ({ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: bg, color });
+    return {
+      navSections: this.state.navSections, roleLabel: this.state.roleLabel,
+      logoWidth: this.state.logoWidth, onLogoWidthChange: this.onLogoWidthChange,
+      integrations: [
+        { name: 'PayProp', desc: 'Rental collections & landlord statements', status: 'Not connected', badge: badge('#f1ede9', '#6b6660') },
+        { name: 'WhatsApp Business API', desc: 'Send upload links and reminders', status: 'Connected', badge: badge('#eaf3ee', '#2f7d5a') },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

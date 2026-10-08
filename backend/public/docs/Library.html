@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Documents / <span style="color:#1c1a19;font-weight:700">Library</span></div>
+      <button onClick="{{ onUpload }}" style="padding:9px 16px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ Upload document</button>
+    </header>
+    <main style="flex:1;padding:28px 32px;overflow-y:auto;min-height:0">
+      <div style="display:flex;gap:16px">
+        <div style="width:200px;flex-shrink:0">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#6b6660;margin-bottom:10px">Categories</div>
+          <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="6">
+            <div onClick="{{ cat.onSelect }}" style="{{ cat.rowStyle }}">{{ cat.name }} <span style="color:#6b6660;font-weight:500">{{ cat.count }}</span></div>
+          </sc-for>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:10px;margin-bottom:16px">
+            <input type="text" value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search documents, property, client…" style="flex:1;padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13px" />
+          </div>
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;overflow:hidden">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead><tr style="text-align:left;color:#6b6660;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;background:#faf8f6">
+                <th style="padding:12px 20px;font-weight:600">Document</th><th style="padding:12px 0;font-weight:600">Category</th><th style="padding:12px 0;font-weight:600">Linked to</th><th style="padding:12px 0;font-weight:600">Version</th><th style="padding:12px 0;font-weight:600">Uploaded</th><th style="padding:12px 20px;font-weight:600"></th>
+              </tr></thead>
+              <tbody>
+                <sc-if value="{{ empty }}"><tr><td colspan="6" style="padding:28px 20px;text-align:center;color:#6b6660">No documents found.</td></tr></sc-if>
+                <sc-for list="{{ files }}" as="f" hint-placeholder-count="8">
+                  <tr style="border-top:1px solid #f1ede9">
+                    <td style="padding:13px 20px;font-weight:700">{{ f.name }}</td>
+                    <td style="padding:13px 0;color:#6b6660">{{ f.category }}</td>
+                    <td style="padding:13px 0;color:#6b6660">{{ f.linkedTo }}</td>
+                    <td style="padding:13px 0"><span style="{{ f.versionBadge }}">v{{ f.version }}</span></td>
+                    <td style="padding:13px 0;color:#6b6660">{{ f.uploaded }}</td>
+                    <td style="padding:13px 20px"><a href="{{ f.url }}" style="font-weight:600;font-size:12.5px">Open</a></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], categories: [], total: 0, category: null, files: [], search: '', loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.forms = await import('../assets/forms.js');
+    this.setState(await this.app.shell('doc-library', ['admin', 'hr']));
+    this.loadCategories();
+    this.load();
+  }
+
+  loadCategories = async () => {
+    const res = await this.app.api('/document-categories');
+    this.setState({ categories: res.data, total: res.total });
+  };
+
+  load = async () => {
+    const s = this.state;
+    const q = new URLSearchParams({ per_page: 100 });
+    if (s.category) q.set('category', s.category);
+    if (s.search) q.set('search', s.search);
+    const seq = (this.seq = (this.seq || 0) + 1);
+    const res = await this.app.run(() => this.app.api('/documents?' + q));
+    if (res && seq === this.seq) this.setState({ files: res.data, loaded: true });
+  };
+
+  onSearch = (e) => { this.setState({ search: e.target.value }); clearTimeout(this.t); this.t = setTimeout(this.load, 250); };
+  onUpload = async () => {
+    if (await this.forms.documentForm()) { this.app.toast('Document uploaded'); this.loadCategories(); this.load(); }
+  };
+
+  renderVals() {
+    const app = this.app;
+    const s = this.state;
+    const catRow = (active) => ({ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: active ? 700 : 500, padding: '8px 10px', borderRadius: 8, background: active ? '#f1ede9' : 'transparent', color: '#1c1a19', marginBottom: 2, cursor: 'pointer' });
+    const vBadge = (v) => ({ fontSize: 11.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#f1ede9', color: v > 1 ? '#7a1528' : '#6b6660' });
+    const select = (id) => () => this.setState({ category: id }, this.load);
+    return {
+      ...(app ? app.shellVals(s) : {}), search: s.search, onSearch: this.onSearch, onUpload: this.onUpload,
+      empty: s.loaded && !s.files.length,
+      categories: [
+        { name: 'All documents', count: s.total, rowStyle: catRow(!s.category), onSelect: select(null) },
+        ...s.categories.map((c) => ({ name: c.name, count: c.count, rowStyle: catRow(s.category === c.id), onSelect: select(c.id) })),
+      ],
+      files: app ? s.files.map((f) => ({
+        name: f.name, category: f.category || '—', linkedTo: f.linked_to, version: f.version, versionBadge: vBadge(f.version),
+        uploaded: app.ago(f.uploaded_at), url: f.download_url,
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

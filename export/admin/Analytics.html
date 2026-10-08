@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">Thandiwe Morena</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Overview / <span style="color:#1c1a19;font-weight:700">Analytics</span></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <select style="padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-size:13px;font-family:inherit;background:#fff"><option>Year to date</option><option>This quarter</option><option>This month</option><option>Last 12 months</option></select>
+        <button style="padding:9px 14px;border:1px solid #e8e3e0;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;background:#fff;cursor:pointer">Export report</button>
+      </div>
+    </header>
+    <main style="flex:1;padding:28px 32px;overflow-y:auto;min-height:0">
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+          <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:16px 18px">
+            <div style="font-size:11.5px;color:#6b6660;font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.03em">{{ k.label }}</div>
+            <div style="font-size:21px;font-weight:700;margin-bottom:5px">{{ k.value }}</div>
+            <div style="font-size:12px;font-weight:600;color:{{ k.deltaColor }}">{{ k.delta }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px">
+            <div style="font-size:15px;font-weight:700">Monthly sales volume &amp; deal count</div>
+            <div style="display:flex;gap:14px;font-size:12px;color:#6b6660">
+              <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#7a1528;margin-right:5px"></span>Value (Rm)</span>
+              <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#c23552;margin-right:5px"></span>Deals</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:170px;margin-bottom:8px">
+            <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end">
+                <div style="font-size:10px;color:#6b6660;font-weight:600">{{ m.valueLabel }}</div>
+                <div style="display:flex;gap:3px;align-items:flex-end;height:100%">
+                  <div style="{{ m.barStyle }}"></div>
+                  <div style="{{ m.countBarStyle }}"></div>
+                </div>
+                <div style="font-size:11px;color:#6b6660">{{ m.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Pipeline funnel</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ funnel }}" as="f" hint-placeholder-count="6">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><span style="font-weight:600">{{ f.name }}</span><span style="color:#6b6660">{{ f.count }}</span></div>
+                <div style="height:20px;border-radius:5px;background:#f1ede9;overflow:hidden"><div style="{{ f.barStyle }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f1ede9;font-size:12px;color:#6b6660">Lead → Deal Closed conversion: <strong style="color:#1c1a19">18.4%</strong></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Deals &amp; value by branch</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ branches }}" as="b" hint-placeholder-count="3">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="font-weight:600">{{ b.name }}</span><span style="color:#6b6660">{{ b.count }} · R{{ b.value }}</span></div>
+                <div style="height:8px;border-radius:4px;background:#f1ede9"><div style="{{ b.barStyle }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Lead source performance</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ sources }}" as="s" hint-placeholder-count="5">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>{{ s.name }}</span><span style="font-weight:700">{{ s.pct }}%</span></div>
+                <div style="height:6px;border-radius:3px;background:#f1ede9"><div style="{{ s.barStyle }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Property type mix (sales)</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ propTypes }}" as="p" hint-placeholder-count="5">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>{{ p.name }}</span><span style="font-weight:700">{{ p.pct }}%</span></div>
+                <div style="height:6px;border-radius:3px;background:#f1ede9"><div style="{{ p.barStyle }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+            <div style="font-size:15px;font-weight:700">Agent leaderboard (YTD)</div>
+            <a href="../sales/Commissions.html" style="font-size:13px;font-weight:600">Commission detail →</a>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead><tr style="text-align:left;color:#6b6660;font-size:11px;text-transform:uppercase;letter-spacing:0.03em">
+              <th style="padding:0 0 8px;font-weight:600">Agent</th><th style="padding:0 0 8px;font-weight:600;text-align:right">Deals</th><th style="padding:0 0 8px;font-weight:600;text-align:right">Value</th><th style="padding:0 0 8px;font-weight:600;text-align:right">Avg. days</th><th style="padding:0 0 8px;font-weight:600;text-align:right">Commission</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ leaderboard }}" as="ag" hint-placeholder-count="8">
+                <tr style="border-top:1px solid #f1ede9">
+                  <td style="padding:10px 0;font-weight:600">{{ ag.name }}</td>
+                  <td style="padding:10px 0;text-align:right;color:#6b6660">{{ ag.deals }}</td>
+                  <td style="padding:10px 0;text-align:right">R{{ ag.value }}</td>
+                  <td style="padding:10px 0;text-align:right;color:#6b6660">{{ ag.avgDays }}</td>
+                  <td style="padding:10px 0;text-align:right;font-weight:700;color:#7a1528">R{{ ag.commission }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Sales velocity by stage</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ velocity }}" as="v" hint-placeholder-count="8">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid #f1ede9">
+                <span style="font-size:13px;font-weight:600">{{ v.name }}</span>
+                <span style="font-size:13px;color:#6b6660">avg {{ v.days }} days</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Commission payouts (last 6 months)</div>
+          <div style="display:flex;align-items:flex-end;gap:14px;height:120px">
+            <sc-for list="{{ commissionHist }}" as="c" hint-placeholder-count="6">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                <div style="font-size:10.5px;color:#6b6660;font-weight:600">R{{ c.valueLabel }}</div>
+                <div style="{{ c.barStyle }}"></div>
+                <div style="font-size:11px;color:#6b6660">{{ c.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Listings inventory health</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ inventory }}" as="i" hint-placeholder-count="4">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div><div style="font-size:13px;font-weight:600">{{ i.label }}</div><div style="font-size:11.5px;color:#6b6660">{{ i.sub }}</div></div>
+                <div style="font-size:19px;font-weight:700;color:{{ i.color }}">{{ i.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:16px">Lost deal reasons (last 90 days)</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px">
+          <sc-for list="{{ lostReasons }}" as="r" hint-placeholder-count="5">
+            <div style="text-align:center;padding:14px 8px;border:1px solid #f1ede9;border-radius:10px">
+              <div style="font-size:22px;font-weight:700;color:#b42318;margin-bottom:4px">{{ r.count }}</div>
+              <div style="font-size:12px;color:#6b6660">{{ r.name }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], roleLabel: 'Administrator' };
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'analytics'), roleLabel: mod.roleLabels.admin });
+  }
+  renderVals() {
+    const bar = (pct, color) => ({ width: '55%', height: pct + '%', borderRadius: '3px 3px 0 0', background: color });
+    const hbar = (pct, color) => ({ width: pct + '%', height: '100%', borderRadius: 4, background: color || '#7a1528' });
+    const months = ['Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'];
+    const heights = [48,40,55,48,62,58,70,65,80,74,90,84];
+    const deals = [8,6,9,8,11,10,13,12,15,14,17,15];
+    const values = [3.8,3.1,4.6,3.9,5.2,4.8,6.1,5.6,7.0,6.4,7.9,7.2];
+    return {
+      navSections: this.state.navSections, roleLabel: this.state.roleLabel,
+      kpis: [
+        { label: 'Total sales value (YTD)', value: 'R68.9m', delta: '+22% vs last year', deltaColor: '#2f7d5a' },
+        { label: 'Deals closed (YTD)', value: '138', delta: '+14 vs last year', deltaColor: '#2f7d5a' },
+        { label: 'Avg. deal size', value: 'R1.52m', delta: '+6% vs last year', deltaColor: '#2f7d5a' },
+        { label: 'Avg. days to close', value: '46', delta: '-5 days vs last year', deltaColor: '#2f7d5a' },
+        { label: 'Conversion (lead→deal)', value: '18.4%', delta: '+1.2pp vs last year', deltaColor: '#2f7d5a' },
+        { label: 'Commission paid (YTD)', value: 'R4.21m', delta: '6.1% effective rate', deltaColor: '#6b6660' },
+      ],
+      months: months.map((m, i) => ({ label: m, valueLabel: 'R'+values[i]+'m', barStyle: bar(heights[i], '#7a1528'), countBarStyle: bar(deals[i]*5.2, '#c23552') })),
+      funnel: [
+        { name: 'Leads', count: 410, barStyle: hbar(100) },
+        { name: 'Qualified', count: 268, barStyle: hbar(65) },
+        { name: 'Viewing Scheduled', count: 190, barStyle: hbar(46) },
+        { name: 'Offer Made', count: 104, barStyle: hbar(25) },
+        { name: 'FICA / Due Diligence', count: 88, barStyle: hbar(21) },
+        { name: 'Deal Closed', count: 76, barStyle: hbar(18) },
+      ],
+      branches: [
+        { name: 'Sandton', count: 84, value: '42.1m', barStyle: hbar(100) },
+        { name: 'Pretoria', count: 39, value: '18.6m', barStyle: hbar(44) },
+        { name: 'Midrand', count: 15, value: '8.2m', barStyle: hbar(19) },
+      ],
+      sources: [
+        { name: 'Referral', pct: 34, barStyle: hbar(100) },
+        { name: 'Website', pct: 28, barStyle: hbar(82) },
+        { name: 'WhatsApp', pct: 18, barStyle: hbar(53) },
+        { name: 'Walk-in', pct: 12, barStyle: hbar(35) },
+        { name: 'Portals (Property24/P24)', pct: 8, barStyle: hbar(24) },
+      ],
+      propTypes: [
+        { name: 'Freestanding house', pct: 41, barStyle: hbar(100) },
+        { name: 'Sectional title / apartment', pct: 33, barStyle: hbar(80) },
+        { name: 'Townhouse', pct: 16, barStyle: hbar(39) },
+        { name: 'Vacant land', pct: 6, barStyle: hbar(15) },
+        { name: 'Commercial', pct: 4, barStyle: hbar(10) },
+      ],
+      leaderboard: [
+        { name: 'Naledi Mokoena', deals: 19, value: '21.4m', avgDays: 38, commission: '412,900' },
+        { name: 'Sipho Khumalo', deals: 16, value: '17.1m', avgDays: 41, commission: '356,200' },
+        { name: 'Riaan Pretorius', deals: 13, value: '14.6m', avgDays: 44, commission: '298,500' },
+        { name: 'Lerato Dlamini', deals: 12, value: '11.9m', avgDays: 47, commission: '251,300' },
+        { name: 'Johan van der Merwe', deals: 9, value: '8.7m', avgDays: 52, commission: '178,900' },
+      ],
+      velocity: [
+        { name: 'Lead → Qualified', days: 4 }, { name: 'Qualified → Viewing Scheduled', days: 6 },
+        { name: 'Viewing Scheduled → Offer Made', days: 11 }, { name: 'Offer Made → Offer Accepted', days: 3 },
+        { name: 'Offer Accepted → FICA/Due Diligence', days: 5 }, { name: 'FICA/Due Diligence → Bond Approved', days: 14 },
+        { name: 'Bond Approved → Deed of Sale Signed', days: 7 }, { name: 'Deed of Sale Signed → Registration', days: 32 },
+      ],
+      commissionHist: ['May','Jun','Jul','Aug','Sep','Oct'].map((l,i)=>{
+        const v=[612,580,705,668,742,784][i];
+        return { label:l, valueLabel: v.toLocaleString(), barStyle: { width:'60%', height:(v/800*100)+'%', borderRadius:'4px 4px 0 0', background:'#7a1528' } };
+      }),
+      inventory: [
+        { label: 'Active listings', sub: 'Currently on market', value: '94', color: '#1c1a19' },
+        { label: 'Under offer', sub: 'Awaiting registration', value: '31', color: '#c07c1e' },
+        { label: 'Avg. days on market', sub: 'Across active listings', value: '52', color: '#1c1a19' },
+        { label: 'Expired mandates (90d)', sub: 'Need renewal or relist', value: '7', color: '#b42318' },
+      ],
+      lostReasons: [
+        { name: 'Bond declined', count: 14 }, { name: 'Price disagreement', count: 11 },
+        { name: 'Buyer withdrew', count: 9 }, { name: 'Chose another property', count: 7 }, { name: 'Seller withdrew mandate', count: 4 },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

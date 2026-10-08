@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0}
+    a{color:#7a1528;text-decoration:none}
+    a:hover{color:#561020}
+    ::-webkit-scrollbar{height:8px;width:8px}
+    ::-webkit-scrollbar-thumb{background:#e8e3e0;border-radius:4px}
+  </style>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" />
+    </div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}">
+              <span style="{{ item.iconStyle }}">{{ item.icon }}</span>
+              {{ item.label }}
+            </a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">TM</div>
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">Thandiwe Morena</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }}</div>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / <span style="color:#1c1a19;font-weight:700">Pipeline Board</span></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="./PipelineSettings.html" style="font-size:13px;font-weight:600;border:1px solid #e8e3e0;padding:8px 14px;border-radius:8px">⚙ Edit stages</a>
+        <button style="padding:9px 16px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ New deal</button>
+      </div>
+    </header>
+
+    <main style="flex:1;padding:24px 28px;overflow-x:auto;overflow-y:hidden">
+      <div style="display:flex;gap:16px;height:100%;min-width:max-content">
+        <sc-for list="{{ stages }}" as="stage" hint-placeholder-count="6">
+          <div style="width:280px;flex-shrink:0;display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 4px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="{{ stage.dotStyle }}"></span>
+                <span style="font-size:13.5px;font-weight:700">{{ stage.name }}</span>
+              </div>
+              <span style="font-size:12px;color:#6b6660;font-weight:600">{{ stage.count }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding-bottom:12px">
+              <sc-for list="{{ stage.deals }}" as="deal" hint-placeholder-count="2">
+                <div style="background:#fff;border:1px solid #e8e3e0;border-radius:12px;padding:14px">
+                  <div style="font-size:13.5px;font-weight:700;margin-bottom:4px">{{ deal.property }}</div>
+                  <div style="font-size:12px;color:#6b6660;margin-bottom:10px">{{ deal.agent }}</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-size:14px;font-weight:700;color:#7a1528">R{{ deal.value }}</span>
+                    <span style="font-size:11px;color:#6b6660">{{ deal.days }}d in stage</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], roleLabel: 'Administrator' };
+
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('admin', 'pipeline'), roleLabel: mod.roleLabels.admin });
+  }
+
+  renderVals() {
+    const dot = (color) => ({ width: 9, height: 9, borderRadius: '50%', background: color });
+    const stageDefs = [
+      { name: 'Lead', color: '#e8c3cc' },
+      { name: 'Viewing Scheduled', color: '#d79aab' },
+      { name: 'Offer Made', color: '#c23552' },
+      { name: 'FICA / Due Diligence', color: '#a3233f' },
+      { name: 'Bond Approved', color: '#7a1528' },
+      { name: 'Registration', color: '#561020' },
+    ];
+    const dealsByStage = [
+      [
+        { property: '3 Fourways Gardens', agent: 'Johan van der Merwe', value: '1,350,000', days: 2 },
+        { property: '19 Parkview Lane', agent: 'Naledi Mokoena', value: '2,100,000', days: 5 },
+      ],
+      [
+        { property: '8 Melrose Close', agent: 'Lerato Dlamini', value: '990,000', days: 4 },
+        { property: '41 Bryanston Road', agent: 'Sipho Khumalo', value: '3,400,000', days: 1 },
+      ],
+      [
+        { property: '14 Rivonia Views', agent: 'Naledi Mokoena', value: '2,450,000', days: 7 },
+      ],
+      [
+        { property: '12 Umhlanga Ridge', agent: 'Riaan Pretorius', value: '4,100,000', days: 9 },
+      ],
+      [
+        { property: 'Unit 6, Oakfield Estate', agent: 'Sipho Khumalo', value: '1,890,000', days: 3 },
+      ],
+      [
+        { property: '22 Sandton Heights', agent: 'Riaan Pretorius', value: '5,200,000', days: 14 },
+      ],
+    ];
+    return {
+      navSections: this.state.navSections,
+      roleLabel: this.state.roleLabel,
+      stages: stageDefs.map((s, i) => ({
+        name: s.name, dotStyle: dot(s.color), count: dealsByStage[i].length, deals: dealsByStage[i],
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>

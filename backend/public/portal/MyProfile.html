@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="2">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="8">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">My Workspace / <span style="color:#1c1a19;font-weight:700">My Profile</span></div>
+      <button onClick="{{ onEdit }}" style="padding:9px 16px;border:1px solid #e8e3e0;border-radius:8px;background:#fff;color:#1c1a19;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer">Edit</button>
+    </header>
+    <main style="flex:1;padding:28px 32px;max-width:640px">
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">Personal details</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13.5px">
+          <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Full name</div><div style="font-weight:600">{{ p.name }}</div></div>
+          <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Role</div><div style="font-weight:600">{{ p.role }}</div></div>
+          <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Branch</div><div style="font-weight:600">{{ p.branch }}</div></div>
+          <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Commission tier</div><div style="font-weight:600">{{ p.tier }}</div></div>
+          <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Email</div><div style="font-weight:600">{{ p.email }}</div></div>
+          <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">Phone</div><div style="font-weight:600">{{ p.phone }}</div></div>
+          <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">FFC number</div><div style="font-weight:600">{{ p.ffc }}</div></div>
+          <div><div style="color:#6b6660;font-size:12px;margin-bottom:3px">FFC expiry</div><div style="font-weight:600">{{ p.ffcExpiry }}</div></div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px">Change password</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <input type="password" name="current_password" value="{{ pw.current_password }}" onChange="{{ onPw }}" placeholder="Current password" style="padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13.5px" />
+          <input type="password" name="password" value="{{ pw.password }}" onChange="{{ onPw }}" placeholder="New password" style="padding:10px 12px;border:1px solid #e8e3e0;border-radius:8px;font-family:inherit;font-size:13.5px" />
+          <button onClick="{{ onPassword }}" style="padding:11px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer">Update password</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], profile: null, pw: { current_password: '', password: '' } };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.setState(await this.app.shell('profile', ['agent']));
+    this.load();
+  }
+
+  load = async () => {
+    const profile = await this.app.run(() => this.app.api('/staff/' + this.state.me.staff_id));
+    if (profile) this.setState({ profile });
+  };
+
+  onPw = (e) => this.setState({ pw: { ...this.state.pw, [e.target.name]: e.target.value } });
+
+  onPassword = async () => {
+    const ok = await this.app.run(() => this.app.api('/auth/password', { method: 'PUT', body: this.state.pw }), 'Password updated');
+    if (ok !== undefined) this.setState({ pw: { current_password: '', password: '' } });
+  };
+
+  // Agents may update their own contact number; everything else is maintained by HR.
+  onEdit = async () => {
+    const st = this.state.profile.staff;
+    const saved = await this.app.form({
+      title: 'Edit my details', intro: 'Name, role, branch and FFC details are maintained by HR — ask them to update those.',
+      submitLabel: 'Save', fields: [{ name: 'phone', label: 'Phone', value: st.phone }],
+      onSubmit: (v) => this.app.api('/staff/' + st.id, { method: 'PUT', body: v }),
+    });
+    if (saved) { this.app.toast('Details saved'); this.load(); }
+  };
+
+  renderVals() {
+    const app = this.app;
+    const s = this.state;
+    const p = s.profile;
+    const st = p ? p.staff : null;
+    return {
+      ...(app ? app.shellVals(s) : {}), pw: s.pw, onPw: this.onPw, onPassword: this.onPassword, onEdit: this.onEdit,
+      p: st && app ? {
+        name: st.name, role: st.role_title, branch: st.branch || '—', tier: p.commission_tier ? p.commission_tier.label : '—',
+        email: st.email, phone: st.phone || '—', ffc: st.ffc_number || 'Pending', ffcExpiry: app.date(st.ffc_expiry),
+      } : {},
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:220px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="1">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="2">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Landlord Portal / <span style="color:#1c1a19;font-weight:700">Overview</span></div>
+    </header>
+    <main style="flex:1;padding:28px 32px">
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 4px">Welcome, M. &amp; S. Abrahams</h1>
+      <div style="font-size:13px;color:#6b6660;margin-bottom:22px">Rentals are managed via PayProp — this view shows your sales-side activity with Morena Properties.</div>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px">Your property sale</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:14.5px;font-weight:700">14 Rivonia Views</div><div style="font-size:12.5px;color:#6b6660;margin-top:2px">Listed with Naledi Mokoena</div></div>
+          <span style="font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;background:#f1ede9;color:#7a1528">Offer Accepted</span>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px">Recent updates</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ updates }}" as="u" hint-placeholder-count="3">
+            <div style="font-size:13px"><span style="font-weight:600">{{ u.text }}</span><span style="color:#6b6660"> — {{ u.when }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [] };
+  async componentDidMount() {
+    const mod = await import('../shell/nav-config.js');
+    this.setState({ navSections: mod.decorateNav('landlord', 'dashboard'), roleLabel: mod.roleLabels.landlord });
+  }
+  renderVals() {
+    return {
+      navSections: this.state.navSections, roleLabel: this.state.roleLabel,
+      updates: [
+        { text: 'Offer accepted on your property', when: 'Today' },
+        { text: 'Buyer FICA documents received', when: '3 days ago' },
+        { text: 'Mandate renewed', when: '2 weeks ago' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
