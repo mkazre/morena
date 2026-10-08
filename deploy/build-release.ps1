@@ -47,8 +47,9 @@ Write-Host "Manifest: $($files.Count) files"
 
 Write-Host "Zipping to $zip ..."
 if (Test-Path $zip) { Remove-Item -Force $zip }
-# Windows' bundled bsdtar writes real zips and keeps dotfiles such as public/.htaccess.
-cmd /c "tar -a -c -f `"$zip`" -C `"$stage`" . 2>&1"
+# Our own zipper sets Linux permissions explicitly (folders 755, files 644) and keeps dotfiles like public/.htaccess.
+# Don't use Windows' tar here: it copies read-only folder attributes into the zip, which breaks updates on cPanel.
+node (Join-Path $PSScriptRoot 'zip-release.js') $stage $zip
 if ($LASTEXITCODE -ne 0) { throw 'zip failed' }
 
 Remove-Item -Recurse -Force $stage
