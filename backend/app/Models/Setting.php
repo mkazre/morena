@@ -15,6 +15,9 @@ class Setting extends Model
 
     public static function current(): self
     {
-        return static::query()->firstOrCreate(['id' => 1]);
+        $s = static::query()->firstOrCreate(['id' => 1]);
+
+        // A just-created row has no DB defaults loaded yet.
+        return $s->wasRecentlyCreated ? $s->fresh() : $s;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models\Accounting;
 
+use App\Casts\DateOnly;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
@@ -12,12 +13,15 @@ class AccountingSetting extends Model
 
     protected function casts(): array
     {
-        return ['lock_date' => 'date', 'auto_invoice_on_deal_close' => 'boolean'];
+        return ['lock_date' => DateOnly::class, 'auto_invoice_on_deal_close' => 'boolean'];
     }
 
     public static function current(): self
     {
-        return static::query()->firstOrCreate(['id' => 1]);
+        $s = static::query()->firstOrCreate(['id' => 1]);
+
+        // A just-created row has no DB defaults loaded yet.
+        return $s->wasRecentlyCreated ? $s->fresh() : $s;
     }
 
     /** First day of the financial year containing $date (SA default: 1 March). */

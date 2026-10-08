@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public const ROLES = ['admin', 'branch_manager', 'hr', 'agent', 'landlord', 'tenant'];
+    public const ROLES = ['admin', 'branch_manager', 'hr', 'finance', 'agent', 'landlord', 'tenant'];
 
     public function index()
     {

@@ -1,6 +1,21 @@
 // Single source of truth for sidebar nav per role. Each page's logic class
 // does: import('./shell/nav-config.js') (relative path adjusted per folder depth)
 // and exposes { navSections, roleLabel } to the template.
+// Accounting module — shared by admins and the "finance" role.
+const FINANCE_SECTION = { title: 'Finance', items: [
+  { key: 'fin-dashboard', label: 'Finance Overview', icon: 'R', href: '../finance/Dashboard.html' },
+  { key: 'fin-invoices', label: 'Invoices', icon: '↗', href: '../finance/Invoices.html' },
+  { key: 'fin-bills', label: 'Bills', icon: '↙', href: '../finance/Bills.html' },
+  { key: 'fin-payments', label: 'Payments & Expenses', icon: '⇄', href: '../finance/Payments.html' },
+  { key: 'fin-banking', label: 'Banking', icon: '▭', href: '../finance/Banking.html' },
+  { key: 'fin-journals', label: 'Journals', icon: '≡', href: '../finance/Journals.html' },
+  { key: 'fin-accounts', label: 'Chart of Accounts', icon: '#', href: '../finance/Accounts.html' },
+  { key: 'fin-contacts', label: 'Customers & Suppliers', icon: '◎', href: '../finance/Contacts.html' },
+  { key: 'fin-payroll', label: 'Payroll', icon: '◔', href: '../finance/Payroll.html' },
+  { key: 'fin-reports', label: 'Financial Reports', icon: '▤', href: '../finance/Reports.html' },
+  { key: 'fin-settings', label: 'Finance Settings', icon: '⚙', href: '../finance/Settings.html' },
+]};
+
 export function getNavForRole(role) {
   const sections = {
     admin: [
@@ -33,11 +48,13 @@ export function getNavForRole(role) {
         { key: 'courses', label: 'Courses', icon: '◈', href: '../training/Courses.html' },
         { key: 'certifications', label: 'Certifications', icon: '◇', href: '../training/Certifications.html' },
       ]},
+      FINANCE_SECTION,
       { title: 'System', items: [
         { key: 'users', label: 'Users & Roles', icon: '◑', href: '../admin/Users.html' },
         { key: 'settings', label: 'Settings', icon: '⚙', href: '../admin/Settings.html' },
       ]},
     ],
+    finance: [FINANCE_SECTION],
     agent: [
       { title: 'My Workspace', items: [
         { key: 'dashboard', label: 'My Dashboard', icon: '◧', href: '../portal/Dashboard.html' },
@@ -108,5 +125,5 @@ export function decorateNav(role, activeKey) {
 
 export const roleLabels = {
   admin: 'Administrator', agent: 'Sales Agent', manager: 'Branch Manager',
-  hr: 'HR Staff', landlord: 'Landlord', tenant: 'Tenant',
+  hr: 'HR Staff', finance: 'Finance', landlord: 'Landlord', tenant: 'Tenant',
 };

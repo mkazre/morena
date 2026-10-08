@@ -2,6 +2,7 @@
 
 namespace App\Models\Accounting;
 
+use App\Casts\DateOnly;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ class JournalEntry extends Model
 
     protected function casts(): array
     {
-        return ['date' => 'date'];
+        return ['date' => DateOnly::class];
     }
 
     public function lines(): HasMany

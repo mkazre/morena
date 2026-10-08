@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Financial Reports</span></div>
+      <div class="btn-row"><button class="btn" onClick="{{ onCsv }}">Export CSV</button>
+<button class="btn" onClick="{{ onPrint }}">Print / PDF</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="tabs no-print"><sc-for list="{{ reports }}" as="r"><div class="{{ r.cls }}" onClick="{{ r.onClick }}">{{ r.label }}</div></sc-for></div>
+<div class="toolbar no-print">
+  <sc-if value="{{ usesRange }}">
+    <select class="sel" value="{{ preset }}" onChange="{{ onPreset }}"><option value="">Custom dates</option><option value="this_month">This month</option><option value="last_month">Last month</option><option value="this_quarter">This quarter</option><option value="this_fy">This financial year</option><option value="last_fy">Last financial year</option></select>
+    <input class="inp" type="date" name="from" value="{{ from }}" onChange="{{ onParam }}" />
+    <input class="inp" type="date" name="to" value="{{ to }}" onChange="{{ onParam }}" />
+  </sc-if>
+  <sc-if value="{{ usesAsAt }}"><span class="muted small">As at</span><input class="inp" type="date" name="as_at" value="{{ asAt }}" onChange="{{ onParam }}" /></sc-if>
+  <sc-if value="{{ usesAccount }}"><select class="sel" style="min-width:260px" name="account_id" value="{{ accountId }}" onChange="{{ onParam }}"><option value="">Choose an account…</option><sc-for list="{{ accountOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></sc-if>
+  <sc-if value="{{ usesCompare }}"><label class="small muted" style="display:flex;gap:6px;align-items:center"><input type="checkbox" checked="{{ compare }}" onChange="{{ onCompare }}" /> Compare with previous period</label></sc-if>
+</div>
+
+<div class="sheet" style="max-width:none">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap">
+    <div><h2 style="font-size:20px">{{ title }}</h2><div class="muted">{{ company }} · {{ subtitle }}</div></div>
+    <sc-if value="{{ check }}"><span class="{{ check.cls }}">{{ check.text }}</span></sc-if>
+  </div>
+  <sc-if value="{{ note }}"><div class="notice warn" style="margin-bottom:14px">{{ note }}</div></sc-if>
+  <sc-if value="{{ loading }}"><div class="empty">Loading…</div></sc-if>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><sc-for list="{{ columns }}" as="c"><th class="{{ c.cls }}">{{ c.label }}</th></sc-for></tr></thead>
+    <tbody>
+      <sc-if value="{{ empty }}"><tr><td colspan="{{ colCount }}" class="empty">Nothing to show for this period.</td></tr></sc-if>
+      <sc-for list="{{ rows }}" as="r"><tr class="{{ r.cls }}"><sc-for list="{{ r.cells }}" as="c"><td class="{{ c.cls }}"><sc-if value="{{ c.href }}"><a href="{{ c.href }}">{{ c.text }}</a></sc-if><sc-if value="{{ c.plain }}">{{ c.text }}</sc-if></td></sc-for></tr></sc-for>
+    </tbody>
+  </table></div>
+</div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], report: 'profit-loss', preset: 'this_fy', from: '', to: '', asAt: '', accountId: '', compare: false, data: null, loading: false, accounts: [], company: '' };
+
+  REPORTS = [
+    ['profit-loss', 'Profit & loss', 'range'], ['balance-sheet', 'Balance sheet', 'asat'], ['cash-flow', 'Cash flow', 'range'],
+    ['trial-balance', 'Trial balance', 'asat'], ['general-ledger', 'General ledger', 'account'], ['aged-receivables', 'Aged debtors', 'asat'],
+    ['aged-payables', 'Aged creditors', 'asat'], ['vat', 'VAT (VAT201)', 'range'],
+  ];
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    const shell = await this.app.shell('fin-reports', ['admin', 'finance']);
+    const [lk, settings, fs] = await Promise.all([this.fin.lookups(), this.app.api('/settings'), this.app.api('/finance/settings')]);
+    this.presets = this.fin.periodPresets(fs.financial_year_start_month);
+    const p = this.app.param;
+    const [from, to] = this.presets.this_fy;
+    this.setState({
+      ...shell, accounts: lk.accounts, company: settings.company_name,
+      report: p('report') || 'profit-loss', accountId: p('account_id') || '', from: p('from') || from, to: p('to') || to,
+      asAt: p('as_at') || this.fin.today(), preset: p('from') ? '' : 'this_fy',
+    }, this.load);
+  }
+
+  query(extra = {}) {
+    const s = this.state;
+    const q = new URLSearchParams({ from: s.from, to: s.to, as_at: s.asAt, ...extra });
+    if (s.accountId) q.set('account_id', s.accountId);
+    if (s.compare) q.set('compare', '1');
+    return q;
+  }
+
+  load = async () => {
+    const s = this.state;
+    if (s.report === 'general-ledger' && !s.accountId) { this.setState({ data: null }); return; }
+    this.setState({ loading: true });
+    const seq = (this.seq = (this.seq || 0) + 1);
+    const data = await this.app.run(() => this.app.api('/finance/reports/' + s.report + '?' + this.query()));
+    if (seq === this.seq) this.setState({ data: data || null, loading: false });
+  };
+
+  onParam = (e) => this.setState({ [e.target.name === 'as_at' ? 'asAt' : e.target.name === 'account_id' ? 'accountId' : e.target.name]: e.target.value, preset: '' }, this.load);
+  onPreset = (e) => { const v = e.target.value; if (!v) return this.setState({ preset: '' }); const [from, to] = this.presets[v]; this.setState({ preset: v, from, to }, this.load); };
+  onCompare = (e) => this.setState({ compare: e.target.checked }, this.load);
+  onCsv = () => { location.href = '/api/v1/finance/reports/' + this.state.report + '?' + this.query({ format: 'csv' }); };
+  onPrint = () => window.print();
+
+  // ---- report → generic rows -------------------------------------------------------------
+  cell(text, cls = '', href = null) { return { text, cls, href, plain: !href }; }
+  money(n, strong) { return this.cell(this.fin.amt(n), 'num' + (n < 0 ? ' neg' : '') + (strong ? ' strong' : '')); }
+  ledger(r) { return r.account_id ? './Reports.html?report=general-ledger&account_id=' + r.account_id + '&from=' + this.state.from + '&to=' + this.state.to : null; }
+
+  build(d) {
+    const s = this.state;
+    const R = [];
+    const C = this.cell.bind(this);
+    const M = this.money.bind(this);
+    switch (s.report) {
+      case 'profit-loss': {
+        const prev = d.previous;
+        const cols = [{ label: 'Account' }, { label: prev ? 'This period' : 'Amount', cls: 'num' }, ...(prev ? [{ label: 'Previous', cls: 'num' }] : [])];
+        const prevAmt = (section, id) => { const r = prev && prev[section].rows.find((x) => x.account_id === id); return r ? r.amount : 0; };
+        const section = (key, label) => {
+          if (!d[key].rows.length && !(prev && prev[key].rows.length)) return;
+          R.push({ cls: 'section', cells: [C(label), C(''), ...(prev ? [C('')] : [])] });
+          d[key].rows.forEach((r) => R.push({ cls: 'indent', cells: [C(r.code + ' · ' + r.name, '', this.ledger(r)), M(r.amount), ...(prev ? [M(prevAmt(key, r.account_id))] : [])] }));
+          R.push({ cls: 'total', cells: [C('Total ' + label.toLowerCase()), M(d[key].total), ...(prev ? [M(prev[key].total)] : [])] });
+        };
+        const line = (label, v, pv) => R.push({ cls: 'total', cells: [C(label), M(v, true), ...(prev ? [M(pv, true)] : [])] });
+        section('income', 'Income'); section('cost_of_sales', 'Cost of sales');
+        line('Gross profit', d.gross_profit, prev && prev.gross_profit);
+        section('operating_expenses', 'Operating expenses');
+        line('Operating profit', d.operating_profit, prev && prev.operating_profit);
+        section('other_income', 'Other income'); section('other_expenses', 'Other expenses');
+        line('Net profit', d.net_profit, prev && prev.net_profit);
+        return { cols, rows: R, subtitle: this.app.date(d.from) + ' – ' + this.app.date(d.to) };
+      }
+      case 'balance-sheet': {
+        const group = (title, groups) => {
+          R.push({ cls: 'section', cells: [C(title), C('')] });
+          groups.forEach((g) => {
+            if (!g.rows.length) return;
+            R.push({ cls: 'strong', cells: [C(g.label, 'strong'), C('')] });
+            g.rows.forEach((r) => R.push({ cls: 'indent', cells: [C(r.code + ' · ' + r.name, '', this.ledger(r)), M(r.amount)] }));
+            R.push({ cls: 'total', cells: [C('Total ' + g.label.toLowerCase()), M(g.total)] });
+          });
+        };
+        group('Assets', d.assets);
+        R.push({ cls: 'total', cells: [C('TOTAL ASSETS'), M(d.total_assets, true)] });
+        group('Liabilities', d.liabilities);
+        R.push({ cls: 'total', cells: [C('Total liabilities'), M(d.total_liabilities, true)] });
+        R.push({ cls: 'section', cells: [C('Equity'), C('')] });
+        d.equity.rows.forEach((r) => R.push({ cls: 'indent', cells: [C((r.code ? r.code + ' · ' : '') + r.name, '', this.ledger(r)), M(r.amount)] }));
+        R.push({ cls: 'total', cells: [C('Total equity'), M(d.equity.total)] });
+        R.push({ cls: 'total', cells: [C('TOTAL LIABILITIES & EQUITY'), M(d.total_liabilities_and_equity, true)] });
+        return { cols: [{ label: 'Account' }, { label: 'Amount', cls: 'num' }], rows: R, subtitle: 'As at ' + this.app.date(d.as_at),
+          check: d.balanced ? { cls: 'badge b-ok', text: 'Balanced' } : { cls: 'badge b-danger', text: 'Out of balance' } };
+      }
+      case 'cash-flow': {
+        R.push({ cls: 'section', cells: [C('Operating activities'), C('')] });
+        R.push({ cls: 'indent', cells: [C('Net profit'), M(d.net_profit)] });
+        const sec = (key, label) => {
+          if (key !== 'operating') R.push({ cls: 'section', cells: [C(label), C('')] });
+          d[key].rows.forEach((r) => R.push({ cls: 'indent', cells: [C('Change in ' + r.name), M(r.amount)] }));
+          R.push({ cls: 'total', cells: [C('Net cash from ' + label.toLowerCase()), M(d[key].total)] });
+        };
+        sec('operating', 'Operating activities'); sec('investing', 'Investing activities'); sec('financing', 'Financing activities');
+        R.push({ cls: 'total', cells: [C('Net change in cash'), M(d.net_change, true)] });
+        R.push({ cells: [C('Cash at start of period'), M(d.opening_cash)] });
+        R.push({ cls: 'total', cells: [C('Cash at end of period'), M(d.closing_cash, true)] });
+        return { cols: [{ label: 'Indirect method' }, { label: 'Amount', cls: 'num' }], rows: R, subtitle: this.app.date(d.from) + ' – ' + this.app.date(d.to) };
+      }
+      case 'trial-balance':
+        d.rows.forEach((r) => R.push({ cells: [C(r.code), C(r.name, '', this.ledger(r)), r.debit ? M(r.debit) : C(''), r.credit ? M(r.credit) : C('')] }));
+        R.push({ cls: 'total', cells: [C(''), C('Totals'), M(d.total_debit, true), M(d.total_credit, true)] });
+        return { cols: [{ label: 'Code' }, { label: 'Account' }, { label: 'Debit', cls: 'num' }, { label: 'Credit', cls: 'num' }], rows: R, subtitle: 'As at ' + this.app.date(d.as_at),
+          check: Math.abs(d.total_debit - d.total_credit) < 0.01 ? { cls: 'badge b-ok', text: 'Debits = credits' } : { cls: 'badge b-danger', text: 'Out of balance' } };
+      case 'general-ledger':
+        R.push({ cls: 'strong', cells: [C(this.app.date(d.from)), C(''), C('Opening balance'), C(''), C(''), C(''), M(d.opening_balance, true)] });
+        d.lines.forEach((l) => R.push({ cells: [C(this.app.date(l.date)), C(l.number, '', './Journals.html?id=' + l.entry_id), C(l.description || ''), C(l.contact || '', 'muted'), l.debit ? M(l.debit) : C(''), l.credit ? M(l.credit) : C(''), M(l.balance)] }));
+        R.push({ cls: 'total', cells: [C(this.app.date(d.to)), C(''), C('Closing balance'), C(''), C(''), C(''), M(d.closing_balance, true)] });
+        return { cols: ['Date', 'Entry', 'Description', 'Contact', 'Debit', 'Credit', 'Balance'].map((label, i) => ({ label, cls: i >= 4 ? 'num' : '' })), rows: R,
+          subtitle: d.account.code + ' · ' + d.account.name + ' · ' + this.app.date(d.from) + ' – ' + this.app.date(d.to) };
+      case 'aged-receivables':
+      case 'aged-payables': {
+        const kind = s.report === 'aged-receivables' ? 'invoices' : 'bills';
+        d.rows.forEach((r) => R.push({ cells: [C(r.contact, '', './' + (kind === 'invoices' ? 'Invoices' : 'Bills') + '.html?status=outstanding'), M(r.current), M(r.d30), M(r.d60), M(r.d90), M(r.d90plus), M(r.total, true)] }));
+        const t = d.totals;
+        R.push({ cls: 'total', cells: [C('Total'), M(t.current), M(t.d30), M(t.d60), M(t.d90), M(t.d90plus), M(t.total, true)] });
+        return { cols: [kind === 'invoices' ? 'Customer' : 'Supplier', 'Current', '1–30 days', '31–60', '61–90', '90+', 'Total'].map((label, i) => ({ label, cls: i ? 'num' : '' })), rows: R, subtitle: 'As at ' + this.app.date(d.as_at) };
+      }
+      case 'vat': {
+        const row = (label, v, cls) => R.push({ cls, cells: [C(label), M(v, cls === 'total')] });
+        R.push({ cls: 'section', cells: [C('Output tax (sales)'), C('')] });
+        row('Standard-rated supplies (excl. VAT)', d.supplies.standard_excl, 'indent');
+        row('Standard-rated supplies (incl. VAT) — field 1', d.supplies.standard_incl, 'indent');
+        row('Zero-rated supplies — field 2', d.supplies.zero_rated, 'indent');
+        row('Exempt supplies — field 3', d.supplies.exempt, 'indent');
+        row('Output VAT — field 4', d.output_vat, 'total');
+        R.push({ cls: 'section', cells: [C('Input tax (purchases)'), C('')] });
+        row('Standard-rated purchases (excl. VAT)', d.purchases.standard_excl, 'indent');
+        row('Input VAT — field 15', d.input_vat, 'total');
+        row(d.net_vat >= 0 ? 'VAT payable to SARS — field 20' : 'VAT refundable by SARS — field 20', Math.abs(d.net_vat), 'total');
+        return { cols: [{ label: 'VAT201 line' }, { label: 'Amount', cls: 'num' }], rows: R, subtitle: this.app.date(d.from) + ' – ' + this.app.date(d.to),
+          note: 'Prepared from the ledger as a working paper for the VAT201. Check it against your source documents before submitting on SARS eFiling.' };
+      }
+    }
+    return { cols: [], rows: [] };
+  }
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const def = this.REPORTS.find((r) => r[0] === s.report) || this.REPORTS[0];
+    const built = app && s.data ? this.build(s.data) : { cols: [{ label: '' }], rows: [] };
+    return {
+      ...(app ? app.shellVals(s) : {}), company: s.company, title: def[1], subtitle: built.subtitle || '', check: built.check || null, note: built.note || null,
+      reports: this.REPORTS.map(([k, label]) => ({ label, cls: 'tab' + (k === s.report ? ' on' : ''), onClick: () => this.setState({ report: k, data: null }, this.load) })),
+      usesRange: def[2] === 'range' || def[2] === 'account', usesAsAt: def[2] === 'asat', usesAccount: def[2] === 'account', usesCompare: s.report === 'profit-loss',
+      preset: s.preset, from: s.from, to: s.to, asAt: s.asAt, accountId: s.accountId, compare: s.compare,
+      accountOptions: fin ? fin.accountOptions(s.accounts) : [],
+      onParam: this.onParam, onPreset: this.onPreset, onCompare: this.onCompare, onCsv: this.onCsv, onPrint: this.onPrint,
+      loading: s.loading, columns: built.cols, colCount: built.cols.length, rows: built.rows,
+      empty: !s.loading && s.data && built.rows.length <= 1 && s.report !== 'balance-sheet' && s.report !== 'vat' && s.report !== 'cash-flow',
+    };
+  }
+}
+</script>
+</body>
+</html>

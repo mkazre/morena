@@ -2,7 +2,21 @@
 
 namespace Database\Seeders;
 
+use App\Models\Accounting\Account;
+use App\Models\Accounting\AccountingSetting;
+use App\Models\Accounting\BankTransaction;
+use App\Models\Accounting\Bill;
+use App\Models\Accounting\Contact;
+use App\Models\Accounting\Invoice;
+use App\Models\Accounting\JournalLine;
+use App\Models\Accounting\PayrollProfile;
+use App\Models\Accounting\TaxRate;
 use App\Models\Branch;
+use App\Services\Accounting\Automation;
+use App\Services\Accounting\DocumentService;
+use App\Services\Accounting\Ledger;
+use App\Services\Accounting\PaymentService;
+use App\Services\Accounting\PayrollService;
 use App\Models\Certification;
 use App\Models\ClientUploadLink;
 use App\Models\Commission;
@@ -73,6 +87,7 @@ class DemoSeeder extends Seeder
             $this->uploadLinks();
             $this->hr();
             $this->training();
+            $this->accounting();
         });
     }
 
@@ -86,7 +101,7 @@ class DemoSeeder extends Seeder
             ['thandiwe', 'Thandiwe Morena', 'thandiwe@morenaproperties.co.za', '082 100 2000', 'admin', 'Managing Director', 'admin', 'Sandton', 'permanent', '2015-03-01', null, null, 'active', '08:12'],
             ['kagiso', 'Kagiso Molefe', 'kagiso.m@morenaproperties.co.za', '083 455 1290', 'branch_manager', 'Branch Manager', 'admin', 'Pretoria', 'permanent', '2022-01-14', null, null, 'on_leave', '07:50'],
             ['busisiwe', 'Busisiwe Nkosi', 'busisiwe.n@morenaproperties.co.za', '072 118 4432', 'hr', 'HR Manager', 'hr', 'Sandton', 'permanent', '2020-02-01', null, null, 'active', '-1 day'],
-            ['anita', 'Anita Singh', 'anita.s@morenaproperties.co.za', '076 901 2245', 'hr', 'Finance Administrator', 'finance', 'Sandton', 'permanent', '2018-06-09', null, null, 'active', '-3 days'],
+            ['anita', 'Anita Singh', 'anita.s@morenaproperties.co.za', '076 901 2245', 'finance', 'Finance Administrator', 'finance', 'Sandton', 'permanent', '2018-06-09', null, null, 'active', '-3 days'],
             ['naledi', 'Naledi Mokoena', 'naledi.m@morenaproperties.co.za', '082 334 1120', 'agent', 'Senior Sales Agent', 'sales', 'Sandton', 'independent_contractor', '2021-03-03', 'FFC2021038812', '2026-12-31', 'active', '09:02'],
             ['sipho', 'Sipho Khumalo', 'sipho.k@morenaproperties.co.za', '071 556 8890', 'agent', 'Senior Sales Agent', 'sales', 'Sandton', 'independent_contractor', '2019-07-18', 'FFC2019027741', '2026-12-31', 'active', '-2 days'],
             ['riaan', 'Riaan Pretorius', 'riaan.p@morenaproperties.co.za', '083 772 0041', 'agent', 'Senior Sales Agent', 'sales', 'Pretoria', 'independent_contractor', '2018-04-02', 'FFC2018019203', '2026-12-31', 'active', '-1 day'],
@@ -548,6 +563,143 @@ class DemoSeeder extends Seeder
                     'status' => $complete ? 'complete' : 'in_progress', 'completed_at' => $complete ? $completedAt : null]);
             }
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    /** Two years of agency books generated through the real accounting services, so every report balances. */
+    private function accounting(): void
+    {
+        $ledger = app(Ledger::class);
+        $docs = app(DocumentService::class);
+        $payments = app(PaymentService::class);
+        $automation = app(Automation::class);
+        $bank = Account::system('bank_main');
+        $std = TaxRate::where('code', 'STD')->value('id');
+        $none = TaxRate::where('code', 'NONE')->value('id');
+        $acc = fn ($code) => Account::where('code', $code)->value('id');
+        $start = now()->startOfMonth()->subMonths(23);
+
+        $ledger->post(['date' => $start->copy()->subDay(), 'memo' => 'Opening balances', 'reference' => 'OB'], [
+            ['account_id' => $bank->id, 'debit' => 450000], ['account_id' => $acc('1510'), 'debit' => 85000],
+            ['account_id' => Account::system('opening_balance')->id, 'credit' => 535000],
+        ]);
+
+        // Commission invoices for every closed sale; paid by the conveyancer a week later.
+        Deal::where('status', 'closed')->with(['commission', 'seller'])->orderBy('closed_at')->each(function (Deal $d) use ($docs, $payments, $ledger, $automation, $bank, $std) {
+            $c = $d->commission;
+            if (! $c) {
+                return;
+            }
+            $contact = Contact::firstOrCreate(['name' => $d->seller_name ?: 'Seller — '.$d->property_title, 'type' => 'customer']);
+            $inv = $docs->approve($docs->save(new Invoice, [
+                'contact_id' => $contact->id, 'deal_id' => $d->id, 'date' => $d->closed_at->toDateString(), 'due_date' => $d->closed_at->copy()->addDays(30)->toDateString(),
+                'reference' => $d->property_title, 'lines' => [[
+                    'account_id' => Account::system('commission_income')->id, 'tax_rate_id' => $std, 'quantity' => 1, 'unit_price' => $c->commission_amount,
+                    'description' => 'Sales commission — '.$d->property_title,
+                ]],
+            ], null), null);
+            $paidOn = $d->closed_at->copy()->addDays(7);
+            if ($paidOn->isPast()) {
+                $payments->record(['direction' => 'received', 'bank_account_id' => $bank->id, 'date' => $paidOn->toDateString(), 'reference' => 'Conveyancer '.$d->property_title,
+                    'allocations' => [['id' => $inv->id, 'amount' => $inv->total]]], null);
+            }
+            if ($c->status === 'paid') {
+                $lines = [];
+                foreach ([[$c->agent_id, $c->agent_share], [$c->co_agent_id, $c->co_agent_share], [$c->referral_agent_id, $c->referral_fee_amount]] as [$sid, $amt]) {
+                    if ($sid && $amt > 0) {
+                        $lines[] = ['account_id' => Account::system('agent_commission')->id, 'contact_id' => $automation->agentContact($sid)->id, 'debit' => $amt, 'description' => 'Commission payout — '.$d->property_title];
+                    }
+                }
+                $lines[] = ['account_id' => $bank->id, 'credit' => round(collect($lines)->sum('debit'), 2)];
+                $ledger->post(['date' => $c->paid_at->toDateString(), 'reference' => $d->property_title, 'memo' => 'Agent commission payout — '.$d->property_title], $lines, $c);
+            }
+        });
+
+        // Monthly overheads: [supplier, account, amount excl VAT, VAT?, day]
+        $overheads = [
+            ['Sandton Office Park (Pty) Ltd', '6030', 28000, true, 1], ['Property24', '6000', 9500, true, 3], ['Private Property', '6000', 4200, true, 3],
+            ['Vumatel', '6040', 1350, true, 5], ['City of Johannesburg', '6050', 3100, true, 12], ['Microsoft & Google Workspace', '6110', 2450, true, 15],
+        ];
+        for ($m = 0; $m < 24; $m++) {
+            $month = $start->copy()->addMonths($m);
+            if ($month->isFuture()) {
+                break;
+            }
+            foreach ($overheads as [$name, $code, $amount, $vat, $day]) {
+                $date = $month->copy()->day($day);
+                if ($date->isFuture()) {
+                    continue;
+                }
+                $supplier = Contact::firstOrCreate(['name' => $name, 'type' => 'supplier']);
+                $bill = $docs->approve($docs->save(new Bill, [
+                    'contact_id' => $supplier->id, 'date' => $date->toDateString(), 'due_date' => $date->copy()->addDays(30)->toDateString(),
+                    'reference' => strtoupper(substr($name, 0, 3)).'-'.$date->format('ym'),
+                    'lines' => [['account_id' => $acc($code), 'tax_rate_id' => $vat ? $std : $none, 'quantity' => 1, 'unit_price' => round($amount * mt_rand(95, 105) / 100, 2), 'description' => $name.' — '.$date->format('F Y')]],
+                ], null), null);
+                // Most recent month left unpaid so Bills / aged creditors have something outstanding.
+                if ($date->copy()->addDays(10)->isPast() && $m < 23) {
+                    $payments->record(['direction' => 'made', 'bank_account_id' => $bank->id, 'date' => $date->copy()->addDays(10)->toDateString(),
+                        'allocations' => [['id' => $bill->id, 'amount' => $bill->total]], 'reference' => $bill->reference], null);
+                }
+            }
+            $feeDate = $month->copy()->endOfMonth()->startOfDay();
+            if ($feeDate->isPast()) {
+                $payments->record(['direction' => 'made', 'bank_account_id' => $bank->id, 'date' => $feeDate->toDateString(), 'memo' => 'Monthly bank fees',
+                    'lines' => [['account_id' => Account::system('bank_charges')->id, 'amount' => mt_rand(550, 900), 'tax_rate_id' => $none, 'description' => 'Bank charges']]], null);
+                $payments->record(['direction' => 'made', 'bank_account_id' => $bank->id, 'date' => $feeDate->toDateString(), 'memo' => 'Fuel card',
+                    'lines' => [['account_id' => $acc('6060'), 'amount' => mt_rand(3500, 6500), 'tax_rate_id' => $std, 'description' => 'Fuel & travel']]], null);
+            }
+        }
+
+        // Salaried staff on payroll (agents are commission-only contractors).
+        foreach (['busisiwe' => 42000, 'anita' => 36000, 'kagiso' => 55000, 'thabo' => 14500, 'thandiwe' => 85000] as $key => $salary) {
+            PayrollProfile::create(['staff_id' => $this->staff[$key]->id, 'basic_salary' => $salary, 'retirement_contribution' => round($salary * 0.075, 2),
+                'medical_aid_members' => mt_rand(1, 3), 'date_of_birth' => now()->subYears(mt_rand(26, 58))->toDateString(), 'tax_number' => (string) mt_rand(1000000000, 3999999999)]);
+        }
+        $payroll = app(PayrollService::class);
+        foreach (['2025-12', '2026-01', '2026-02'] as $period) {
+            $payroll->finalise($payroll->calculate($period, $period.'-25'), null);
+        }
+
+        // Settle with SARS: EMP201 by the 7th of the following month, VAT201 bi-monthly by the 25th after the period.
+        foreach (\App\Models\Accounting\PayrollRun::all() as $run) {
+            $emp = $payroll->emp201($run);
+            $ledger->post(['date' => $emp['due_date'], 'reference' => 'EMP201 '.$run->period, 'memo' => 'SARS EMP201 '.$run->period], [
+                ['account_id' => Account::system('paye_payable')->id, 'debit' => $emp['paye']], ['account_id' => Account::system('uif_payable')->id, 'debit' => $emp['uif']],
+                ['account_id' => Account::system('sdl_payable')->id, 'debit' => $emp['sdl']], ['account_id' => Account::system('salaries_payable')->id, 'debit' => $run->total_net],
+                ['account_id' => $bank->id, 'credit' => round($emp['total'] + $run->total_net, 2)],
+            ]);
+        }
+        $reports = app(\App\Services\Accounting\Reports::class);
+        for ($p = $start->copy(); $p->copy()->addMonths(2)->day(25)->isPast(); $p->addMonths(2)) {
+            $to = $p->copy()->addMonth()->endOfMonth();
+            $vat = $reports->vat($p->toDateString(), $to->toDateString());
+            if (abs($vat['net_vat']) < 0.01) {
+                continue;
+            }
+            $ledger->post(['date' => $to->copy()->addDays(25)->toDateString(), 'reference' => 'VAT201 '.$p->format('M').'–'.$to->format('M Y'), 'memo' => 'SARS VAT201 '.$p->format('M').'–'.$to->format('M Y')], [
+                ['account_id' => Account::system('vat_output')->id, 'debit' => $vat['output_vat']],
+                ['account_id' => Account::system('vat_input')->id, 'credit' => $vat['input_vat']],
+                ['account_id' => $bank->id, 'credit' => $vat['net_vat']],
+            ]);
+        }
+
+        // Last ~6 weeks of bank activity as an imported statement: most lines already matched, a few left to code.
+        $since = now()->subDays(45)->toDateString();
+        $lines = JournalLine::with('entry')->where('account_id', $bank->id)
+            ->whereHas('entry', fn ($e) => $e->where('status', 'posted')->where('date', '>=', $since))->get();
+        foreach ($lines as $i => $l) {
+            BankTransaction::create([
+                'bank_account_id' => $bank->id, 'date' => $l->entry->date, 'description' => strtoupper(mb_substr($l->entry->memo ?? 'Transfer', 0, 60)),
+                'reference' => $l->entry->reference, 'amount' => $l->debit - $l->credit, 'status' => 'matched', 'journal_entry_id' => $l->journal_entry_id,
+                'import_hash' => hash('sha256', 'demo-'.$l->id),
+            ]);
+        }
+        foreach ([['FNB CARD PURCHASE ENGEN SANDTON', -1240.50], ['INTEREST RECEIVED', 812.33], ['DEBIT ORDER DISCOVERY INSURE', -2895.00], ['CASH DEPOSIT REFERRAL FEE', 5000.00]] as $i => [$desc, $amount]) {
+            BankTransaction::create(['bank_account_id' => $bank->id, 'date' => now()->subDays(6 - $i)->toDateString(), 'description' => $desc,
+                'amount' => $amount, 'import_hash' => hash('sha256', 'demo-unmatched-'.$i)]);
+        }
+        AccountingSetting::current()->update(['invoice_footer' => "Banking details: FNB · Morena Properties (Pty) Ltd · Acc 62000000001 · Branch 250655\nPlease use the invoice number as your payment reference."]);
     }
 
     // ---------------------------------------------------------------------------------------------

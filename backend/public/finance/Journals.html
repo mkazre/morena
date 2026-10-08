@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Journals</span></div>
+      <div class="btn-row"><button class="btn btn-primary" onClick="{{ onNew }}">+ Manual journal</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Journals</h1><p>The complete double-entry record. Invoices, bills, payments, payroll and commission payouts post here automatically; use a manual journal for adjustments, depreciation, accruals and opening balances.</p></div>
+</div>
+
+<sc-if value="{{ composing }}">
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">New manual journal</div>
+    <sc-if value="{{ jError }}"><div class="notice danger" style="margin-bottom:12px">{{ jError }}</div></sc-if>
+    <div class="grid grid-3" style="margin-bottom:14px">
+      <div class="field"><label>Date *</label><input class="inp" type="date" name="date" value="{{ j.date }}" onChange="{{ onJField }}" /></div>
+      <div class="field"><label>Narration *</label><input class="inp" name="memo" value="{{ j.memo }}" onChange="{{ onJField }}" placeholder="e.g. Depreciation for September" /></div>
+      <div class="field"><label>Reference</label><input class="inp" name="reference" value="{{ j.reference }}" onChange="{{ onJField }}" /></div>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th style="min-width:240px">Account</th><th style="min-width:200px">Description</th><th class="num" style="width:140px">Debit</th><th class="num" style="width:140px">Credit</th><th></th></tr></thead>
+      <tbody>
+        <sc-for list="{{ jLines }}" as="l">
+          <tr>
+            <td><select class="sel" value="{{ l.account_id }}" onChange="{{ l.onAccount }}"><option value="">Account…</option><sc-for list="{{ accountOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></td>
+            <td><input class="inp" value="{{ l.description }}" onChange="{{ l.onDescription }}" /></td>
+            <td><input class="inp num" type="number" step="0.01" value="{{ l.debit }}" onChange="{{ l.onDebit }}" /></td>
+            <td><input class="inp num" type="number" step="0.01" value="{{ l.credit }}" onChange="{{ l.onCredit }}" /></td>
+            <td><button class="link" style="color:#b42318" onClick="{{ l.onRemove }}">✕</button></td>
+          </tr>
+        </sc-for>
+        <tr class="total"><td><button class="btn btn-sm" onClick="{{ onAddLine }}">+ Add line</button></td><td class="num">Totals</td><td class="num">{{ jTotals.debit }}</td><td class="num">{{ jTotals.credit }}</td><td></td></tr>
+      </tbody>
+    </table></div>
+    <div class="btn-row" style="justify-content:space-between;margin-top:14px">
+      <span class="{{ jTotals.cls }}">{{ jTotals.label }}</span>
+      <div class="btn-row"><button class="btn" onClick="{{ onCancelNew }}">Cancel</button><button class="btn btn-primary" onClick="{{ onPost }}" disabled="{{ jTotals.cannotPost }}">Post journal</button></div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ selected }}">
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title"><span>{{ sel.number }} · {{ sel.date }} <span class="{{ sel.statusClass }}">{{ sel.status }}</span></span>
+      <span class="btn-row"><sc-if value="{{ sel.canReverse }}"><button class="btn btn-sm" onClick="{{ onReverse }}">Reverse</button></sc-if><sc-if value="{{ sel.canVoid }}"><button class="btn btn-sm btn-danger" onClick="{{ onVoid }}">Void</button></sc-if><button class="btn btn-sm" onClick="{{ onClose }}">Close</button></span></div>
+    <div class="muted small" style="margin-bottom:10px">{{ sel.memo }} · {{ sel.source }}{{ sel.ref }} · by {{ sel.by }}</div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Account</th><th>Description</th><th>Contact</th><th>VAT</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead>
+      <tbody>
+        <sc-for list="{{ sel.lines }}" as="l"><tr><td><a href="{{ l.ledgerHref }}">{{ l.account }}</a></td><td class="muted">{{ l.description }}</td><td class="muted">{{ l.contact }}</td><td class="muted">{{ l.tax }}</td><td class="num">{{ l.debit }}</td><td class="num">{{ l.credit }}</td></tr></sc-for>
+        <tr class="total"><td colspan="4">Totals</td><td class="num">{{ sel.totalDebit }}</td><td class="num">{{ sel.totalCredit }}</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</sc-if>
+
+<div class="toolbar">
+  <input class="inp" style="max-width:260px" value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search number, reference, narration…" />
+  <input class="inp" type="date" name="from" value="{{ from }}" onChange="{{ onFilter }}" />
+  <input class="inp" type="date" name="to" value="{{ to }}" onChange="{{ onFilter }}" />
+  <select class="sel" name="source" value="{{ source }}" onChange="{{ onFilter }}"><option value="">All sources</option><option value="manual">Manual journals only</option></select>
+</div>
+<div class="card flush"><div class="tbl-wrap"><table class="tbl">
+  <thead><tr><th>Entry</th><th>Date</th><th>Source</th><th>Reference</th><th>Narration</th><th class="num">Amount</th><th>Status</th></tr></thead>
+  <tbody>
+    <sc-if value="{{ empty }}"><tr><td colspan="7" class="empty">No journal entries match.</td></tr></sc-if>
+    <sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+      <tr class="click" onClick="{{ r.onOpen }}"><td class="strong">{{ r.number }}</td><td>{{ r.date }}</td><td class="muted">{{ r.source }}</td><td class="muted">{{ r.reference }}</td><td>{{ r.memo }}</td><td class="num">{{ r.amount }}</td><td><span class="{{ r.statusClass }}">{{ r.status }}</span></td></tr>
+    </sc-for>
+  </tbody>
+</table></div></div>
+<sc-if value="{{ more }}"><div class="muted small" style="margin-top:10px">{{ more }}</div></sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], rows: [], meta: null, search: '', from: '', to: '', source: '', loaded: false, selected: null, composing: false, j: null, jError: null, accounts: [] };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-journals', ['admin', 'finance']));
+    const lk = await this.fin.lookups();
+    this.setState({ accounts: lk.accounts });
+    this.load();
+    if (this.app.param('id')) this.open(this.app.param('id'));
+    if (this.app.param('new')) this.onNew();
+  }
+
+  load = async () => {
+    const s = this.state;
+    const q = new URLSearchParams({ per_page: 100 });
+    for (const k of ['search', 'from', 'to', 'source']) if (s[k]) q.set(k, s[k]);
+    const seq = (this.seq = (this.seq || 0) + 1);
+    const res = await this.app.run(() => this.app.api('/finance/journals?' + q));
+    if (res && seq === this.seq) this.setState({ rows: res.data, meta: res.meta, loaded: true });
+  };
+
+  open = async (id) => {
+    const selected = await this.app.run(() => this.app.api('/finance/journals/' + id));
+    if (selected) { this.setState({ selected }); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  };
+
+  onSearch = (e) => { this.setState({ search: e.target.value }); clearTimeout(this.t); this.t = setTimeout(this.load, 250); };
+  onFilter = (e) => this.setState({ [e.target.name]: e.target.value }, this.load);
+  onClose = () => this.setState({ selected: null });
+
+  onVoid = async () => {
+    const e = this.state.selected;
+    if (!confirm('Void ' + e.number + '? It will drop out of all balances and reports (kept in the audit trail).')) return;
+    if (await this.app.run(() => this.app.api('/finance/journals/' + e.id + '/void', { method: 'POST' }), 'Journal voided')) { this.open(e.id); this.load(); }
+  };
+
+  onReverse = async () => {
+    const e = this.state.selected;
+    const res = await this.app.form({
+      title: 'Reverse ' + e.number, intro: 'Posts the mirror image of this entry — e.g. to reverse an accrual at the start of the next month.',
+      submitLabel: 'Post reversal', fields: [{ name: 'date', label: 'Reversal date', type: 'date', value: this.fin.today(), required: true }],
+      onSubmit: (v) => this.app.api('/finance/journals/' + e.id + '/reverse', { method: 'POST', body: v }),
+    });
+    if (res) { this.app.toast('Reversal posted: ' + res.number); this.open(res.id); this.load(); }
+  };
+
+  blank = () => ({ account_id: '', description: '', debit: '', credit: '' });
+  onNew = () => this.setState({ composing: true, jError: null, j: { date: this.fin.today(), memo: '', reference: '', lines: [this.blank(), this.blank()] } });
+  onCancelNew = () => this.setState({ composing: false });
+  onJField = (e) => this.setState({ j: { ...this.state.j, [e.target.name]: e.target.value } });
+  setLine = (i, patch) => this.setState({ j: { ...this.state.j, lines: this.state.j.lines.map((l, k) => (k === i ? { ...l, ...patch } : l)) } });
+  onAddLine = () => this.setState({ j: { ...this.state.j, lines: [...this.state.j.lines, this.blank()] } });
+
+  onPost = async () => {
+    const j = this.state.j;
+    try {
+      const res = await this.app.api('/finance/journals', { method: 'POST', body: { ...j, lines: j.lines.filter((l) => l.account_id && (l.debit || l.credit)) } });
+      this.app.toast('Posted ' + res.number);
+      this.setState({ composing: false, selected: res });
+      this.load();
+    } catch (e) {
+      this.setState({ jError: e.message });
+    }
+  };
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const base = {
+      ...(app ? app.shellVals(s) : {}), search: s.search, from: s.from, to: s.to, source: s.source,
+      onSearch: this.onSearch, onFilter: this.onFilter, onNew: this.onNew, onCancelNew: this.onCancelNew, onClose: this.onClose,
+      onVoid: this.onVoid, onReverse: this.onReverse, onJField: this.onJField, onAddLine: this.onAddLine, onPost: this.onPost,
+      composing: s.composing, selected: !!s.selected, empty: s.loaded && !s.rows.length, jError: s.jError,
+      more: s.meta && s.meta.total > s.rows.length ? 'Showing the latest ' + s.rows.length + ' of ' + s.meta.total + ' entries — narrow the dates to see older ones.' : null,
+    };
+    if (!app) return { ...base, rows: [], jLines: [], sel: { lines: [] }, jTotals: {} };
+    const j = s.j || { lines: [] };
+    const dr = j.lines.reduce((t, l) => t + Math.round((Number(l.debit) || 0) * 100), 0);
+    const cr = j.lines.reduce((t, l) => t + Math.round((Number(l.credit) || 0) * 100), 0);
+    const e = s.selected;
+    return {
+      ...base, j,
+      accountOptions: fin.accountOptions(s.accounts),
+      jLines: j.lines.map((l, i) => ({
+        ...l, onAccount: (ev) => this.setLine(i, { account_id: ev.target.value }), onDescription: (ev) => this.setLine(i, { description: ev.target.value }),
+        onDebit: (ev) => this.setLine(i, { debit: ev.target.value, credit: ev.target.value ? '' : l.credit }),
+        onCredit: (ev) => this.setLine(i, { credit: ev.target.value, debit: ev.target.value ? '' : l.debit }),
+        onRemove: () => this.setState({ j: { ...j, lines: j.lines.length > 2 ? j.lines.filter((_, k) => k !== i) : j.lines } }),
+      })),
+      jTotals: {
+        debit: fin.amt(dr / 100), credit: fin.amt(cr / 100), cannotPost: dr === 0 || dr !== cr,
+        label: dr === cr ? (dr ? 'Balanced' : 'Enter debits and credits') : 'Out of balance by R ' + fin.amt(Math.abs(dr - cr) / 100),
+        cls: 'badge ' + (dr === cr && dr ? 'b-ok' : 'b-warn'),
+      },
+      rows: s.rows.map((r) => ({
+        number: r.number, date: app.date(r.date), source: r.source, reference: r.reference || '', memo: r.memo || '', amount: fin.amt(r.amount),
+        status: fin.statusLabel(r.status), statusClass: fin.statusClass(r.status), onOpen: () => this.open(r.id),
+      })),
+      sel: e ? {
+        number: e.number, date: app.date(e.date), memo: e.memo || '', source: e.source, ref: e.reference ? ' · ref ' + e.reference : '', by: e.created_by || 'system',
+        status: fin.statusLabel(e.status), statusClass: fin.statusClass(e.status),
+        canVoid: e.status === 'posted' && !e.source_type, canReverse: e.status === 'posted',
+        lines: e.lines.map((l) => ({ account: l.account, ledgerHref: './Reports.html?report=general-ledger&account_id=' + l.account_id, description: l.description || '', contact: l.contact || '', tax: l.tax || '', debit: l.debit ? fin.amt(l.debit) : '', credit: l.credit ? fin.amt(l.credit) : '' })),
+        totalDebit: fin.amt(e.lines.reduce((t, l) => t + l.debit, 0)), totalCredit: fin.amt(e.lines.reduce((t, l) => t + l.credit, 0)),
+      } : { lines: [] },
+    };
+  }
+}
+</script>
+</body>
+</html>

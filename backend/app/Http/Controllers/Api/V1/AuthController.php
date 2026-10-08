@@ -128,6 +128,7 @@ class AuthController extends Controller
             'admin' => '/admin/Dashboard.html',
             'branch_manager' => '/manager/Dashboard.html',
             'hr' => '/hr/StaffDirectory.html',
+            'finance' => '/finance/Dashboard.html',
             'landlord' => '/landlord/Dashboard.html',
             'tenant' => '/tenant/Dashboard.html',
             default => '/portal/Dashboard.html',

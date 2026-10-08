@@ -167,6 +167,19 @@ class AccountingTest extends TestCase
         $this->assertSame(200000.0, $vat['supplies']['standard_excl']);
     }
 
+    public function test_entries_on_period_boundary_days_are_included(): void
+    {
+        $this->invoice(1000, '2026-02-28'); // last day of FY 2025/26
+        $this->invoice(2000, '2026-03-01'); // first day of FY 2026/27
+        $r = app(Reports::class);
+        $this->assertSame(1000.0, $r->profitAndLoss('2026-02-01', '2026-02-28')['net_profit']);
+        $this->assertSame(2000.0, $r->profitAndLoss('2026-03-01', '2026-03-31')['net_profit']);
+        $bs = $r->balanceSheet('2026-03-01');
+        $this->assertTrue($bs['balanced']);
+        $this->assertSame(1000.0, collect($bs['equity']['rows'])->firstWhere('name', 'Retained Earnings')['amount']);
+        $this->assertSame(2000.0, collect($bs['equity']['rows'])->firstWhere('name', 'Current year earnings')['amount']);
+    }
+
     public function test_aging_buckets_overdue_invoices(): void
     {
         $this->invoice(1000, '2026-06-01'); // due 2026-10-10

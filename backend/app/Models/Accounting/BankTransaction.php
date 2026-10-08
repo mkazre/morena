@@ -2,6 +2,7 @@
 
 namespace App\Models\Accounting;
 
+use App\Casts\DateOnly;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,7 +13,7 @@ class BankTransaction extends Model
 
     protected function casts(): array
     {
-        return ['date' => 'date', 'amount' => 'float'];
+        return ['date' => DateOnly::class, 'amount' => 'float'];
     }
 
     public function bankAccount(): BelongsTo

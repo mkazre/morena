@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Payments & Expenses</span></div>
+      <div class="btn-row"><button class="btn" onClick="{{ onReceive }}">+ Receive money</button>
+<button class="btn btn-primary" onClick="{{ onSpend }}">+ Spend money</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Payments &amp; expenses</h1><p>Every rand in and out of the bank. Pay invoices and bills from their own screens; use <b>Spend money</b> for expenses without a bill (bank fees, fuel, petty cash).</p></div>
+</div>
+<div class="tabs"><sc-for list="{{ tabs }}" as="t"><div class="{{ t.cls }}" onClick="{{ t.onClick }}">{{ t.label }}</div></sc-for></div>
+<div class="card flush"><div class="tbl-wrap"><table class="tbl">
+  <thead><tr><th>Number</th><th>Date</th><th>Contact</th><th>Bank account</th><th>Method</th><th>Reference</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <sc-if value="{{ empty }}"><tr><td colspan="9" class="empty">Nothing recorded yet.</td></tr></sc-if>
+    <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+      <tr>
+        <td class="strong">{{ r.number }}</td><td>{{ r.date }}</td><td>{{ r.contact }}</td><td class="muted">{{ r.bank }}</td><td class="muted">{{ r.method }}</td><td class="muted">{{ r.reference }}</td>
+        <td class="num strong" style="color:{{ r.color }}">{{ r.amount }}</td><td><span class="{{ r.statusClass }}">{{ r.status }}</span></td>
+        <td><a class="link small" href="{{ r.journalHref }}">Journal</a><sc-if value="{{ r.canVoid }}"> · <a class="link small" style="color:#b42318" onClick="{{ r.onVoid }}">Void</a></sc-if></td>
+      </tr>
+    </sc-for>
+  </tbody>
+</table></div></div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], rows: [], direction: '', loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-payments', ['admin', 'finance']));
+    await this.load();
+    const n = this.app.param('new');
+    if (n === 'spend') this.onSpend();
+    if (n === 'receive') this.onReceive();
+  }
+
+  load = async () => {
+    const res = await this.app.run(() => this.app.api('/finance/payments' + (this.state.direction ? '?direction=' + this.state.direction : '')));
+    if (res) this.setState({ rows: res.data, loaded: true });
+  };
+
+  direct = async (direction) => {
+    const { app, fin } = this;
+    const lk = await fin.lookups();
+    const spend = direction === 'made';
+    const ok = await app.form({
+      title: spend ? 'Spend money' : 'Receive money',
+      intro: 'Enter the amount as it left/entered the bank (VAT inclusive). VAT is split out automatically.',
+      submitLabel: 'Record',
+      fields: [
+        { name: 'bank_account_id', label: 'Bank account', type: 'select', options: lk.banks.map((b) => ({ value: b.id, label: b.name })), required: true },
+        { name: 'date', label: 'Date', type: 'date', value: fin.today(), required: true },
+        { name: 'contact_id', label: spend ? 'Paid to (optional)' : 'Received from (optional)', type: 'select', options: [{ value: '', label: '—' }, ...lk.contacts.map((c) => ({ value: c.id, label: c.name }))] },
+        { name: 'account_id', label: 'Account', type: 'select', required: true, options: fin.accountOptions(lk.accounts.filter((a) => a.subtype !== 'bank'), spend ? ['expense', 'asset', 'liability', 'equity'] : ['income', 'liability', 'equity', 'asset']) },
+        { name: 'amount', label: 'Amount (R, incl. VAT)', type: 'number', step: '0.01', required: true },
+        { name: 'tax_rate_id', label: 'VAT', type: 'select', options: lk.taxRates.map((t) => ({ value: t.id, label: t.name })), value: (lk.taxRates.find((t) => t.is_default) || {}).id },
+        { name: 'description', label: 'Description', required: true },
+        { name: 'reference', label: 'Reference' },
+      ],
+      onSubmit: (v) => app.api('/finance/payments', { method: 'POST', body: {
+        direction, bank_account_id: v.bank_account_id, date: v.date, contact_id: v.contact_id || null, reference: v.reference, memo: v.description,
+        lines: [{ account_id: v.account_id, amount: v.amount, tax_rate_id: v.tax_rate_id || null, description: v.description }],
+      } }),
+    });
+    if (ok) { app.toast(spend ? 'Expense recorded' : 'Receipt recorded'); this.load(); }
+  };
+  onSpend = () => this.direct('made');
+  onReceive = () => this.direct('received');
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const tabs = [['', 'All'], ['received', 'Money in'], ['made', 'Money out']];
+    const methods = { eft: 'EFT', cash: 'Cash', card: 'Card', cheque: 'Cheque', debit_order: 'Debit order' };
+    return {
+      ...(app ? app.shellVals(s) : {}), onSpend: this.onSpend, onReceive: this.onReceive, empty: s.loaded && !s.rows.length,
+      tabs: tabs.map(([k, label]) => ({ label, cls: 'tab' + (s.direction === k ? ' on' : ''), onClick: () => this.setState({ direction: k }, this.load) })),
+      rows: app ? s.rows.map((p) => ({
+        number: p.number, date: app.date(p.date), contact: p.contact || '—', bank: p.bank_account, method: methods[p.method] || p.method,
+        reference: p.reference || '', amount: (p.direction === 'made' ? '-' : '') + fin.amt(p.amount), color: p.direction === 'made' ? '#1c1a19' : '#2f7d5a',
+        status: p.status === 'void' ? 'Void' : 'Posted', statusClass: fin.statusClass(p.status === 'void' ? 'void' : 'posted'),
+        journalHref: './Journals.html?id=' + p.journal_entry_id, canVoid: p.status !== 'void',
+        onVoid: async () => {
+          if (!confirm('Void ' + p.number + '? Any invoice or bill it paid will show as unpaid again.')) return;
+          if (await app.run(() => app.api('/finance/payments/' + p.id + '/void', { method: 'POST' }), 'Payment voided')) this.load();
+        },
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

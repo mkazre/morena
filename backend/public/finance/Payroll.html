@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Payroll</span></div>
+      <div class="btn-row"><button class="btn btn-primary" onClick="{{ onRun }}">Run payroll</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Payroll</h1><p>PAYE (SARS annualisation method), UIF and SDL for salaried staff. Commission-only agents are paid through Commissions, not payroll.</p></div>
+</div>
+<sc-if value="{{ tableWarning }}"><div class="notice warn" style="margin-bottom:14px">{{ tableWarning }}</div></sc-if>
+<div class="tabs"><sc-for list="{{ tabs }}" as="t"><div class="{{ t.cls }}" onClick="{{ t.onClick }}">{{ t.label }}</div></sc-for></div>
+
+<sc-if value="{{ onRuns }}">
+  <sc-if value="{{ run }}">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title"><span>Payroll {{ run.period }} · pay date {{ run.payDate }} <span class="{{ run.statusClass }}">{{ run.status }}</span></span>
+        <span class="btn-row"><sc-if value="{{ run.draft }}"><button class="btn btn-sm" onClick="{{ onRecalc }}">Recalculate</button><button class="btn btn-sm btn-primary" onClick="{{ onFinalise }}">Finalise &amp; post</button></sc-if><button class="btn btn-sm" onClick="{{ onCloseRun }}">Close</button></span></div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>Employee</th><th class="num">Gross</th><th class="num">PAYE</th><th class="num">UIF</th><th class="num">Other deductions</th><th class="num">Net pay</th><th class="num">SDL (employer)</th><th></th></tr></thead>
+        <tbody>
+          <sc-for list="{{ run.slips }}" as="p"><tr><td class="strong">{{ p.name }}</td><td class="num">{{ p.gross }}</td><td class="num">{{ p.paye }}</td><td class="num">{{ p.uif }}</td><td class="num">{{ p.deductions }}</td><td class="num strong">{{ p.net }}</td><td class="num">{{ p.sdl }}</td><td><a class="link small" href="{{ p.href }}">Payslip</a></td></tr></sc-for>
+          <tr class="total"><td>Totals</td><td class="num">{{ run.gross }}</td><td class="num">{{ run.paye }}</td><td class="num">{{ run.uifEe }}</td><td></td><td class="num">{{ run.net }}</td><td class="num">{{ run.sdl }}</td><td></td></tr>
+        </tbody>
+      </table></div>
+      <div class="grid grid-4" style="margin-top:16px">
+        <div class="kpi"><div class="kpi-label">EMP201 PAYE</div><div class="kpi-value">{{ run.emp.paye }}</div></div>
+        <div class="kpi"><div class="kpi-label">EMP201 UIF (employee + employer)</div><div class="kpi-value">{{ run.emp.uif }}</div></div>
+        <div class="kpi"><div class="kpi-label">EMP201 SDL</div><div class="kpi-value">{{ run.emp.sdl }}</div></div>
+        <div class="kpi"><div class="kpi-label">Pay SARS by {{ run.emp.due }}</div><div class="kpi-value">{{ run.emp.total }}</div></div>
+      </div>
+      <sc-if value="{{ run.journalHref }}"><div class="muted small" style="margin-top:12px">Posted to the ledger — <a href="{{ run.journalHref }}">view journal</a>. Pay staff and SARS from <a href="./Payments.html?new=spend">Spend money</a> against Net Salaries / PAYE / UIF / SDL Payable.</div></sc-if>
+    </div>
+  </sc-if>
+  <div class="card flush"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Period</th><th>Pay date</th><th class="num">Employees</th><th class="num">Gross</th><th class="num">PAYE</th><th class="num">Net</th><th>Status</th></tr></thead>
+    <tbody>
+      <sc-if value="{{ noRuns }}"><tr><td colspan="7" class="empty">No payroll runs yet. Add salary details under Employees, then Run payroll.</td></tr></sc-if>
+      <sc-for list="{{ runs }}" as="r"><tr class="click" onClick="{{ r.onOpen }}"><td class="strong">{{ r.period }}</td><td>{{ r.payDate }}</td><td class="num">{{ r.employees }}</td><td class="num">{{ r.gross }}</td><td class="num">{{ r.paye }}</td><td class="num">{{ r.net }}</td><td><span class="{{ r.statusClass }}">{{ r.status }}</span></td></tr></sc-for>
+    </tbody>
+  </table></div></div>
+</sc-if>
+
+<sc-if value="{{ onEmployees }}">
+  <div class="card flush"><div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Staff member</th><th>Role</th><th>Employment</th><th class="num">Basic salary</th><th class="num">Allowances</th><th>Tax no.</th><th>Payroll</th><th></th></tr></thead>
+    <tbody>
+      <sc-for list="{{ employees }}" as="e"><tr><td class="strong">{{ e.name }}</td><td class="muted">{{ e.role }}</td><td class="muted">{{ e.employment }}</td><td class="num">{{ e.salary }}</td><td class="num">{{ e.allowances }}</td><td class="muted">{{ e.taxNo }}</td><td><span class="{{ e.statusClass }}">{{ e.status }}</span></td><td><a class="link small" onClick="{{ e.onEdit }}">{{ e.action }}</a></td></tr></sc-for>
+    </tbody>
+  </table></div></div>
+</sc-if>
+
+<sc-if value="{{ onTables }}">
+  <div class="btn-row" style="margin-bottom:12px"><button class="btn" onClick="{{ onNewTable }}">+ Add tax year (copy latest)</button></div>
+  <sc-for list="{{ tables }}" as="t">
+    <div class="card">
+      <div class="card-title"><span>{{ t.label }} · {{ t.range }}</span><a class="link small" onClick="{{ t.onEdit }}">Edit</a></div>
+      <div class="grid grid-2">
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="num">Taxable income from</th><th class="num">Rate</th><th class="num">Tax on lower bands</th></tr></thead>
+          <tbody><sc-for list="{{ t.brackets }}" as="b"><tr><td class="num">{{ b.from }}</td><td class="num">{{ b.rate }}%</td><td class="num">{{ b.base }}</td></tr></sc-for></tbody></table></div>
+        <div class="small" style="line-height:1.9">Rebates: primary {{ t.r1 }} · 65+ {{ t.r2 }} · 75+ {{ t.r3 }}<br />Medical credits: {{ t.m1 }} (main + 1st dependant) · {{ t.m2 }} (others) per month<br />UIF {{ t.uif }}% up to {{ t.uifCap }}/month · SDL {{ t.sdl }}% when payroll &gt; {{ t.sdlThreshold }}/year<br /><span class="muted">{{ t.note }}</span></div>
+      </div>
+    </div>
+  </sc-for>
+</sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], tab: 'runs', runs: [], run: null, employees: [], tables: [] };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-payroll', ['admin', 'finance']));
+    this.load();
+  }
+
+  load = async () => {
+    const [runs, employees, tables] = await Promise.all([
+      this.app.api('/finance/payroll/runs'), this.app.api('/finance/payroll/employees'), this.app.api('/finance/payroll/tax-tables'),
+    ]);
+    this.setState({ runs: runs.data, employees: employees.data, tables: tables.data });
+  };
+
+  openRun = async (id) => { const run = await this.app.run(() => this.app.api('/finance/payroll/runs/' + id)); if (run) this.setState({ run, tab: 'runs' }); };
+
+  onRun = async () => {
+    const { app, fin } = this;
+    const now = new Date();
+    const period = now.toISOString().slice(0, 7);
+    const run = await app.form({
+      title: 'Run payroll', intro: 'Calculates a draft for every employee with a payroll profile. Nothing posts until you finalise.',
+      submitLabel: 'Calculate',
+      fields: [
+        { name: 'period', label: 'Period (YYYY-MM)', value: period, required: true },
+        { name: 'pay_date', label: 'Pay date', type: 'date', value: period + '-25', required: true },
+      ],
+      onSubmit: (v) => app.api('/finance/payroll/runs', { method: 'POST', body: v }),
+    });
+    if (run) { this.setState({ run, tab: 'runs' }); this.load(); }
+  };
+  onRecalc = async () => {
+    const r = this.state.run;
+    const run = await this.app.run(() => this.app.api('/finance/payroll/runs', { method: 'POST', body: { period: r.period, pay_date: r.pay_date } }), 'Recalculated');
+    if (run) { this.setState({ run }); this.load(); }
+  };
+  onFinalise = async () => {
+    const r = this.state.run;
+    if (!confirm('Finalise payroll ' + r.period + '? This posts salaries, PAYE, UIF and SDL to the ledger and locks the run.')) return;
+    const run = await this.app.run(() => this.app.api('/finance/payroll/runs/' + r.id + '/finalise', { method: 'POST' }), 'Payroll finalised and posted');
+    if (run) { this.setState({ run }); this.load(); }
+  };
+  onCloseRun = () => this.setState({ run: null });
+
+  editEmployee = async (e) => {
+    const { app } = this;
+    const p = e.profile || {};
+    const saved = await app.form({
+      title: 'Payroll details — ' + e.name, submitLabel: 'Save',
+      fields: [
+        { name: 'basic_salary', label: 'Basic salary (R per month)', type: 'number', step: '0.01', value: p.basic_salary, required: true },
+        { name: 'taxable_allowances', label: 'Taxable allowances (R per month)', type: 'number', step: '0.01', value: p.taxable_allowances },
+        { name: 'retirement_contribution', label: 'Pension / RA contribution (R per month)', type: 'number', step: '0.01', value: p.retirement_contribution },
+        { name: 'medical_aid_members', label: 'Medical aid members (incl. employee)', type: 'number', value: p.medical_aid_members },
+        { name: 'other_deductions', label: 'Other after-tax deductions (R per month)', type: 'number', step: '0.01', value: p.other_deductions },
+        { name: 'date_of_birth', label: 'Date of birth (for age rebates)', type: 'date', value: p.date_of_birth },
+        { name: 'tax_number', label: 'SARS income tax number', value: p.tax_number },
+        { name: 'id_number', label: 'ID number', value: p.id_number },
+        { name: 'bank_name', label: 'Bank', value: p.bank_name },
+        { name: 'bank_account_number', label: 'Bank account number', value: p.bank_account_number },
+        { name: 'uif_exempt', label: 'UIF exempt', type: 'checkbox', value: p.uif_exempt },
+        { name: 'is_active', label: 'Include in payroll', type: 'checkbox', value: e.profile ? p.is_active : true },
+      ],
+      onSubmit: (v) => app.api('/finance/payroll/employees/' + e.staff_id, { method: 'PUT', body: v }),
+    });
+    if (saved) { app.toast('Payroll details saved'); this.load(); }
+  };
+
+  editTable = async (t, copy) => {
+    const { app } = this;
+    const src = t || this.state.tables[0];
+    const next = (iso, years) => (iso ? String(Number(iso.slice(0, 4)) + years) + iso.slice(4) : '');
+    const label = copy && src ? Number(src.label.slice(0, 4)) + 1 + '/' + String(Number(src.label.slice(5, 7)) + 1).padStart(2, '0') : src && src.label;
+    const saved = await app.form({
+      title: copy ? 'Add tax year ' + label : 'Edit tax year ' + src.label,
+      intro: 'Take the figures from the SARS "Rates of tax for individuals" table for this year. Brackets: one per line as "from, rate %, tax on lower bands".',
+      submitLabel: 'Save tax table',
+      fields: [
+        { name: 'label', label: 'Tax year', value: label, required: true },
+        { name: 'starts_on', label: 'Starts', type: 'date', value: copy ? next(src.starts_on.slice(0, 10), 1) : src.starts_on.slice(0, 10), required: true },
+        { name: 'ends_on', label: 'Ends', type: 'date', value: copy ? next(src.ends_on.slice(0, 10), 1).replace('-02-28', '-02-28') : src.ends_on.slice(0, 10), required: true },
+        { name: 'brackets', label: 'Brackets', type: 'lines', rows: 8, value: src.brackets.map((b) => b.from + ', ' + b.rate + ', ' + b.base), required: true },
+        ...[['rebate_primary', 'Primary rebate'], ['rebate_secondary', 'Secondary rebate (65+)'], ['rebate_tertiary', 'Tertiary rebate (75+)'],
+          ['medical_credit_main', 'Medical credit — main member & first dependant (monthly, each)'], ['medical_credit_additional', 'Medical credit — additional dependants (monthly, each)'],
+          ['uif_monthly_ceiling', 'UIF earnings ceiling (monthly)'], ['uif_rate', 'UIF rate %'], ['sdl_rate', 'SDL rate %'], ['sdl_annual_threshold', 'SDL annual payroll threshold'],
+          ['retirement_cap_percent', 'Retirement deduction cap %'], ['retirement_cap_annual', 'Retirement deduction cap (annual R)']]
+          .map(([name, lbl]) => ({ name, label: lbl, type: 'number', step: '0.01', value: src[name], required: true })),
+        { name: 'source_note', label: 'Source / note', value: copy ? 'Update from SARS Budget tables — verify before use.' : src.source_note },
+      ],
+      onSubmit: (v) => {
+        const brackets = v.brackets.map((line) => { const [from, rate, base] = line.split(',').map((x) => Number(String(x).trim())); return { from, rate, base }; });
+        const body = { ...v, brackets };
+        return copy ? app.api('/finance/payroll/tax-tables', { method: 'POST', body }) : app.api('/finance/payroll/tax-tables/' + src.id, { method: 'PUT', body });
+      },
+    });
+    if (saved) { app.toast('Tax table saved'); this.load(); }
+  };
+  onNewTable = () => this.editTable(null, true);
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const tabs = [['runs', 'Payroll runs'], ['employees', 'Employees'], ['tables', 'SARS tax tables']];
+    const today = new Date().toISOString().slice(0, 10);
+    const covered = s.tables.some((t) => t.starts_on.slice(0, 10) <= today && t.ends_on.slice(0, 10) >= today);
+    const base = {
+      ...(app ? app.shellVals(s) : {}), onRun: this.onRun, onRecalc: this.onRecalc, onFinalise: this.onFinalise, onCloseRun: this.onCloseRun, onNewTable: this.onNewTable,
+      tabs: tabs.map(([k, label]) => ({ label, cls: 'tab' + (s.tab === k ? ' on' : ''), onClick: () => this.setState({ tab: k }) })),
+      onRuns: s.tab === 'runs', onEmployees: s.tab === 'employees', onTables: s.tab === 'tables', noRuns: !s.runs.length,
+      tableWarning: s.tables.length && !covered ? 'No SARS tax table covers today. Open "SARS tax tables" → "Add tax year" and enter this year\'s figures before running payroll.' : null,
+    };
+    if (!fin) return { ...base, runs: [], employees: [], tables: [], run: null };
+    const r = s.run;
+    return {
+      ...base,
+      runs: s.runs.map((x) => ({ period: x.period, payDate: app.date(x.pay_date), employees: x.employees, gross: fin.amt(x.total_gross), paye: fin.amt(x.total_paye), net: fin.amt(x.total_net),
+        status: fin.statusLabel(x.status), statusClass: fin.statusClass(x.status), onOpen: () => this.openRun(x.id) })),
+      run: r ? {
+        period: r.period, payDate: app.date(r.pay_date), status: fin.statusLabel(r.status), statusClass: fin.statusClass(r.status), draft: r.status === 'draft',
+        slips: r.payslips.map((p) => ({ name: p.name, gross: fin.amt(p.gross), paye: fin.amt(p.paye), uif: fin.amt(p.uif), deductions: fin.amt(p.deductions), net: fin.amt(p.net), sdl: fin.amt(p.sdl), href: './Payslip.html?id=' + p.id })),
+        gross: fin.amt(r.totals.total_gross), paye: fin.amt(r.totals.total_paye), uifEe: fin.amt(r.payslips.reduce((t, p) => t + p.uif, 0)), net: fin.amt(r.totals.total_net), sdl: fin.amt(r.totals.total_sdl),
+        emp: { paye: fin.rand(r.emp201.paye), uif: fin.rand(r.emp201.uif), sdl: fin.rand(r.emp201.sdl), total: fin.rand(r.emp201.total), due: app.date(r.emp201.due_date) },
+        journalHref: r.journal_entry_id ? './Journals.html?id=' + r.journal_entry_id : null,
+      } : null,
+      employees: s.employees.map((e) => ({
+        name: e.name, role: e.role_title, employment: e.employment_type === 'permanent' ? 'Permanent' : 'Contractor',
+        salary: e.profile ? fin.amt(e.profile.basic_salary) : '—', allowances: e.profile ? fin.amt(e.profile.taxable_allowances) : '—', taxNo: (e.profile && e.profile.tax_number) || '',
+        status: e.profile ? (e.profile.is_active ? 'On payroll' : 'Excluded') : 'Not set up', statusClass: 'badge ' + (e.profile && e.profile.is_active ? 'b-ok' : ''),
+        action: e.profile ? 'Edit' : 'Set up', onEdit: () => this.editEmployee(e),
+      })),
+      tables: s.tables.map((t) => ({
+        label: t.label, range: app.date(t.starts_on.slice(0, 10)) + ' – ' + app.date(t.ends_on.slice(0, 10)), note: t.source_note || '',
+        brackets: t.brackets.map((b) => ({ from: fin.amt(b.from), rate: b.rate, base: fin.amt(b.base) })),
+        r1: fin.rand(t.rebate_primary), r2: fin.rand(t.rebate_secondary), r3: fin.rand(t.rebate_tertiary), m1: fin.rand(t.medical_credit_main), m2: fin.rand(t.medical_credit_additional),
+        uif: t.uif_rate, uifCap: fin.rand(t.uif_monthly_ceiling), sdl: t.sdl_rate, sdlThreshold: fin.rand(t.sdl_annual_threshold),
+        onEdit: () => this.editTable(t, false),
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>

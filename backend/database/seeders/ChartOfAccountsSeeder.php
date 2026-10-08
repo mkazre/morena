@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Accounting\Account;
 use App\Models\Accounting\AccountingSetting;
+use App\Models\Accounting\PayrollTaxTable;
 use App\Models\Accounting\TaxRate;
 use Illuminate\Database\Seeder;
 
@@ -91,6 +92,22 @@ class ChartOfAccountsSeeder extends Seeder
             }
             Account::create(['code' => $code, 'name' => $name, 'type' => $type, 'subtype' => $subtype, 'system_key' => $key]);
         }
+
+        // SARS 2025/26 tables (1 Mar 2025 – 28 Feb 2026). Add each new year from the Budget tables via Payroll → Tax tables.
+        PayrollTaxTable::firstOrCreate(['label' => '2025/26'], [
+            'starts_on' => '2025-03-01', 'ends_on' => '2026-02-28',
+            'brackets' => [
+                ['from' => 0, 'rate' => 18, 'base' => 0], ['from' => 237100, 'rate' => 26, 'base' => 42678],
+                ['from' => 370500, 'rate' => 31, 'base' => 77362], ['from' => 512800, 'rate' => 36, 'base' => 121475],
+                ['from' => 673000, 'rate' => 39, 'base' => 179147], ['from' => 857900, 'rate' => 41, 'base' => 251258],
+                ['from' => 1817000, 'rate' => 45, 'base' => 644489],
+            ],
+            'rebate_primary' => 17235, 'rebate_secondary' => 9444, 'rebate_tertiary' => 3145,
+            'medical_credit_main' => 364, 'medical_credit_additional' => 246,
+            'uif_rate' => 1, 'uif_monthly_ceiling' => 17712, 'sdl_rate' => 1, 'sdl_annual_threshold' => 500000,
+            'retirement_cap_percent' => 27.5, 'retirement_cap_annual' => 350000,
+            'source_note' => 'SARS rates of tax for individuals, 2025/26 tax year. Verify against sars.gov.za before use.',
+        ]);
 
         $settings = AccountingSetting::current();
         if (! $settings->default_bank_account_id) {

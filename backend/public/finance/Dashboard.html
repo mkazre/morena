@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Overview</span></div>
+      <div class="btn-row"><a class="btn" href="./Payments.html?new=spend">Record expense</a>
+<a class="btn btn-primary" href="./Document.html?kind=invoices&new=1">+ New invoice</a></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Finance overview</h1><p>Agency books · financial year from {{ yearStart }}. Trust accounts remain in PayProp.</p></div>
+  <sc-if value="{{ lockDate }}"><span class="badge">Books locked to {{ lockDate }}</span></sc-if>
+</div>
+
+<div class="grid grid-4" style="margin-bottom:16px">
+  <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+    <a href="{{ k.href }}" class="kpi" style="display:block;color:#1c1a19">
+      <div class="kpi-label">{{ k.label }}</div>
+      <div class="kpi-value">{{ k.value }}</div>
+      <div class="kpi-sub" style="color:{{ k.subColor }}">{{ k.sub }}</div>
+    </a>
+  </sc-for>
+</div>
+
+<div class="grid grid-main" style="margin-bottom:16px">
+  <div class="card">
+    <div class="card-title">Income vs expenses <span class="muted small"><span class="badge b-brand">Income</span> <span class="badge">Expenses</span></span></div>
+    <div class="bars">
+      <sc-for list="{{ months }}" as="m" hint-placeholder-count="6">
+        <div class="col">
+          <div class="pair"><div class="bar" style="{{ m.incomeStyle }}" title="{{ m.incomeLabel }}"></div><div class="bar" style="{{ m.expenseStyle }}" title="{{ m.expenseLabel }}"></div></div>
+          <div>{{ m.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Bank accounts <a class="link small" href="./Banking.html">Banking →</a></div>
+    <sc-for list="{{ banks }}" as="b" hint-placeholder-count="3">
+      <div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid #f1ede9;font-size:13.5px"><span>{{ b.name }}</span><span class="strong num">{{ b.balance }}</span></div>
+    </sc-for>
+    <sc-if value="{{ unmatched }}"><div class="notice warn" style="margin-top:12px">{{ unmatched }} bank statement line(s) to match</div></sc-if>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-title">VAT this period <a class="link small" href="./Reports.html?report=vat">VAT report →</a></div>
+    <div class="tbl-wrap"><table class="tbl"><tbody>
+      <tr><td>Output VAT (on sales)</td><td class="num">{{ vat.output }}</td></tr>
+      <tr><td>Input VAT (on purchases)</td><td class="num">{{ vat.input }}</td></tr>
+      <tr class="total"><td>{{ vat.netLabel }}</td><td class="num">{{ vat.net }}</td></tr>
+    </tbody></table></div>
+    <div class="muted small" style="margin-top:10px">{{ vat.period }} · VAT201 is due by the 25th after each period ends (e-filing).</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Biggest costs this year <a class="link small" href="./Reports.html?report=profit-loss">Profit &amp; loss →</a></div>
+    <sc-for list="{{ topExpenses }}" as="e" hint-placeholder-count="5">
+      <div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid #f1ede9;font-size:13.5px"><span>{{ e.name }}</span><span class="num">{{ e.amount }}</span></div>
+    </sc-for>
+    <sc-if value="{{ noExpenses }}"><div class="empty">No expenses recorded yet this year.</div></sc-if>
+  </div>
+</div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], d: null };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-dashboard', ['admin', 'finance']));
+    const d = await this.app.run(() => this.app.api('/finance/dashboard'));
+    if (d) this.setState({ d });
+  }
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const d = s.d;
+    const base = { ...(app ? app.shellVals(s) : {}) };
+    if (!app || !d) return { ...base, kpis: [], months: [], banks: [], topExpenses: [], vat: {} };
+    const max = Math.max(1, ...d.months.map((m) => Math.max(m.income, m.expenses)));
+    const pct = (v) => Math.max(2, Math.round((v / max) * 100)) + '%';
+    return {
+      ...base,
+      yearStart: app.date(d.year_start), lockDate: d.lock_date ? app.date(d.lock_date) : null,
+      kpis: [
+        { label: 'Cash in bank', value: fin.rand(d.cash), sub: d.bank_accounts.length + ' account(s)', subColor: '#6b6660', href: './Banking.html' },
+        { label: 'Owed to us', value: fin.rand(d.receivable), sub: d.receivable_overdue > 0 ? fin.rand(d.receivable_overdue) + ' overdue' : 'Nothing overdue', subColor: d.receivable_overdue > 0 ? '#b42318' : '#2f7d5a', href: './Invoices.html?status=outstanding' },
+        { label: 'We owe', value: fin.rand(d.payable), sub: d.payable_overdue > 0 ? fin.rand(d.payable_overdue) + ' overdue' : 'Nothing overdue', subColor: d.payable_overdue > 0 ? '#b42318' : '#2f7d5a', href: './Bills.html?status=outstanding' },
+        { label: 'Net profit (this year)', value: fin.rand(d.profit_ytd), sub: 'This month ' + fin.rand(d.profit_mtd), subColor: d.profit_mtd >= 0 ? '#2f7d5a' : '#b42318', href: './Reports.html?report=profit-loss' },
+      ],
+      months: d.months.map((m) => ({
+        label: m.label, incomeLabel: 'Income ' + fin.rand(m.income), expenseLabel: 'Expenses ' + fin.rand(m.expenses),
+        incomeStyle: { height: pct(m.income), background: '#7a1528' }, expenseStyle: { height: pct(m.expenses), background: '#d8d2cd' },
+      })),
+      banks: d.bank_accounts.map((b) => ({ name: b.name, balance: fin.rand(b.balance) })),
+      unmatched: d.unmatched_bank_lines || null,
+      vat: {
+        output: fin.rand(d.vat_period.output_vat), input: fin.rand(d.vat_period.input_vat),
+        netLabel: d.vat_period.net_vat >= 0 ? 'Payable to SARS' : 'Refund due from SARS', net: fin.rand(Math.abs(d.vat_period.net_vat)),
+        period: app.date(d.vat_period.from) + ' – ' + app.date(d.vat_period.to),
+      },
+      topExpenses: d.top_expenses.map((e) => ({ name: e.name, amount: fin.rand(e.amount) })),
+      noExpenses: !d.top_expenses.length,
+    };
+  }
+}
+</script>
+</body>
+</html>

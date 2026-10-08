@@ -369,7 +369,7 @@ export async function courseForm(course) {
 }
 
 const ROLE_OPTIONS = [
-  { value: 'admin', label: 'Administrator' }, { value: 'branch_manager', label: 'Branch Manager' }, { value: 'hr', label: 'HR Staff' },
+  { value: 'admin', label: 'Administrator' }, { value: 'branch_manager', label: 'Branch Manager' }, { value: 'hr', label: 'HR Staff' }, { value: 'finance', label: 'Finance' },
   { value: 'agent', label: 'Sales Agent' }, { value: 'landlord', label: 'Landlord (portal)' }, { value: 'tenant', label: 'Tenant (portal)' },
 ];
 

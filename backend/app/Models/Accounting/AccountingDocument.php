@@ -2,6 +2,7 @@
 
 namespace App\Models\Accounting;
 
+use App\Casts\DateOnly;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -11,7 +12,7 @@ trait AccountingDocument
     protected function casts(): array
     {
         return [
-            'date' => 'date', 'due_date' => 'date',
+            'date' => DateOnly::class, 'due_date' => DateOnly::class,
             'subtotal' => 'float', 'vat_total' => 'float', 'total' => 'float', 'amount_paid' => 'float',
         ];
     }

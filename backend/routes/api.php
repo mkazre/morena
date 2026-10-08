@@ -132,6 +132,64 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
         Route::put('lessons/{lesson}/complete', [V1\CourseController::class, 'completeLesson'])->middleware($staffRoles);
         Route::get('certifications', [V1\CertificationController::class, 'index'])->middleware('role:admin|hr');
 
+        // Finance / accounting (agency books — trust accounts stay in PayProp)
+        Route::prefix('finance')->middleware('role:admin|finance')->group(function () {
+            Route::get('dashboard', [V1\Finance\FinanceController::class, 'dashboard']);
+            Route::get('settings', [V1\Finance\FinanceController::class, 'settings']);
+            Route::put('settings', [V1\Finance\FinanceController::class, 'updateSettings']);
+
+            Route::get('accounts', [V1\Finance\AccountController::class, 'index']);
+            Route::post('accounts', [V1\Finance\AccountController::class, 'store']);
+            Route::put('accounts/{account}', [V1\Finance\AccountController::class, 'update']);
+            Route::get('tax-rates', [V1\Finance\AccountController::class, 'taxRates']);
+            Route::get('contacts', [V1\Finance\AccountController::class, 'contacts']);
+            Route::post('contacts', [V1\Finance\AccountController::class, 'storeContact']);
+            Route::put('contacts/{contact}', [V1\Finance\AccountController::class, 'updateContact']);
+
+            Route::get('journals', [V1\Finance\JournalController::class, 'index']);
+            Route::post('journals', [V1\Finance\JournalController::class, 'store']);
+            Route::get('journals/{journal}', [V1\Finance\JournalController::class, 'show']);
+            Route::post('journals/{journal}/void', [V1\Finance\JournalController::class, 'void']);
+            Route::post('journals/{journal}/reverse', [V1\Finance\JournalController::class, 'reverse']);
+
+            Route::prefix('{kind}')->where(['kind' => 'invoices|bills'])->group(function () {
+                Route::get('/', [V1\Finance\DocumentController::class, 'index']);
+                Route::post('/', [V1\Finance\DocumentController::class, 'store']);
+                Route::get('{id}', [V1\Finance\DocumentController::class, 'show'])->whereNumber('id');
+                Route::put('{id}', [V1\Finance\DocumentController::class, 'update'])->whereNumber('id');
+                Route::post('{id}/approve', [V1\Finance\DocumentController::class, 'approve'])->whereNumber('id');
+                Route::post('{id}/void', [V1\Finance\DocumentController::class, 'void'])->whereNumber('id');
+            });
+
+            Route::get('payments', [V1\Finance\PaymentController::class, 'index']);
+            Route::post('payments', [V1\Finance\PaymentController::class, 'store']);
+            Route::post('payments/{payment}/void', [V1\Finance\PaymentController::class, 'void']);
+
+            Route::get('bank-accounts', [V1\Finance\BankController::class, 'accounts']);
+            Route::get('bank-transactions', [V1\Finance\BankController::class, 'transactions']);
+            Route::post('bank-transactions/import', [V1\Finance\BankController::class, 'import']);
+            Route::get('bank-transactions/{transaction}/suggestions', [V1\Finance\BankController::class, 'suggestions']);
+            Route::post('bank-transactions/{transaction}/match', [V1\Finance\BankController::class, 'match']);
+            Route::post('bank-transactions/{transaction}/create', [V1\Finance\BankController::class, 'create']);
+            Route::post('bank-transactions/{transaction}/unmatch', [V1\Finance\BankController::class, 'unmatch']);
+            Route::post('bank-transactions/{transaction}/ignore', [V1\Finance\BankController::class, 'ignore']);
+            Route::get('reconciliations', [V1\Finance\BankController::class, 'reconciliations']);
+            Route::post('reconciliations', [V1\Finance\BankController::class, 'reconcile']);
+
+            Route::get('reports/{report}', [V1\Finance\ReportController::class, 'show']);
+
+            Route::get('payroll/employees', [V1\Finance\PayrollController::class, 'employees']);
+            Route::put('payroll/employees/{staff}', [V1\Finance\PayrollController::class, 'saveProfile']);
+            Route::get('payroll/tax-tables', [V1\Finance\PayrollController::class, 'taxTables']);
+            Route::post('payroll/tax-tables', [V1\Finance\PayrollController::class, 'saveTaxTable']);
+            Route::put('payroll/tax-tables/{table}', [V1\Finance\PayrollController::class, 'saveTaxTable']);
+            Route::get('payroll/runs', [V1\Finance\PayrollController::class, 'runs']);
+            Route::post('payroll/runs', [V1\Finance\PayrollController::class, 'calculate']);
+            Route::get('payroll/runs/{run}', [V1\Finance\PayrollController::class, 'showRun']);
+            Route::post('payroll/runs/{run}/finalise', [V1\Finance\PayrollController::class, 'finalise']);
+            Route::get('payroll/payslips/{payslip}', [V1\Finance\PayrollController::class, 'payslip']);
+        });
+
         // System
         Route::middleware('role:admin')->group(function () {
             Route::get('users', [V1\UserController::class, 'index']);

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Banking</span></div>
+      <div class="btn-row"><button class="btn" onClick="{{ onImport }}">Import statement (CSV)</button>
+<button class="btn btn-primary" onClick="{{ onReconcile }}">Reconcile</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Banking</h1><p>Import your bank statement, match each line to the books (or code it straight to an account), then reconcile to the statement balance.</p></div>
+</div>
+<div class="grid grid-3" style="margin-bottom:18px">
+  <sc-for list="{{ accounts }}" as="a" hint-placeholder-count="3">
+    <div class="kpi" onClick="{{ a.onSelect }}" style="{{ a.style }}">
+      <div class="kpi-label">{{ a.name }}</div>
+      <div class="kpi-value">{{ a.ledger }}</div>
+      <div class="kpi-sub">Statement {{ a.statement }} · <span style="color:{{ a.unmatchedColor }}">{{ a.unmatched }} to match</span></div>
+      <div class="kpi-sub">{{ a.reconciled }}</div>
+    </div>
+  </sc-for>
+</div>
+<div class="tabs"><sc-for list="{{ tabs }}" as="t"><div class="{{ t.cls }}" onClick="{{ t.onClick }}">{{ t.label }}</div></sc-for></div>
+<div class="card flush"><div class="tbl-wrap"><table class="tbl">
+  <thead><tr><th>Date</th><th>Description</th><th>Reference</th><th class="num">Money in</th><th class="num">Money out</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <sc-if value="{{ empty }}"><tr><td colspan="7" class="empty">{{ emptyText }}</td></tr></sc-if>
+    <sc-for list="{{ lines }}" as="l" hint-placeholder-count="10">
+      <tr>
+        <td style="white-space:nowrap">{{ l.date }}</td><td>{{ l.description }}</td><td class="muted">{{ l.reference }}</td>
+        <td class="num" style="color:#2f7d5a">{{ l.in }}</td><td class="num">{{ l.out }}</td>
+        <td><span class="{{ l.statusClass }}">{{ l.status }}</span><sc-if value="{{ l.journal }}"> <a class="link small" href="{{ l.journalHref }}">{{ l.journal }}</a></sc-if></td>
+        <td style="white-space:nowrap">
+          <sc-if value="{{ l.canMatch }}"><button class="btn btn-sm btn-primary" onClick="{{ l.onMatch }}">Match / code</button> <a class="link small" onClick="{{ l.onIgnore }}">Ignore</a></sc-if>
+          <sc-if value="{{ l.canUnmatch }}"><a class="link small" onClick="{{ l.onUnmatch }}">Unmatch</a></sc-if>
+          <sc-if value="{{ l.isIgnored }}"><a class="link small" onClick="{{ l.onIgnore }}">Restore</a></sc-if>
+        </td>
+      </tr>
+    </sc-for>
+  </tbody>
+</table></div></div>
+<div class="muted small" style="margin-top:12px">CSV exports from FNB, Standard Bank, Absa, Nedbank and Capitec are recognised automatically (Date, Description, Amount or Debit/Credit columns). Re-importing the same statement never creates duplicates.</div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], accounts: [], accountId: null, status: 'unmatched', lines: [], loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-banking', ['admin', 'finance']));
+    await this.loadAccounts();
+  }
+
+  loadAccounts = async () => {
+    const res = await this.app.api('/finance/bank-accounts');
+    const accountId = this.state.accountId || (res.data[0] && res.data[0].id);
+    this.setState({ accounts: res.data, accountId }, this.loadLines);
+  };
+
+  loadLines = async () => {
+    if (!this.state.accountId) return;
+    const q = new URLSearchParams({ bank_account_id: this.state.accountId });
+    if (this.state.status) q.set('status', this.state.status);
+    const res = await this.app.run(() => this.app.api('/finance/bank-transactions?' + q));
+    if (res) this.setState({ lines: res.data, loaded: true });
+  };
+
+  refresh = async () => { await this.loadAccounts(); };
+
+  current() { return this.state.accounts.find((a) => a.id === this.state.accountId); }
+
+  onImport = async () => {
+    const { app } = this;
+    const res = await app.form({
+      title: 'Import bank statement', intro: 'Download the statement as CSV from internet banking, then upload it here.',
+      submitLabel: 'Import',
+      fields: [
+        { name: 'bank_account_id', label: 'Into account', type: 'select', value: this.state.accountId, options: this.state.accounts.map((a) => ({ value: a.id, label: a.name })) },
+        { name: 'file', label: 'CSV file', type: 'file', accept: '.csv,text/csv', required: true },
+      ],
+      onSubmit: (v) => app.api('/finance/bank-transactions/import', { method: 'POST', form: app.formData(v) }),
+    });
+    if (res) { app.toast(res.imported + ' line(s) imported' + (res.skipped ? ', ' + res.skipped + ' already imported' : '')); this.refresh(); }
+  };
+
+  onReconcile = async () => {
+    const { app, fin } = this;
+    const acc = this.current();
+    if (!acc) return;
+    const rec = await app.form({
+      title: 'Reconcile ' + acc.name,
+      intro: 'Enter the closing balance printed on your bank statement. Every statement line up to that date must be matched first.',
+      submitLabel: 'Reconcile',
+      fields: [
+        { name: 'statement_date', label: 'Statement date', type: 'date', value: fin.today(), required: true },
+        { name: 'statement_balance', label: 'Closing balance on statement (R)', type: 'number', step: '0.01', value: acc.statement_balance, required: true },
+      ],
+      onSubmit: (v) => app.api('/finance/reconciliations', { method: 'POST', body: { ...v, bank_account_id: acc.id } }),
+    });
+    if (rec) { app.toast('Reconciled to ' + app.date(rec.statement_date)); this.refresh(); }
+  };
+
+  match = async (l) => {
+    const { app, fin } = this;
+    const [sugg, lk] = await Promise.all([app.api('/finance/bank-transactions/' + l.id + '/suggestions'), fin.lookups()]);
+    const options = [
+      { value: '', label: 'Code it to an account (below)' },
+      ...sugg.data.map((x) => ({ value: x.type + ':' + (x.journal_entry_id || x.id), label: (x.type === 'journal' ? 'Existing entry ' : x.type === 'invoice' ? 'Payment for invoice ' : 'Payment of bill ') + x.label + ' (' + app.date(x.date) + ')' })),
+    ];
+    const moneyIn = l.amount > 0;
+    const done = await app.form({
+      title: (moneyIn ? 'Money in ' : 'Money out ') + 'R ' + fin.amt(Math.abs(l.amount)),
+      intro: l.description + ' · ' + app.date(l.date),
+      submitLabel: 'Save',
+      fields: [
+        { name: 'match', label: sugg.data.length ? 'Suggested matches' : 'No matching entries found', type: 'select', options, value: options[1] ? options[1].value : '' },
+        { name: 'account_id', label: 'Account', type: 'select', options: [{ value: '', label: '—' }, ...fin.accountOptions(lk.accounts.filter((a) => a.id !== l.bank_account_id), moneyIn ? ['income', 'liability', 'equity', 'asset'] : ['expense', 'asset', 'liability', 'equity'])] },
+        { name: 'tax_rate_id', label: 'VAT', type: 'select', options: lk.taxRates.map((t) => ({ value: t.id, label: t.name })), value: (lk.taxRates.find((t) => t.code === 'NONE') || {}).id },
+        { name: 'contact_id', label: 'Contact (optional)', type: 'select', options: [{ value: '', label: '—' }, ...lk.contacts.map((c) => ({ value: c.id, label: c.name }))] },
+        { name: 'description', label: 'Description', value: l.description },
+      ],
+      onSubmit: (v) => {
+        const base = '/finance/bank-transactions/' + l.id;
+        if (v.match) {
+          const [type, id] = v.match.split(':');
+          return type === 'journal'
+            ? app.api(base + '/match', { method: 'POST', body: { journal_entry_id: id } })
+            : app.api(base + '/create', { method: 'POST', body: { document_id: id, contact_id: v.contact_id || null } });
+        }
+        if (!v.account_id) throw new app.ApiError(422, 'Choose a match or an account', { account_id: ['Choose a match above, or an account to code this line to.'] });
+        return app.api(base + '/create', { method: 'POST', body: { account_id: v.account_id, tax_rate_id: v.tax_rate_id || null, contact_id: v.contact_id || null, description: v.description } });
+      },
+    });
+    if (done) { app.toast('Matched'); this.refresh(); }
+  };
+
+  post = async (l, action, msg) => {
+    if (await this.app.run(() => this.app.api('/finance/bank-transactions/' + l.id + '/' + action, { method: 'POST' }), msg)) this.refresh();
+  };
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const tabs = [['unmatched', 'To match'], ['matched', 'Matched'], ['reconciled', 'Reconciled'], ['ignored', 'Ignored'], ['', 'All']];
+    return {
+      ...(app ? app.shellVals(s) : {}), onImport: this.onImport, onReconcile: this.onReconcile,
+      empty: s.loaded && !s.lines.length,
+      emptyText: s.status === 'unmatched' ? 'All caught up — nothing to match. Import a statement to continue.' : 'No statement lines here.',
+      tabs: tabs.map(([k, label]) => ({ label, cls: 'tab' + (s.status === k ? ' on' : ''), onClick: () => this.setState({ status: k }, this.loadLines) })),
+      accounts: fin ? s.accounts.map((a) => ({
+        name: a.name, ledger: fin.rand(a.ledger_balance), statement: fin.rand(a.statement_balance), unmatched: a.unmatched,
+        unmatchedColor: a.unmatched ? '#c07c1e' : '#2f7d5a', reconciled: a.last_reconciled ? 'Reconciled to ' + app.date(a.last_reconciled) : 'Never reconciled',
+        style: { cursor: 'pointer', borderColor: a.id === s.accountId ? '#7a1528' : '#e8e3e0', boxShadow: a.id === s.accountId ? '0 0 0 1px #7a1528' : 'none' },
+        onSelect: () => this.setState({ accountId: a.id }, this.loadLines),
+      })) : [],
+      lines: app ? s.lines.map((l) => ({
+        date: app.date(l.date), description: l.description, reference: l.reference || '',
+        in: l.amount > 0 ? fin.amt(l.amount) : '', out: l.amount < 0 ? fin.amt(-l.amount) : '',
+        status: fin.statusLabel(l.status), statusClass: fin.statusClass(l.status),
+        journal: l.journal_number, journalHref: './Journals.html?id=' + l.journal_entry_id,
+        canMatch: l.status === 'unmatched', canUnmatch: l.status === 'matched', isIgnored: l.status === 'ignored',
+        onMatch: () => this.match({ ...l, bank_account_id: s.accountId }),
+        onIgnore: () => this.post(l, 'ignore', l.status === 'ignored' ? 'Restored' : 'Ignored'),
+        onUnmatch: () => this.post(l, 'unmatch', 'Unmatched'),
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Customers & Suppliers</span></div>
+      <div class="btn-row"><button class="btn btn-primary" onClick="{{ onNew }}">+ New contact</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Customers &amp; suppliers</h1><p>Sellers who owe commission are added automatically when a deal closes; agents are set up as suppliers when their commission is paid out.</p></div>
+</div>
+<div class="tabs"><sc-for list="{{ tabs }}" as="t"><div class="{{ t.cls }}" onClick="{{ t.onClick }}">{{ t.label }}</div></sc-for></div>
+<div class="toolbar"><input class="inp" style="max-width:300px" value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search name…" /></div>
+<div class="card flush"><div class="tbl-wrap"><table class="tbl">
+  <thead><tr><th>Name</th><th>Type</th><th>Email</th><th>Phone</th><th>VAT no.</th><th class="num">Owes us</th><th class="num">We owe</th><th></th></tr></thead>
+  <tbody>
+    <sc-if value="{{ empty }}"><tr><td colspan="8" class="empty">No contacts yet.</td></tr></sc-if>
+    <sc-for list="{{ rows }}" as="c" hint-placeholder-count="8">
+      <tr>
+        <td class="strong">{{ c.name }}<sc-if value="{{ c.isAgent }}"> <span class="badge b-brand">agent</span></sc-if></td><td class="muted">{{ c.type }}</td><td class="muted">{{ c.email }}</td><td class="muted">{{ c.phone }}</td><td class="muted">{{ c.vat }}</td>
+        <td class="num">{{ c.owes }}</td><td class="num">{{ c.owe }}</td>
+        <td style="white-space:nowrap"><a class="link small" href="{{ c.invoiceHref }}">{{ c.newDoc }}</a> · <a class="link small" onClick="{{ c.onEdit }}">Edit</a></td>
+      </tr>
+    </sc-for>
+  </tbody>
+</table></div></div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], rows: [], type: '', search: '', loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-contacts', ['admin', 'finance']));
+    this.load();
+  }
+
+  load = async () => {
+    const q = new URLSearchParams();
+    if (this.state.type) q.set('type', this.state.type);
+    if (this.state.search) q.set('search', this.state.search);
+    const res = await this.app.run(() => this.app.api('/finance/contacts?' + q));
+    if (res) this.setState({ rows: res.data, loaded: true });
+  };
+
+  edit = async (c) => {
+    const { app, fin } = this;
+    if (!c) { if (await fin.newContact(this.state.type === 'supplier' ? 'supplier' : 'customer')) this.load(); return; }
+    const saved = await app.form({
+      title: 'Edit ' + c.name, submitLabel: 'Save',
+      fields: [
+        { name: 'name', label: 'Name', value: c.name, required: true },
+        { name: 'type', label: 'Type', type: 'select', value: c.type, options: [{ value: 'customer', label: 'Customer' }, { value: 'supplier', label: 'Supplier' }, { value: 'both', label: 'Both' }] },
+        { name: 'email', label: 'Email', type: 'email', value: c.email }, { name: 'phone', label: 'Phone', value: c.phone },
+        { name: 'vat_number', label: 'VAT number', value: c.vat_number }, { name: 'address', label: 'Address', type: 'textarea', rows: 3, value: c.address },
+        { name: 'is_active', label: 'Active', type: 'checkbox', value: true },
+      ],
+      onSubmit: (v) => app.api('/finance/contacts/' + c.id, { method: 'PUT', body: v }),
+    });
+    if (saved) { fin.resetLookups(); app.toast('Contact saved'); this.load(); }
+  };
+  onNew = () => this.edit(null);
+  onSearch = (e) => { this.setState({ search: e.target.value }); clearTimeout(this.t); this.t = setTimeout(this.load, 250); };
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const tabs = [['', 'All'], ['customer', 'Customers'], ['supplier', 'Suppliers']];
+    const types = { customer: 'Customer', supplier: 'Supplier', both: 'Customer & supplier' };
+    return {
+      ...(app ? app.shellVals(s) : {}), search: s.search, onSearch: this.onSearch, onNew: this.onNew, empty: s.loaded && !s.rows.length,
+      tabs: tabs.map(([k, label]) => ({ label, cls: 'tab' + (s.type === k ? ' on' : ''), onClick: () => this.setState({ type: k }, this.load) })),
+      rows: fin ? s.rows.map((c) => ({
+        name: c.name, isAgent: !!c.staff_id, type: types[c.type], email: c.email || '', phone: c.phone || '', vat: c.vat_number || '',
+        owes: c.owes_us ? fin.amt(c.owes_us) : '—', owe: c.we_owe ? fin.amt(c.we_owe) : '—',
+        newDoc: c.type === 'supplier' ? 'New bill' : 'New invoice',
+        invoiceHref: './Document.html?kind=' + (c.type === 'supplier' ? 'bills' : 'invoices') + '&new=1&contact_id=' + c.id,
+        onEdit: () => this.edit(c),
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

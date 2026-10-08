@@ -245,7 +245,7 @@ export function status(kind, key, extra) {
 }
 
 export const ROLE_LABELS = {
-  admin: 'Administrator', branch_manager: 'Branch Manager', hr: 'HR Staff', agent: 'Sales Agent',
+  admin: 'Administrator', branch_manager: 'Branch Manager', hr: 'HR Staff', finance: 'Finance', agent: 'Sales Agent',
   landlord: 'Landlord (portal)', tenant: 'Tenant (portal)',
 };
 

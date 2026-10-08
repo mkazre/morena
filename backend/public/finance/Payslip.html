@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / Payroll / <span style="color:#1c1a19;font-weight:700">Payslip</span></div>
+      <div class="btn-row"><a class="btn" href="./Payroll.html">← Payroll</a>
+<button class="btn btn-primary" onClick="{{ onPrint }}">Print / PDF</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<sc-if value="{{ ready }}">
+<div class="sheet">
+  <div class="sheet-head">
+    <div><img src="../assets/logo.png" alt="" style="width:180px;height:auto;margin-bottom:8px" /><div class="strong">{{ p.company }}</div></div>
+    <div style="text-align:right"><h2>PAYSLIP</h2><div class="strong">{{ p.period }}</div><div class="muted small">Paid {{ p.payDate }}<sc-if value="{{ p.draft }}"> · <span class="badge b-warn">Draft</span></sc-if></div></div>
+  </div>
+  <div class="grid grid-2" style="margin-bottom:20px;font-size:13px">
+    <div><div class="strong">{{ p.name }}</div><div class="muted">{{ p.role }}{{ p.branch }}</div></div>
+    <div style="text-align:right" class="muted">Tax no. {{ p.taxNo }}<br />ID {{ p.idNo }}<br />{{ p.bank }}</div>
+  </div>
+  <div class="grid grid-2">
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Earnings</th><th class="num">Amount</th></tr></thead><tbody>
+      <tr><td>Basic salary</td><td class="num">{{ p.basic }}</td></tr>
+      <tr><td>Taxable allowances</td><td class="num">{{ p.allowances }}</td></tr>
+      <tr class="total"><td>Gross earnings</td><td class="num">{{ p.gross }}</td></tr>
+    </tbody></table></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Deductions</th><th class="num">Amount</th></tr></thead><tbody>
+      <tr><td>PAYE</td><td class="num">{{ p.paye }}</td></tr>
+      <tr><td>UIF (1%)</td><td class="num">{{ p.uif }}</td></tr>
+      <tr><td>Pension / retirement annuity</td><td class="num">{{ p.retirement }}</td></tr>
+      <tr><td>Other deductions</td><td class="num">{{ p.other }}</td></tr>
+      <tr class="total"><td>Total deductions</td><td class="num">{{ p.deductions }}</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="totals"><div class="grand"><span>NET PAY</span><span class="num">R {{ p.net }}</span></div></div>
+  <div class="muted small" style="margin-top:22px;line-height:1.8">
+    Employer contributions (not deducted from pay): UIF {{ p.uifEr }} · SDL {{ p.sdl }}<br />
+    PAYE workings ({{ p.taxYear }}): annualised taxable income {{ p.annual }} → tax {{ p.taxBefore }} − rebates {{ p.rebates }} − medical credits {{ p.medical }}/month × 12 = {{ p.annualPaye }} a year ÷ 12.
+  </div>
+</div>
+</sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], slip: null };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-payroll', ['admin', 'finance']));
+    const slip = await this.app.run(() => this.app.api('/finance/payroll/payslips/' + this.app.param('id')));
+    if (slip) this.setState({ slip });
+  }
+
+  onPrint = () => window.print();
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const x = s.slip;
+    if (!app || !x) return { ...(app ? app.shellVals(s) : {}), ready: false, p: {}, onPrint: this.onPrint };
+    const w = x.workings;
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return {
+      ...app.shellVals(s), ready: true, onPrint: this.onPrint,
+      p: {
+        company: x.company.company_name, period: months[Number(x.period.slice(5, 7)) - 1] + ' ' + x.period.slice(0, 4), payDate: app.date(x.pay_date), draft: x.status === 'draft',
+        name: x.employee.name, role: x.employee.role || '', branch: x.employee.branch ? ' · ' + x.employee.branch : '',
+        taxNo: x.employee.tax_number || '—', idNo: x.employee.id_number || '—', bank: [x.employee.bank, x.employee.account].filter(Boolean).join(' ') || '',
+        basic: fin.amt(x.basic_salary), allowances: fin.amt(x.allowances), gross: fin.amt(x.gross),
+        paye: fin.amt(x.paye), uif: fin.amt(x.uif_employee), retirement: fin.amt(x.retirement), other: fin.amt(x.other_deductions),
+        deductions: fin.amt(x.paye + x.uif_employee + x.retirement + x.other_deductions), net: fin.amt(x.net),
+        uifEr: fin.rand(x.uif_employer), sdl: fin.rand(x.sdl), taxYear: w.tax_year,
+        annual: fin.rand(w.annual_taxable_income), taxBefore: fin.rand(w.tax_before_rebates), rebates: fin.rand(w.rebates),
+        medical: fin.rand(w.medical_credits_monthly), annualPaye: fin.rand(w.annual_paye),
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

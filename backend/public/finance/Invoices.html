@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Invoices</span></div>
+      <div class="btn-row"><a class="btn btn-primary" href="./Document.html?kind=invoices&new=1">+ New invoice</a></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Invoices</h1><p>Money owed to the agency — commission invoices are raised automatically when a deal reaches its final stage.</p></div>
+</div>
+<div class="grid grid-3" style="margin-bottom:16px">
+  <div class="kpi"><div class="kpi-label">Outstanding</div><div class="kpi-value">{{ sum.outstanding }}</div></div>
+  <div class="kpi"><div class="kpi-label">Overdue</div><div class="kpi-value" style="color:#b42318">{{ sum.overdue }}</div></div>
+  <div class="kpi"><div class="kpi-label">Drafts</div><div class="kpi-value">{{ sum.drafts }}</div></div>
+</div>
+<div class="tabs">
+  <sc-for list="{{ tabs }}" as="t"><div class="{{ t.cls }}" onClick="{{ t.onClick }}">{{ t.label }}</div></sc-for>
+</div>
+<div class="toolbar"><input class="inp" style="max-width:320px" value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search number, customer, reference…" /></div>
+<div class="card flush"><div class="tbl-wrap"><table class="tbl">
+  <thead><tr><th>Number</th><th>Customer</th><th>Date</th><th>Due</th><th>Reference</th><th class="num">Total</th><th class="num">Balance due</th><th>Status</th></tr></thead>
+  <tbody>
+    <sc-if value="{{ empty }}"><tr><td colspan="8" class="empty">No invoices here yet.</td></tr></sc-if>
+    <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+      <tr class="click" onClick="{{ r.onOpen }}">
+        <td class="strong">{{ r.number }}</td><td>{{ r.contact }}</td><td>{{ r.date }}</td><td>{{ r.due }}</td><td class="muted">{{ r.reference }}</td>
+        <td class="num">{{ r.total }}</td><td class="num strong">{{ r.balance }}</td><td><span class="{{ r.statusClass }}">{{ r.status }}</span></td>
+      </tr>
+    </sc-for>
+  </tbody>
+</table></div></div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  kind = 'invoices';
+  state = { navSections: [], rows: [], summary: null, status: '', search: '', loaded: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell(this.kind === 'bills' ? 'fin-bills' : 'fin-invoices', ['admin', 'finance']));
+    this.setState({ status: this.app.param('status') || '' }, this.load);
+  }
+
+  load = async () => {
+    const q = new URLSearchParams();
+    if (this.state.status) q.set('status', this.state.status);
+    if (this.state.search) q.set('search', this.state.search);
+    const seq = (this.seq = (this.seq || 0) + 1);
+    const res = await this.app.run(() => this.app.api('/finance/' + this.kind + '?' + q));
+    if (res && seq === this.seq) this.setState({ rows: res.data, summary: res.summary, loaded: true });
+  };
+
+  onSearch = (e) => { this.setState({ search: e.target.value }); clearTimeout(this.t); this.t = setTimeout(this.load, 250); };
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const tabs = [['', 'All'], ['draft', 'Draft'], ['outstanding', 'Awaiting payment'], ['overdue', 'Overdue'], ['paid', 'Paid'], ['void', 'Void']];
+    return {
+      ...(app ? app.shellVals(s) : {}), search: s.search, onSearch: this.onSearch, empty: s.loaded && !s.rows.length,
+      tabs: tabs.map(([k, label]) => ({ label, cls: 'tab' + (s.status === k ? ' on' : ''), onClick: () => this.setState({ status: k }, this.load) })),
+      sum: s.summary && fin ? { outstanding: fin.rand(s.summary.outstanding), overdue: fin.rand(s.summary.overdue), drafts: s.summary.draft_count } : {},
+      rows: app ? s.rows.map((r) => ({
+        number: r.number, contact: r.contact, date: app.date(r.date), due: app.date(r.due_date), reference: r.reference || '',
+        total: fin.amt(r.total), balance: fin.amt(r.balance_due), status: fin.statusLabel(r.status), statusClass: fin.statusClass(r.status),
+        onOpen: () => { location.href = './Document.html?kind=' + this.kind + '&id=' + r.id; },
+      })) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

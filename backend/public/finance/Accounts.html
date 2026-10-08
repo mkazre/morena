@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/ui.css">
+  <style>body{margin:0} a{color:#7a1528;text-decoration:none} a:hover{color:#561020}</style>
+  <script src="../assets/logo-scale.js"></script>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f6;color:#1c1a19">
+  <aside style="width:240px;flex-shrink:0;background:#1c1a19;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)"><img id="sidebarLogo" src="../assets/logo.png" alt="Morena Properties" style="width:170px;max-width:100%;height:auto;filter:brightness(0) invert(1)" /></div>
+    <nav style="flex:1;padding:16px 12px;overflow-y:auto">
+      <sc-for list="{{ navSections }}" as="section" hint-placeholder-count="5">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:0 10px 6px">{{ section.title }}</div>
+          <sc-for list="{{ section.items }}" as="item" hint-placeholder-count="3">
+            <a href="{{ item.href }}" style="{{ item.rowStyle }}"><span style="{{ item.iconStyle }}">{{ item.icon }}</span>{{ item.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:50%;background:#7a1528;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ userInitials }}</div>
+      <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">{{ userName }}</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">{{ roleLabel }} · <a href="#" onClick="{{ onSignOut }}" style="color:rgba(255,255,255,0.5);text-decoration:underline">Sign out</a></div></div>
+    </div>
+  </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
+      <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Chart of Accounts</span></div>
+      <div class="btn-row"><button class="btn btn-primary" onClick="{{ onNew }}">+ New account</button></div>
+    </header>
+    <main style="flex:1;padding:28px 32px;min-width:0">
+<div class="page-head">
+  <div><h1>Chart of accounts</h1><p>Pre-loaded for a South African estate agency. Accounts marked <span class="badge">system</span> drive automatic postings — rename them freely, but they can't be archived.</p></div>
+  <label class="small muted" style="display:flex;gap:6px;align-items:center"><input type="checkbox" checked="{{ showArchived }}" onChange="{{ onToggleArchived }}" /> Show archived</label>
+</div>
+<div class="toolbar"><input class="inp" style="max-width:300px" value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search code or name…" /></div>
+<div class="card flush"><div class="tbl-wrap"><table class="tbl">
+  <thead><tr><th style="width:90px">Code</th><th>Account</th><th>Type</th><th class="num">Balance</th><th></th></tr></thead>
+  <tbody>
+    <sc-for list="{{ groups }}" as="g">
+      <tr class="section"><td colspan="5">{{ g.label }}</td></tr>
+      <sc-for list="{{ g.rows }}" as="a">
+        <tr>
+          <td class="muted">{{ a.code }}</td>
+          <td><span class="strong">{{ a.name }}</span> <sc-if value="{{ a.system }}"><span class="badge">system</span></sc-if> <sc-if value="{{ a.archived }}"><span class="badge b-danger">archived</span></sc-if><div class="muted small">{{ a.description }}</div></td>
+          <td class="muted">{{ a.subtype }}</td>
+          <td class="num strong">{{ a.balance }}</td>
+          <td style="white-space:nowrap"><a class="link small" href="{{ a.ledgerHref }}">Ledger</a> · <a class="link small" onClick="{{ a.onEdit }}">Edit</a></td>
+        </tr>
+      </sc-for>
+    </sc-for>
+  </tbody>
+</table></div></div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { navSections: [], accounts: [], search: '', showArchived: false };
+
+  async componentDidMount() {
+    this.app = await import('../assets/app.js');
+    this.fin = await import('../assets/finance.js');
+    this.setState(await this.app.shell('fin-accounts', ['admin', 'finance']));
+    this.load();
+  }
+
+  load = async () => {
+    const res = await this.app.run(() => this.app.api('/finance/accounts' + (this.state.showArchived ? '?include_archived=1' : '')));
+    if (res) this.setState({ accounts: res.data });
+  };
+
+  edit = async (acc) => {
+    const { app, fin } = this;
+    const typeOpts = Object.entries(fin.TYPE_LABELS).map(([value, label]) => ({ value, label }));
+    const subOpts = Object.entries(fin.SUBTYPE_LABELS).map(([value, label]) => ({ value, label: label + ' (' + Object.keys(fin.SUBTYPES).find((t) => fin.SUBTYPES[t].includes(value)) + ')' }));
+    const saved = await app.form({
+      title: acc ? 'Edit ' + acc.code + ' · ' + acc.name : 'New account',
+      intro: acc && acc.system ? 'System account — only the name, description and bank number can change.' : 'The detail type decides where the account appears on the balance sheet, profit & loss and cash-flow statement.',
+      submitLabel: 'Save account',
+      fields: [
+        { name: 'code', label: 'Code', value: acc && acc.code, required: true },
+        { name: 'name', label: 'Name', value: acc && acc.name, required: true },
+        ...(acc && acc.system ? [] : [
+          { name: 'type', label: 'Type', type: 'select', options: typeOpts, value: acc ? acc.type : 'expense' },
+          { name: 'subtype', label: 'Detail type', type: 'select', options: subOpts, value: acc ? acc.subtype : 'operating_expense', hint: 'Must belong to the chosen type.' },
+        ]),
+        { name: 'description', label: 'Description', value: acc && acc.description },
+        { name: 'bank_account_number', label: 'Bank account number (bank accounts only)', value: acc && acc.bank_account_number },
+        ...(acc && !acc.system ? [{ name: 'is_active', label: 'Active (untick to archive)', type: 'checkbox', value: acc.is_active }] : []),
+      ],
+      onSubmit: (v) => (acc ? app.api('/finance/accounts/' + acc.id, { method: 'PUT', body: v }) : app.api('/finance/accounts', { method: 'POST', body: v })),
+    });
+    if (saved) { fin.resetLookups(); app.toast('Account saved'); this.load(); }
+  };
+  onNew = () => this.edit(null);
+  onSearch = (e) => this.setState({ search: e.target.value });
+  onToggleArchived = (e) => this.setState({ showArchived: e.target.checked }, this.load);
+
+  renderVals() {
+    const { app, fin } = this;
+    const s = this.state;
+    const term = s.search.toLowerCase();
+    const list = s.accounts.filter((a) => !term || a.code.includes(term) || a.name.toLowerCase().includes(term));
+    return {
+      ...(app ? app.shellVals(s) : {}), search: s.search, showArchived: s.showArchived,
+      onNew: this.onNew, onSearch: this.onSearch, onToggleArchived: this.onToggleArchived,
+      groups: fin ? Object.entries(fin.TYPE_LABELS).map(([type, label]) => ({
+        label,
+        rows: list.filter((a) => a.type === type).map((a) => ({
+          code: a.code, name: a.name, description: a.description || '', system: a.system, archived: !a.is_active,
+          subtype: fin.SUBTYPE_LABELS[a.subtype], balance: fin.amt(a.balance),
+          ledgerHref: './Reports.html?report=general-ledger&account_id=' + a.id, onEdit: () => this.edit(a),
+        })),
+      })).filter((g) => g.rows.length) : [],
+    };
+  }
+}
+</script>
+</body>
+</html>

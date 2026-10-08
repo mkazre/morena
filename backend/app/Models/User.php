@@ -21,6 +21,7 @@ class User extends Authenticatable
         'admin' => 'admin',
         'branch_manager' => 'manager',
         'hr' => 'hr',
+        'finance' => 'finance',
         'agent' => 'agent',
         'landlord' => 'landlord',
         'tenant' => 'tenant',
