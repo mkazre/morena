@@ -39,6 +39,12 @@ if ($LASTEXITCODE -ne 0) { Pop-Location; throw 'composer install failed' }
 cmd /c "composer dump-autoload --optimize --no-dev --no-scripts 2>&1" | Out-Null
 Pop-Location
 
+# Manifest of every file, so `morena:deploy` can refuse to run on a half-extracted upload.
+$files = Get-ChildItem -Path $stage -Recurse -File | ForEach-Object { $_.FullName.Substring($stage.Length + 1).Replace('\', '/') } | Sort-Object
+$lines = @("# $stamp") + $files
+[IO.File]::WriteAllLines((Join-Path $stage 'release-manifest.txt'), $lines)
+Write-Host "Manifest: $($files.Count) files"
+
 Write-Host "Zipping to $zip ..."
 if (Test-Path $zip) { Remove-Item -Force $zip }
 # Windows' bundled bsdtar writes real zips and keeps dotfiles such as public/.htaccess.

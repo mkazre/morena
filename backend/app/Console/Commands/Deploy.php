@@ -28,6 +28,10 @@ class Deploy extends Command
     {
         $this->line('== Morena deploy '.now()->toDateTimeString().' ('.app()->environment().') ==');
 
+        if (! $this->releaseComplete()) {
+            return self::FAILURE; // never migrate a half-extracted release
+        }
+
         try {
             $this->step('Database migrations', fn () => Artisan::call('migrate', ['--force' => true]));
             $this->step('Reference data (roles, pipeline, commission rules, categories)', fn () => Artisan::call('db:seed', [
@@ -50,6 +54,38 @@ class Deploy extends Command
         $this->info('== Done ==');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * build-release.ps1 writes release-manifest.txt (every file in the zip). If File Manager's extract stopped early —
+     * usually the hosting account's disk or file-count (inode) limit, or a timeout — files that are new in this
+     * release are missing while overwritten ones look fine. Check before touching the database.
+     */
+    private function releaseComplete(): bool
+    {
+        $manifest = base_path('release-manifest.txt');
+        if (! is_file($manifest)) {
+            $this->warn('WARN No release-manifest.txt — skipping the file check (older release zip).');
+
+            return true;
+        }
+        $lines = preg_split('/\r\n|\n/', trim(file_get_contents($manifest)));
+        $release = str_starts_with($lines[0] ?? '', '# ') ? substr(array_shift($lines), 2) : 'unknown';
+        $missing = array_values(array_filter($lines, fn ($f) => $f !== '' && ! is_file(base_path($f))));
+        if ($missing) {
+            $this->error('FAILED: release '.$release.' is incomplete — '.count($missing).' of '.count($lines).' files are missing on the server, e.g.:');
+            foreach (array_slice($missing, 0, 12) as $f) {
+                $this->line('    '.$f);
+            }
+            $this->line('    Nothing was changed in the database. Likely cause: the hosting account hit its disk-space or');
+            $this->line('    file-count (inode) limit, or File Manager stopped extracting. Check cPanel → Disk Usage / the');
+            $this->line('    "Inodes" figure in the sidebar, delete old zips, then extract the zip again (overwrite) and re-run.');
+
+            return false;
+        }
+        $this->info('OK  Release '.$release.' — all '.count($lines).' files present');
+
+        return true;
     }
 
     private function step(string $label, callable $run): void
