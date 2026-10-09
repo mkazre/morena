@@ -51,7 +51,7 @@
     <div onClick="{{ onAll }}" style="{{ allStyle }}">All documents <span class="muted small">{{ allCount }}</span></div>
     <sc-for list="{{ tree }}" as="f">
       <div onClick="{{ f.onSelect }}" style="{{ f.style }}" title="{{ f.access }}">
-        <span><span onClick="{{ f.onToggle }}" style="display:inline-block;width:14px;color:#6b6660">{{ f.caret }}</span>{{ f.name }}<sc-if value="{{ f.locked }}"> <span title="{{ f.access }}">🔒</span></sc-if></span>
+        <span><span onClick="{{ f.onToggle }}" style="display:inline-block;width:14px;color:#6b6660">{{ f.caret }}</span>{{ f.name }}<sc-if value="{{ f.locked }}"> <span title="{{ f.access }}" class="i i-lock" style="color:#c07c1e"></span></sc-if></span>
         <span class="muted small">{{ f.total }}</span>
       </div>
     </sc-for>

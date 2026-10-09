@@ -5,6 +5,9 @@
 | Message templates use {placeholders}: {client} {agent} {agent_phone} {property} {link} {company} {amount} {due}.
 */
 return [
+    // Shown in the footer of every page. Bump on each release (major.minor.patch).
+    'version' => '1.5.0',
+
     'templates' => [
         'whatsapp' => [
             'lead_intro' => ['label' => 'Introduce yourself', 'body' => 'Hi {client}, this is {agent} from {company}. Thanks for your interest — when would suit you for a quick call about what you\'re looking for?'],

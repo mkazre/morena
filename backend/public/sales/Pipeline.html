@@ -54,7 +54,7 @@
     <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
       <div style="font-size:13px;color:#6b6660;font-weight:500">Sales / <span style="color:#1c1a19;font-weight:700">Pipeline Board</span></div>
       <div style="display:flex;align-items:center;gap:12px">
-        <a href="./PipelineSettings.html" style="font-size:13px;font-weight:600;border:1px solid #e8e3e0;padding:8px 14px;border-radius:8px">⚙ Edit stages</a>
+        <a href="./PipelineSettings.html" style="font-size:13px;font-weight:600;border:1px solid #e8e3e0;padding:8px 14px;border-radius:8px"><span class="i i-settings"></span> Edit stages</a>
         <button onClick="{{ onNewDeal }}" style="padding:9px 16px;border:none;border-radius:8px;background:#7a1528;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ New deal</button>
       </div>
     </header>
@@ -106,6 +106,9 @@ class Component extends DCLogic {
       this.app.api('/deals?status=open&per_page=200'),
     ]);
     this.setState({ stages: stages.data, deals: deals.data });
+    // Export menu: the board has no table, so hand the deals over directly.
+    window.__morenaExport = () => [{ title: 'Pipeline', columns: ['Property', 'Stage', 'Agent', 'Value (R)', 'Expected close'],
+      rows: this.state.deals.map((d) => [d.property, d.stage || '', d.agent || '', Number(d.value || 0).toFixed(2), d.expected_close_date || '']) }];
   };
 
   onNewDeal = async () => {

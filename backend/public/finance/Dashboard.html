@@ -39,13 +39,13 @@
   <div style="flex:1;display:flex;flex-direction:column;min-width:0">
     <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
       <div style="font-size:13px;color:#6b6660;font-weight:500">Finance / <span style="color:#1c1a19;font-weight:700">Overview</span></div>
-      <div class="btn-row"><a class="btn" href="./Payments.html?new=spend">Record expense</a>
-<a class="btn btn-primary" href="./Document.html?kind=invoices&new=1">+ New invoice</a></div>
+      <div class="btn-row"><a class="btn" href="./Payments.html?new=spend"><span class="i i-receipt"></span> Record expense</a>
+<a class="btn btn-primary" href="./Document.html?kind=invoices&new=1"><span class="i i-plus"></span> New invoice</a></div>
     </header>
     <main style="flex:1;padding:28px 32px;min-width:0">
 <div class="page-head">
-  <div><h1>Finance overview</h1><p>Agency books · financial year from {{ yearStart }}. Trust accounts remain in PayProp.</p></div>
-  <sc-if value="{{ lockDate }}"><span class="badge">Books locked to {{ lockDate }}</span></sc-if>
+  <div><h1>Finance overview</h1><p>Agency books · financial year from {{ yearStart }}. Trust accounts remain in PayProp. Use <strong>Export</strong> (top right) for a PDF or Excel copy of this dashboard.</p></div>
+  <sc-if value="{{ lockDate }}"><span class="badge"><span class="i i-lock"></span> Books locked to {{ lockDate }}</span></sc-if>
 </div>
 
 <div class="grid grid-4" style="margin-bottom:16px">
@@ -53,22 +53,15 @@
     <a href="{{ k.href }}" class="kpi" style="display:block;color:#1c1a19">
       <div class="kpi-label">{{ k.label }}</div>
       <div class="kpi-value">{{ k.value }}</div>
-      <div class="kpi-sub" style="color:{{ k.subColor }}">{{ k.sub }}</div>
+      <div class="kpi-sub" style="{{ k.subStyle }}">{{ k.sub }}</div>
     </a>
   </sc-for>
 </div>
 
 <div class="grid grid-main" style="margin-bottom:16px">
   <div class="card">
-    <div class="card-title">Income vs expenses <span class="muted small"><span class="badge b-brand">Income</span> <span class="badge">Expenses</span></span></div>
-    <div class="bars">
-      <sc-for list="{{ months }}" as="m" hint-placeholder-count="6">
-        <div class="col">
-          <div class="pair"><div class="bar" style="{{ m.incomeStyle }}" title="{{ m.incomeLabel }}"></div><div class="bar" style="{{ m.expenseStyle }}" title="{{ m.expenseLabel }}"></div></div>
-          <div>{{ m.label }}</div>
-        </div>
-      </sc-for>
-    </div>
+    <div class="card-title">Income, expenses &amp; net profit — last 12 months <button class="btn btn-sm" title="Download chart (PNG)" onClick="{{ onPngTrend }}"><span class="i i-download"></span></button></div>
+    <div class="chart-box tall"><canvas id="ch-trend"></canvas></div>
   </div>
   <div class="card">
     <div class="card-title">Bank accounts <a class="link small" href="./Banking.html">Banking →</a></div>
@@ -76,10 +69,34 @@
       <div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid #f1ede9;font-size:13.5px"><span>{{ b.name }}</span><span class="strong num">{{ b.balance }}</span></div>
     </sc-for>
     <sc-if value="{{ unmatched }}"><div class="notice warn" style="margin-top:12px">{{ unmatched }} bank statement line(s) to match</div></sc-if>
+    <div class="kpi-label" style="margin-top:18px">Month-end cash</div>
+    <div class="chart-box short"><canvas id="ch-cash"></canvas></div>
+  </div>
+</div>
+
+<div class="grid grid-3" style="margin-bottom:16px">
+  <div class="card">
+    <div class="card-title">Who owes us (receivables) <button class="btn btn-sm" title="Download chart (PNG)" onClick="{{ onPngAr }}"><span class="i i-download"></span></button></div>
+    <div class="chart-box"><canvas id="ch-ar"></canvas></div>
+    <div class="muted small" style="margin-top:8px">{{ arNote }} · <a class="link small" href="./Reports.html?report=aged-receivables">Aged receivables →</a></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Where the money goes (this year) <button class="btn btn-sm" title="Download chart (PNG)" onClick="{{ onPngExp }}"><span class="i i-download"></span></button></div>
+    <div class="chart-box"><canvas id="ch-exp"></canvas></div>
+    <div class="muted small" style="margin-top:8px"><a class="link small" href="./Reports.html?report=profit-loss">Profit &amp; loss →</a></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Where it comes from (this year) <button class="btn btn-sm" title="Download chart (PNG)" onClick="{{ onPngInc }}"><span class="i i-download"></span></button></div>
+    <div class="chart-box"><canvas id="ch-inc"></canvas></div>
+    <div class="muted small" style="margin-top:8px">{{ marginNote }}</div>
   </div>
 </div>
 
 <div class="grid grid-2">
+  <div class="card">
+    <div class="card-title">Top customers (this year, invoiced) <button class="btn btn-sm" title="Download chart (PNG)" onClick="{{ onPngCust }}"><span class="i i-download"></span></button></div>
+    <div class="chart-box tall"><canvas id="ch-cust"></canvas></div>
+  </div>
   <div class="card">
     <div class="card-title">VAT this period <a class="link small" href="./Reports.html?report=vat">VAT report →</a></div>
     <div class="tbl-wrap"><table class="tbl"><tbody>
@@ -88,13 +105,8 @@
       <tr class="total"><td>{{ vat.netLabel }}</td><td class="num">{{ vat.net }}</td></tr>
     </tbody></table></div>
     <div class="muted small" style="margin-top:10px">{{ vat.period }} · VAT201 is due by the 25th after each period ends (e-filing).</div>
-  </div>
-  <div class="card">
-    <div class="card-title">Biggest costs this year <a class="link small" href="./Reports.html?report=profit-loss">Profit &amp; loss →</a></div>
-    <sc-for list="{{ topExpenses }}" as="e" hint-placeholder-count="5">
-      <div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid #f1ede9;font-size:13.5px"><span>{{ e.name }}</span><span class="num">{{ e.amount }}</span></div>
-    </sc-for>
-    <sc-if value="{{ noExpenses }}"><div class="empty">No expenses recorded yet this year.</div></sc-if>
+    <div class="kpi-label" style="margin-top:20px">Who we owe (payables)</div>
+    <div class="chart-box short"><canvas id="ch-ap"></canvas></div>
   </div>
 </div>
     </main>
@@ -103,46 +115,149 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { navSections: [], d: null };
+  state = { navSections: [], d: null, c: null };
+  charts = {};
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
     this.fin = await import('../assets/finance.js');
     this.setState(await this.app.shell('fin-dashboard', ['admin', 'finance']));
-    const d = await this.app.run(() => this.app.api('/finance/dashboard'));
-    if (d) this.setState({ d });
+    const [d, c] = await Promise.all([this.app.run(() => this.app.api('/finance/dashboard')), this.app.run(() => this.app.api('/finance/dashboard/charts'))]);
+    this.setState({ d, c }, () => setTimeout(this.draw, 30));
+  }
+
+  componentWillUnmount() { Object.values(this.charts).forEach((ch) => ch.destroy()); }
+
+  // Brand palette: maroon family first, then warm neutrals and the status colours.
+  PALETTE = ['#7a1528', '#c23552', '#e2607e', '#c07c1e', '#2f7d5a', '#3b4cca', '#9a948e', '#561020'];
+
+  draw = async () => {
+    const c = this.state.c;
+    if (!c) return;
+    if (!window.Chart) {
+      await new Promise((res, rej) => { const s = document.createElement('script'); s.src = '../assets/vendor/chart.umd.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    }
+    const Chart = window.Chart;
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+    Chart.defaults.font.size = 11.5;
+    Chart.defaults.color = '#6b6660';
+    const R = (v) => 'R ' + Math.round(v).toLocaleString('en-US');
+    const short = (v) => { const a = Math.abs(v); return (v < 0 ? '-' : '') + 'R' + (a >= 1e6 ? (a / 1e6).toFixed(1) + 'm' : a >= 1e3 ? Math.round(a / 1e3) + 'k' : Math.round(a)); };
+    const tip = { callbacks: { label: (ctx) => ' ' + (ctx.dataset.label ? ctx.dataset.label + ': ' : ctx.label + ': ') + R(ctx.parsed.y ?? ctx.parsed.x ?? ctx.parsed) } };
+    const grid = { color: '#f1ede9' };
+    const make = (id, cfg) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (this.charts[id]) this.charts[id].destroy();
+      this.charts[id] = new Chart(el, { ...cfg, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 500 }, ...cfg.options } });
+    };
+    const doughnut = (id, items, empty) => make(id, {
+      type: 'doughnut',
+      data: { labels: items.length ? items.map((x) => x.label) : [empty], datasets: [{ data: items.length ? items.map((x) => x.value) : [1], backgroundColor: items.length ? this.PALETTE : ['#f1ede9'], borderWidth: 2, borderColor: '#fff' }] },
+      options: { cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, padding: 10 } }, tooltip: items.length ? { callbacks: { label: (ctx) => ' ' + ctx.label + ': ' + R(ctx.parsed) } } : { enabled: false } } },
+    });
+
+    make('ch-trend', {
+      data: {
+        labels: c.months.map((m) => m.short),
+        datasets: [
+          { type: 'bar', label: 'Income', data: c.months.map((m) => m.income), backgroundColor: '#7a1528', borderRadius: 4, maxBarThickness: 22, order: 2 },
+          { type: 'bar', label: 'Expenses', data: c.months.map((m) => m.expenses), backgroundColor: '#d8d2cd', borderRadius: 4, maxBarThickness: 22, order: 3 },
+          { type: 'line', label: 'Net profit', data: c.months.map((m) => m.net), borderColor: '#2f7d5a', backgroundColor: '#2f7d5a', tension: 0.35, pointRadius: 3, borderWidth: 2.5, order: 1 },
+        ],
+      },
+      options: { interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, boxHeight: 10 } }, tooltip: tip },
+        scales: { x: { grid: { display: false } }, y: { grid, ticks: { callback: short } } } },
+    });
+    make('ch-cash', {
+      type: 'line',
+      data: { labels: c.months.map((m) => m.short), datasets: [{ label: 'Cash', data: c.months.map((m) => m.cash), borderColor: '#7a1528', backgroundColor: 'rgba(122, 21, 40, 0.10)', fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2 }] },
+      options: { plugins: { legend: { display: false }, tooltip: tip }, scales: { x: { grid: { display: false } }, y: { grid, ticks: { callback: short, maxTicksLimit: 4 } } } },
+    });
+    const aging = (items) => items.filter((x) => x.value > 0);
+    doughnut('ch-ar', aging(c.receivables_aging), 'Nothing owed');
+    doughnut('ch-exp', c.expenses_ytd, 'No expenses yet');
+    doughnut('ch-inc', c.income_ytd, 'No income yet');
+    make('ch-cust', {
+      type: 'bar',
+      data: { labels: c.top_customers.map((x) => x.label), datasets: [{ label: 'Invoiced', data: c.top_customers.map((x) => x.value), backgroundColor: c.top_customers.map((_, i) => (i === 0 ? '#7a1528' : '#c23552')), borderRadius: 4, maxBarThickness: 18 }] },
+      options: { indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ' ' + R(ctx.parsed.x) } } }, scales: { x: { grid, ticks: { callback: short } }, y: { grid: { display: false } } } },
+    });
+    make('ch-ap', {
+      type: 'bar',
+      data: { labels: c.payables_aging.map((x) => x.label), datasets: [{ label: 'Owed', data: c.payables_aging.map((x) => x.value), backgroundColor: ['#2f7d5a', '#c07c1e', '#e2607e', '#c23552', '#7a1528'], borderRadius: 4, maxBarThickness: 28 }] },
+      options: { plugins: { legend: { display: false }, tooltip: tip }, scales: { x: { grid: { display: false } }, y: { grid, ticks: { callback: short, maxTicksLimit: 4 } } } },
+    });
+
+    // Header Export menu: every chart's data as tables, and the chart images in the PDF.
+    window.__morenaExport = () => this.exportSets();
+    window.__morenaExportImages = () => [['ch-trend', 'Income, expenses & net profit — 12 months'], ['ch-cash', 'Month-end cash'], ['ch-ar', 'Receivables aging'],
+      ['ch-exp', 'Expenses this year'], ['ch-inc', 'Income this year'], ['ch-cust', 'Top customers']]
+      .filter(([id]) => this.charts[id]).map(([id, title]) => ({ title, dataUrl: this.png(id, 'image/jpeg'), w: this.charts[id].width, h: this.charts[id].height }));
+  };
+
+  png(id, type = 'image/png') {
+    // White background so PNGs/PDFs don't come out transparent.
+    const src = this.charts[id].canvas;
+    const out = document.createElement('canvas');
+    out.width = src.width; out.height = src.height;
+    const g = out.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, out.width, out.height); g.drawImage(src, 0, 0);
+    return out.toDataURL(type, 0.9);
+  }
+  downloadPng = (id, name) => {
+    if (!this.charts[id]) return;
+    const a = document.createElement('a');
+    a.href = this.png(id); a.download = name + '-' + new Date().toISOString().slice(0, 10) + '.png'; a.click();
+  };
+  onPngTrend = () => this.downloadPng('ch-trend', 'income-expenses-12-months');
+  onPngAr = () => this.downloadPng('ch-ar', 'receivables-aging');
+  onPngExp = () => this.downloadPng('ch-exp', 'expenses-this-year');
+  onPngInc = () => this.downloadPng('ch-inc', 'income-this-year');
+  onPngCust = () => this.downloadPng('ch-cust', 'top-customers');
+
+  exportSets() {
+    const { d, c } = this.state;
+    const n = (v) => Number(v || 0).toFixed(2);
+    const sets = [{ title: 'Key figures', columns: ['Measure', 'Amount (R)'], rows: [
+      ['Cash in bank', n(d.cash)], ['Owed to us', n(d.receivable)], ['Owed to us — overdue', n(d.receivable_overdue)], ['We owe', n(d.payable)],
+      ['We owe — overdue', n(d.payable_overdue)], ['Income this year', n(c.totals.income_ytd)], ['Net profit this year', n(c.totals.net_ytd)], ['Net profit this month', n(d.profit_mtd)],
+    ] }];
+    sets.push({ title: 'Monthly trend', columns: ['Month', 'Income (R)', 'Expenses (R)', 'Net profit (R)', 'Month-end cash (R)'], rows: c.months.map((m) => [m.label, n(m.income), n(m.expenses), n(m.net), n(m.cash)]) });
+    const pairs = (title, items, col) => ({ title, columns: [col, 'Amount (R)'], rows: items.map((x) => [x.label, n(x.value)]) });
+    sets.push(pairs('Receivables aging', c.receivables_aging, 'Age'), pairs('Payables aging', c.payables_aging, 'Age'),
+      pairs('Expenses this year', c.expenses_ytd, 'Account'), pairs('Income this year', c.income_ytd, 'Account'), pairs('Top customers', c.top_customers, 'Customer'));
+    sets.push({ title: 'Bank accounts', columns: ['Account', 'Balance (R)'], rows: d.bank_accounts.map((b) => [b.name, n(b.balance)]) });
+    return sets;
   }
 
   renderVals() {
     const { app, fin } = this;
     const s = this.state;
     const d = s.d;
-    const base = { ...(app ? app.shellVals(s) : {}) };
-    if (!app || !d) return { ...base, kpis: [], months: [], banks: [], topExpenses: [], vat: {} };
-    const max = Math.max(1, ...d.months.map((m) => Math.max(m.income, m.expenses)));
-    const pct = (v) => Math.max(2, Math.round((v / max) * 100)) + '%';
+    const c = s.c;
+    const base = { ...(app ? app.shellVals(s) : {}), onPngTrend: this.onPngTrend, onPngAr: this.onPngAr, onPngExp: this.onPngExp, onPngInc: this.onPngInc, onPngCust: this.onPngCust };
+    if (!app || !d) return { ...base, kpis: [], banks: [], vat: {} };
+    const tone = (bad) => ({ color: bad ? '#b42318' : '#2f7d5a' });
+    const overdueAr = c ? c.receivables_aging.slice(1).reduce((t, x) => t + x.value, 0) : 0;
     return {
       ...base,
       yearStart: app.date(d.year_start), lockDate: d.lock_date ? app.date(d.lock_date) : null,
       kpis: [
-        { label: 'Cash in bank', value: fin.rand(d.cash), sub: d.bank_accounts.length + ' account(s)', subColor: '#6b6660', href: './Banking.html' },
-        { label: 'Owed to us', value: fin.rand(d.receivable), sub: d.receivable_overdue > 0 ? fin.rand(d.receivable_overdue) + ' overdue' : 'Nothing overdue', subColor: d.receivable_overdue > 0 ? '#b42318' : '#2f7d5a', href: './Invoices.html?status=outstanding' },
-        { label: 'We owe', value: fin.rand(d.payable), sub: d.payable_overdue > 0 ? fin.rand(d.payable_overdue) + ' overdue' : 'Nothing overdue', subColor: d.payable_overdue > 0 ? '#b42318' : '#2f7d5a', href: './Bills.html?status=outstanding' },
-        { label: 'Net profit (this year)', value: fin.rand(d.profit_ytd), sub: 'This month ' + fin.rand(d.profit_mtd), subColor: d.profit_mtd >= 0 ? '#2f7d5a' : '#b42318', href: './Reports.html?report=profit-loss' },
+        { label: 'Cash in bank', value: fin.rand(d.cash), sub: d.bank_accounts.length + ' account(s)', subStyle: { color: '#6b6660' }, href: './Banking.html' },
+        { label: 'Owed to us', value: fin.rand(d.receivable), sub: d.receivable_overdue > 0 ? fin.rand(d.receivable_overdue) + ' overdue' : 'Nothing overdue', subStyle: tone(d.receivable_overdue > 0), href: './Invoices.html?status=outstanding' },
+        { label: 'We owe', value: fin.rand(d.payable), sub: d.payable_overdue > 0 ? fin.rand(d.payable_overdue) + ' overdue' : 'Nothing overdue', subStyle: tone(d.payable_overdue > 0), href: './Bills.html?status=outstanding' },
+        { label: 'Net profit (this year)', value: fin.rand(d.profit_ytd), sub: 'This month ' + fin.rand(d.profit_mtd), subStyle: tone(d.profit_mtd < 0), href: './Reports.html?report=profit-loss' },
       ],
-      months: d.months.map((m) => ({
-        label: m.label, incomeLabel: 'Income ' + fin.rand(m.income), expenseLabel: 'Expenses ' + fin.rand(m.expenses),
-        incomeStyle: { height: pct(m.income), background: '#7a1528' }, expenseStyle: { height: pct(m.expenses), background: '#d8d2cd' },
-      })),
       banks: d.bank_accounts.map((b) => ({ name: b.name, balance: fin.rand(b.balance) })),
       unmatched: d.unmatched_bank_lines || null,
+      arNote: c ? (overdueAr > 0 ? fin.rand(overdueAr) + ' overdue' : 'Nothing overdue') : '',
+      marginNote: c && c.totals.margin_ytd !== null ? 'Net margin this year: ' + c.totals.margin_ytd + '%' : '',
       vat: {
         output: fin.rand(d.vat_period.output_vat), input: fin.rand(d.vat_period.input_vat),
         netLabel: d.vat_period.net_vat >= 0 ? 'Payable to SARS' : 'Refund due from SARS', net: fin.rand(Math.abs(d.vat_period.net_vat)),
         period: app.date(d.vat_period.from) + ' – ' + app.date(d.vat_period.to),
       },
-      topExpenses: d.top_expenses.map((e) => ({ name: e.name, amount: fin.rand(e.amount) })),
-      noExpenses: !d.top_expenses.length,
     };
   }
 }

@@ -150,6 +150,8 @@ class Component extends DCLogic {
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
+    // Header Export menu (CSV / Excel / PDF) — this page shows cards, so hand over the data itself.
+    import('../assets/export.js').then((xp) => { window.__morenaExport = () => xp.recordSets('Deal', this.state.detail, { team_notes: this.state.comments || [], tasks: this.state.tasks || [] }); });
     this.forms = await import('../assets/forms.js');
     this.x = await import('../assets/extras.js');
     const shell = await this.app.shell('deals', ['admin', 'branch_manager', 'agent']);

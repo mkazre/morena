@@ -66,12 +66,13 @@
         <button type="submit" disabled="{{ busy }}" style="margin-top:8px;padding:13px;border:none;border-radius:10px;background:#7a1528;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;opacity:{{ buttonOpacity }}">{{ buttonLabel }}</button>
         <div style="text-align:center;font-size:12px;color:#6b6660;margin-top:8px">Accounts are created by your administrator. Contact HR if you need access.</div>
       </form>
+      <div style="text-align:center;font-size:11.5px;color:#9a948e;margin-top:36px">{{ footer }}</div>
     </div>
   </div>
-  <div style="flex:1;background:linear-gradient(160deg,#1c1a19,#3a1420 70%);position:relative;display:flex;align-items:flex-end;padding:56px;box-sizing:border-box">
+  <div class="login-panel" style="{{ panelStyle }}">
     <div style="color:#fff;max-width:420px">
       <div style="font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#e2607e;margin-bottom:14px">People · Property · Passion</div>
-      <div style="font-size:26px;font-weight:600;line-height:1.4">One system for sales, people, documents and training — everything your team needs, nothing on WhatsApp.</div>
+      <div style="font-size:26px;font-weight:600;line-height:1.4">{{ headline }}</div>
     </div>
   </div>
 </div>
@@ -82,6 +83,11 @@ class Component extends DCLogic {
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
+    // Panel design + footer come from Settings → Sign-in page (public endpoint).
+    fetch('/api/v1/branding', { headers: { Accept: 'application/json' } }).then((r) => r.json()).then((branding) => {
+      this.setState({ branding });
+      if (branding.system_name) document.title = 'Sign in — ' + branding.system_name;
+    }).catch(() => {});
     const p = new URLSearchParams(location.search);
     if (p.get('token')) {
       // Invite / reset link from email: set a password.
@@ -149,6 +155,9 @@ class Component extends DCLogic {
       twofa: ['Two-step verification', 'Enter your code', 'Verify', ''],
     }[s.mode];
     return {
+      panelStyle: this.app ? this.app.loginPanelStyle(s.branding && s.branding.login) : { flex: 1, background: '#1c1a19' },
+      headline: (s.branding && s.branding.login.headline) || 'One system for sales, people, documents and training — everything your team needs, nothing on WhatsApp.',
+      footer: this.app && s.branding ? this.app.footerText(s.branding) : '',
       eyebrow: copy[0], heading: copy[1], buttonLabel: s.busy ? 'Please wait…' : copy[2], passwordLabel: copy[3],
       passwordAutocomplete: s.mode === 'login' ? 'current-password' : 'new-password',
       isLogin: s.mode === 'login', isForgot: s.mode === 'forgot', showPassword: s.mode !== 'forgot' && s.mode !== 'twofa',

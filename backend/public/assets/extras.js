@@ -2,16 +2,18 @@
 // quick "new task / book appointment" forms, the WhatsApp + email composer and CSV import/export helpers.
 // Everything here lives outside the React tree (plain DOM), so page re-renders never remove it.
 import { api, run, toast, form, formData, date, when, ago, me } from './app.js';
+import { icon } from './icons.js';
+import { NAV_ICONS } from '../shell/nav-config.js';
 
 const STAFF = ['admin', 'branch_manager', 'hr', 'finance', 'agent'];
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
 /** Pages every staff role can open, added to the palette alongside the role's own sidebar links. */
 export const WORK_PAGES = [
-  { label: 'Tasks', href: '/work/Tasks.html', icon: '☑' },
-  { label: 'Calendar', href: '/work/Calendar.html', icon: '▦' },
-  { label: 'Calculators & CMA', href: '/work/Tools.html', icon: '∑' },
-  { label: 'Account security (2FA)', href: '/work/Security.html', icon: '⚿' },
+  { label: 'Tasks', href: '/work/Tasks.html', icon: 'tasks' },
+  { label: 'Calendar', href: '/work/Calendar.html', icon: 'calendar' },
+  { label: 'Calculators & CMA', href: '/work/Tools.html', icon: 'calculator' },
+  { label: 'Account security (2FA)', href: '/work/Security.html', icon: 'lock' },
 ];
 
 let installed = false;
@@ -20,7 +22,7 @@ let navItems = [];
 
 export function install(s, navSections) {
   session = s;
-  navItems = navSections.flatMap((sec) => sec.items.map((i) => ({ label: i.label, href: i.href, icon: i.icon, group: sec.title })));
+  navItems = navSections.flatMap((sec) => sec.items.map((i) => ({ label: i.label, href: i.href, icon: NAV_ICONS[i.key] || 'chevron-right', group: sec.title })));
   if (installed) return;
   installed = true;
   const staff = STAFF.includes(s.user.role);
@@ -41,14 +43,15 @@ function mountTools(staff) {
   if (staff) {
     const search = el('button', 'mx-search');
     search.type = 'button';
-    search.innerHTML = '<span class="mx-ico">⌕</span><span class="mx-label">Search</span><kbd>Ctrl K</kbd>';
+    search.innerHTML = icon('search', 16) + '<span class="mx-label">Search</span><kbd>Ctrl K</kbd>';
     search.onclick = () => openPalette();
     tools.appendChild(search);
   }
+  if (staff) tools.appendChild(exportButton());
   const bell = el('button', 'mx-bell');
   bell.type = 'button';
   bell.setAttribute('aria-label', 'Notifications');
-  bell.innerHTML = '<span class="mx-ico">🔔</span>';
+  bell.innerHTML = icon('bell', 17);
   const badge = el('span', 'mx-badge');
   bell.appendChild(badge);
   bell.onclick = (e) => { e.stopPropagation(); togglePanel(bell); };
@@ -57,6 +60,45 @@ function mountTools(staff) {
   setBadge(lastUnread);
   if (header) { header.classList.add('mx-hdr'); header.appendChild(tools); }
   else { tools.classList.add('mx-float'); document.body.appendChild(tools); }
+}
+
+// ---- Export (CSV / Excel / PDF of the page's tables) ------------------------------------------
+
+const hasExportData = () => typeof window.__morenaExport === 'function'
+  || [...document.querySelectorAll('main table')].some((t) => t.tBodies[0] && [...t.tBodies[0].rows].some((r) => r.cells.length > 1 && !r.querySelector('.empty')));
+
+function exportButton() {
+  const wrap = el('div', 'mx-export');
+  const btn = el('button', 'mx-search');
+  btn.type = 'button';
+  btn.innerHTML = icon('download', 16) + '<span class="mx-label">Export</span>';
+  btn.title = 'Export this page (CSV, Excel, PDF)';
+  wrap.style.display = 'none';
+  const menu = el('div', 'mx-menu');
+  const opts = [['csv', 'csv', 'CSV', 'Opens in Excel, Sheets, Numbers'], ['xlsx', 'excel', 'Excel (.xlsx)', 'Formatted workbook, one sheet per table'], ['pdf', 'pdf', 'PDF', 'Branded report with logo and page numbers']];
+  for (const [fmt, ic, label, hint] of opts) {
+    const b = el('button', 'mx-menu-item');
+    b.type = 'button';
+    b.innerHTML = icon(ic, 16) + '<span><strong></strong><small></small></span>';
+    b.querySelector('strong').textContent = label;
+    b.querySelector('small').textContent = hint;
+    b.onclick = async () => {
+      menu.classList.remove('open');
+      try {
+        const x = await import('./export.js');
+        const rows = await x.exportPage(fmt, session);
+        toast(`Exported ${rows} row${rows === 1 ? '' : 's'} as ${label}`);
+      } catch (e) { toast(e.message || 'Export failed', 'danger'); }
+    };
+    menu.appendChild(b);
+  }
+  btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('open'); };
+  document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) menu.classList.remove('open'); });
+  wrap.append(btn, menu);
+  const check = () => { wrap.style.display = hasExportData() ? '' : 'none'; };
+  check();
+  setInterval(check, 1500);
+  return wrap;
 }
 
 let lastUnread = 0;
@@ -121,16 +163,18 @@ function closePanel() { panel?.remove(); panel = null; document.removeEventListe
 function actions() {
   const role = session.user.role;
   const list = [
-    { label: 'New task', icon: '+', group: 'Actions', run: () => quickTask() },
-    { label: 'Book a viewing or meeting', icon: '+', group: 'Actions', run: () => quickAppointment() },
+    { label: 'New task', icon: 'tasks', group: 'Actions', run: () => quickTask() },
+    { label: 'Book a viewing or meeting', icon: 'calendar', group: 'Actions', run: () => quickAppointment() },
   ];
-  if (['admin', 'branch_manager', 'agent'].includes(role)) list.push({ label: 'Transfer duty & bond calculator', icon: '∑', group: 'Actions', href: '/work/Tools.html' });
+  if (['admin', 'branch_manager', 'agent'].includes(role)) list.push({ label: 'Transfer duty & bond calculator', icon: 'calculator', group: 'Actions', href: '/work/Tools.html' });
   if (['admin', 'finance'].includes(role)) {
-    list.push({ label: 'New invoice', icon: '+', group: 'Actions', href: '/finance/Document.html?kind=invoices&new=1' });
-    list.push({ label: 'New bill', icon: '+', group: 'Actions', href: '/finance/Document.html?kind=bills&new=1' });
+    list.push({ label: 'New invoice', icon: 'invoice-out', group: 'Actions', href: '/finance/Document.html?kind=invoices&new=1' });
+    list.push({ label: 'New bill', icon: 'invoice-in', group: 'Actions', href: '/finance/Document.html?kind=bills&new=1' });
   }
   return list;
 }
+
+const GROUP_ICONS = { Deals: 'deals', Leads: 'leads', Listings: 'listings', People: 'staff', Invoices: 'invoice-out', Contacts: 'contacts', Documents: 'documents' };
 
 export async function openPalette() {
   if (document.querySelector('.mx-palette')) return;
@@ -161,7 +205,9 @@ export async function openPalette() {
     items.forEach((it, i) => {
       if (it.group !== group) { group = it.group; list.appendChild(el('div', 'mx-palette-group', group)); }
       const row = el('div', 'mx-palette-row' + (i === active ? ' on' : ''));
-      row.appendChild(el('span', 'mx-palette-ico', it.icon || '›'));
+      const ico = el('span', 'mx-palette-ico');
+      ico.innerHTML = icon(it.icon || GROUP_ICONS[it.group] || 'chevron-right', 14);
+      row.appendChild(ico);
       const txt = el('span', 'mx-palette-txt');
       txt.appendChild(el('span', null, it.label || it.title));
       if (it.sub) txt.appendChild(el('span', 'mx-palette-sub', it.sub));
@@ -359,6 +405,8 @@ export async function csvImport({ endpoint, title, columns }) {
 // ---- My Day (dashboards) ---------------------------------------------------------------------
 
 /** Renders the "My Day" panel into every `.myday-slot` on the page (an empty div the template provides). */
+const chipIcon = (name, text) => { const a = el('a', 'chip'); a.innerHTML = icon(name, 14); a.appendChild(document.createTextNode(text)); return a; };
+
 export async function mountMyDay() {
   const slot = document.querySelector('.myday-slot');
   if (!slot) return;
@@ -379,8 +427,8 @@ export async function mountMyDay() {
 
   const chips = el('div', 'btn-row');
   chips.style.marginBottom = '12px';
-  if (d.uploads_to_file) { const a = el('a', 'chip', '📥 ' + d.uploads_to_file + ' client upload' + (d.uploads_to_file === 1 ? '' : 's') + ' to file'); a.href = '/portal/MyUploadLinks.html'; chips.appendChild(a); }
-  if (d.approvals) { const a = el('a', 'chip', '✋ ' + d.approvals + ' leave request' + (d.approvals === 1 ? '' : 's') + ' to approve'); a.href = session?.user.role === 'branch_manager' ? '/manager/LeaveApprovals.html' : '/hr/Leave.html'; chips.appendChild(a); }
+  if (d.uploads_to_file) { const a = chipIcon('inbox', d.uploads_to_file + ' client upload' + (d.uploads_to_file === 1 ? '' : 's') + ' to file'); a.href = '/portal/MyUploadLinks.html'; chips.appendChild(a); }
+  if (d.approvals) { const a = chipIcon('calendar-check', d.approvals + ' leave request' + (d.approvals === 1 ? '' : 's') + ' to approve'); a.href = session?.user.role === 'branch_manager' ? '/manager/LeaveApprovals.html' : '/hr/Leave.html'; chips.appendChild(a); }
   if (chips.children.length) card.appendChild(chips);
 
   const grid = el('div', 'grid grid-3');

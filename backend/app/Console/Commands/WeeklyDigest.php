@@ -36,13 +36,15 @@ class WeeklyDigest extends Command
                 'Overdue tasks: '.Task::whereNull('completed_at')->where('due_at', '<', now())->when($branch, fn ($q) => $q->whereHas('assignee', fn ($a) => $a->where('branch_id', $branch)))->count(),
             ];
             $body = 'Hi '.strtok($user->name, ' ').",\n\nHere's ".($branch ? 'your branch' : $company)."'s week (".$from->format('j M').' – '.now()->format('j M')."):\n\n• "
-                .implode("\n• ", $lines)."\n\nOpen the CRM: ".url('/')."\n\n— Morena CRM";
+                .implode("\n• ", $lines);
             if ($this->option('dry-run')) {
                 $this->line("To {$user->email}\n{$body}\n");
 
                 continue;
             }
-            $mailer->send($user->email, $company.' — weekly summary', $body);
+            $mailer->send($user->email, $company.' — weekly summary', $body, extra: [
+                'heading' => 'Your weekly summary', 'actionUrl' => url('/auth/Login.html'), 'actionText' => 'Open the dashboard',
+            ]);
             $notify->send($user, 'digest', 'Your weekly summary is ready', $lines[0], '/admin/Dashboard.html', 'digest-'.now()->format('o-W'));
         }
         $this->info('Digest sent to '.$recipients->count().' recipient(s)');

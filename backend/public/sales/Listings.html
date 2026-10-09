@@ -79,6 +79,8 @@ class Component extends DCLogic {
   load = async () => {
     const res = await this.app.run(() => this.app.api('/listings?per_page=200'));
     if (res) this.setState({ listings: res.data });
+    window.__morenaExport = () => [{ title: 'Listings', columns: ['Listing', 'Suburb', 'Type', 'Beds', 'Baths', 'Price (R)', 'Status', 'Agent', 'Listed', 'Mandate expiry'],
+      rows: this.state.listings.map((l) => [l.title, l.suburb, l.property_type || '', l.beds ?? '', l.baths ?? '', Number(l.price || 0).toFixed(2), l.status, l.agent || '', l.listed_at || '', l.mandate_expiry || '']) }];
   };
 
   onImport = async () => { if (await this.x.csvImport({ endpoint: '/listings/import', title: 'Import listings', columns: 'title, suburb, price, beds, baths, type, agent_email, mandate_expiry, status' })) this.load(); };

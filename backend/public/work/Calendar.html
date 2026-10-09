@@ -39,7 +39,7 @@
   <div style="flex:1;display:flex;flex-direction:column;min-width:0">
     <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
       <div style="font-size:13px;color:#6b6660;font-weight:500">Workspace / <span style="color:#1c1a19;font-weight:700">Calendar</span></div>
-      <div class="btn-row"><button class="btn" onClick="{{ onSubscribe }}">📱 Add to phone calendar</button>
+      <div class="btn-row"><button class="btn" onClick="{{ onSubscribe }}"><span class="i i-phone"></span> Add to phone calendar</button>
 <button class="btn btn-primary" onClick="{{ onNew }}">+ Book appointment</button></div>
     </header>
     <main style="flex:1;padding:28px 32px;min-width:0">
@@ -88,6 +88,8 @@ class Component extends DCLogic {
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
+    // Header Export menu (CSV / Excel / PDF) — this page shows cards, so hand over the data itself.
+    import('../assets/export.js').then((xp) => { window.__morenaExport = () => [xp.records('Appointments', this.state.appts), xp.records('Tasks with a due date', this.state.tasks)]; });
     this.x = await import('../assets/extras.js');
     const s = await this.app.shell('calendar', ['admin', 'branch_manager', 'hr', 'finance', 'agent']);
     this.setState({ ...s, role: s.me.role });
@@ -155,7 +157,7 @@ class Component extends DCLogic {
     }
     for (const t of s.tasks) {
       const d = new Date(t.due_at);
-      add(d, { at: d, cls: 'cal-ev ev-task', label: '☐ ' + t.title, tip: 'Task: ' + t.title, onClick: () => { location.href = './Tasks.html'; } });
+      add(d, { at: d, cls: 'cal-ev ev-task', label: t.title, tip: 'Task: ' + t.title, onClick: () => { location.href = './Tasks.html'; } });
     }
     const today = key(new Date());
     const cells = [];

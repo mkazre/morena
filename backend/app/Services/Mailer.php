@@ -8,15 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
-/** Plain-text email to clients, logged against the record it relates to (lead, deal, invoice…). */
+/**
+ * Branded email (colour logo header, company footer; HTML + plain-text alternative), logged against the record it
+ * relates to (lead, deal, invoice…). $body is plain text — line breaks are kept and links made clickable.
+ * $extra may add 'heading', 'actionUrl', 'actionText', 'note' (see resources/views/emails/branded.blade.php).
+ */
 class Mailer
 {
-    public function send(string $to, string $subject, string $body, ?Model $related = null, ?User $by = null, ?string $replyTo = null): EmailLog
+    public function send(string $to, string $subject, string $body, ?Model $related = null, ?User $by = null, ?string $replyTo = null, array $extra = []): EmailLog
     {
         $log = ['user_id' => $by?->id, 'to' => $to, 'subject' => $subject, 'body' => $body,
             'related_type' => $related ? $related::class : null, 'related_id' => $related?->getKey(), 'created_at' => now()];
         try {
-            Mail::raw($body, function ($m) use ($to, $subject, $replyTo, $by) {
+            Mail::send(['html' => 'emails.branded', 'text' => 'emails.branded-text'], ['body' => $body] + $extra, function ($m) use ($to, $subject, $replyTo, $by) {
                 $m->to($to)->subject($subject);
                 if ($replyTo ?? $by?->email) {
                     $m->replyTo($replyTo ?? $by->email, $by?->name);

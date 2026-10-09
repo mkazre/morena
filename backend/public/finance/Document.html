@@ -43,7 +43,7 @@
   <sc-if value="{{ can.approve }}"><button class="btn btn-primary" onClick="{{ onApprove }}">Approve</button></sc-if>
   <sc-if value="{{ can.pay }}"><button class="btn btn-primary" onClick="{{ onPay }}">{{ payLabel }}</button></sc-if>
   <sc-if value="{{ can.edit }}"><button class="btn" onClick="{{ onEdit }}">Edit</button></sc-if>
-  <sc-if value="{{ can.email }}"><button class="btn" onClick="{{ onEmail }}">✉ Email to customer</button></sc-if>
+  <sc-if value="{{ can.email }}"><button class="btn" onClick="{{ onEmail }}"><span class="i i-mail"></span> Email to customer</button></sc-if>
   <button class="btn" onClick="{{ onPrint }}">Print / PDF</button>
   <sc-if value="{{ can.void }}"><button class="btn btn-danger" onClick="{{ onVoid }}">Void</button></sc-if>
 </sc-if>

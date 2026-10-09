@@ -63,6 +63,8 @@ class Component extends DCLogic {
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
+    // Header Export menu (CSV / Excel / PDF) — this page shows cards, so hand over the data itself.
+    import('../assets/export.js').then((xp) => { window.__morenaExport = () => [xp.records('Leave requests', this.state.requests)]; });
     this.setState(await this.app.shell('leave-approvals', ['branch_manager']));
     this.load();
   }

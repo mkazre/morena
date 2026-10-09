@@ -40,7 +40,7 @@
     <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
       <div style="font-size:13px;color:#6b6660;font-weight:500">System / <span style="color:#1c1a19;font-weight:700">Settings</span></div>
     </header>
-    <main style="flex:1;padding:28px 32px;max-width:720px">
+    <main style="flex:1;padding:28px 32px;max-width:1080px">
       <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:16px">
         <div style="font-size:14px;font-weight:700;margin-bottom:16px">Company details</div>
         <div style="display:flex;flex-direction:column;gap:12px">
@@ -54,6 +54,54 @@
         <label style="display:block;font-size:12px;font-weight:600;color:#6b6660;margin-bottom:5px">Sidebar logo size — {{ logoWidth }}px</label>
         <input type="range" min="100" max="200" step="10" value="{{ logoWidth }}" onChange="{{ onLogoWidthChange }}" style="width:100%" />
         <div style="font-size:11.5px;color:#6b6660;margin-top:8px">Applies to the sidebar logo on every page. Saved immediately.</div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">System name &amp; sign-in page <span class="muted small" style="font-weight:500">{{ versionLabel }}</span></div>
+        <div class="grid grid-2" style="margin-bottom:14px">
+          <div class="field"><label>System name (footer, emails, browser tab)</label><input class="inp" name="system_name" value="{{ b.system_name }}" onChange="{{ onBrandField }}" maxlength="80" /></div>
+          <div class="field"><label>Sign-in page headline</label><input class="inp" name="login_headline" value="{{ b.login_headline }}" onChange="{{ onBrandField }}" maxlength="200" placeholder="One system for sales, people, documents and training…" /></div>
+        </div>
+        <div class="grid grid-2" style="align-items:start">
+          <div>
+            <div class="field" style="margin-bottom:12px"><label>Background image (optional — shows through transparent colours)</label>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <sc-if value="{{ hasImage }}"><div style="{{ thumbStyle }}"></div></sc-if>
+                <label class="btn btn-sm" style="cursor:pointer"><span class="i i-upload"></span> {{ imageLabel }}<input type="file" accept="image/jpeg,image/png,image/webp" onChange="{{ onImage }}" style="display:none" /></label>
+                <sc-if value="{{ hasImage }}"><button class="btn btn-sm btn-danger" onClick="{{ onRemoveImage }}"><span class="i i-trash"></span> Remove</button></sc-if>
+              </div>
+              <div class="muted small" style="margin-top:5px">JPG, PNG or WebP up to 5 MB. Landscape photos around 1600×1200 work best.</div>
+            </div>
+            <div class="grid grid-2" style="margin-bottom:12px">
+              <div class="field"><label>Gradient style</label><select class="sel" value="{{ g.type }}" onChange="{{ onGradType }}"><option value="linear">Linear</option><option value="radial">Circle (radial)</option></select></div>
+              <sc-if value="{{ isLinear }}"><div class="field"><label>Direction — {{ g.angle }}°</label><input type="range" min="0" max="360" step="5" value="{{ g.angle }}" onChange="{{ onAngle }}" style="width:100%" /></div></sc-if>
+            </div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#6b6660;margin-bottom:6px">Colours (top layer over the image)</label>
+            <sc-for list="{{ stops }}" as="st">
+              <div style="display:grid;grid-template-columns:36px 82px 1fr 1fr 28px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid #f1ede9">
+                <input type="color" value="{{ st.color }}" onChange="{{ st.onColor }}" style="width:36px;height:32px;border:1px solid #e8e3e0;border-radius:6px;padding:0;background:none;cursor:pointer" />
+                <input class="inp" value="{{ st.color }}" onChange="{{ st.onHex }}" style="padding:6px 8px;font-family:monospace;font-size:12px" />
+                <div class="small">Opacity {{ st.opacity }}%<input type="range" min="0" max="100" value="{{ st.opacity }}" onChange="{{ st.onOpacity }}" style="width:100%" /></div>
+                <div class="small">Position {{ st.position }}%<input type="range" min="0" max="100" value="{{ st.position }}" onChange="{{ st.onPosition }}" style="width:100%" /></div>
+                <sc-if value="{{ st.canRemove }}"><button class="btn btn-sm" title="Remove colour" onClick="{{ st.onRemove }}" style="padding:5px"><span class="i i-x"></span></button></sc-if>
+              </div>
+            </sc-for>
+            <div class="btn-row" style="margin-top:10px">
+              <button class="btn btn-sm" onClick="{{ onAddStop }}"><span class="i i-plus"></span> Add colour</button>
+              <button class="btn btn-sm" onClick="{{ onResetGrad }}"><span class="i i-refresh"></span> Reset to default</button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#6b6660;margin-bottom:6px">Live preview</label>
+            <div style="{{ previewStyle }}">
+              <div style="color:#fff;max-width:85%">
+                <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#e2607e;margin-bottom:6px">People · Property · Passion</div>
+                <div style="font-size:14px;font-weight:600;line-height:1.35">{{ previewHeadline }}</div>
+              </div>
+            </div>
+            <div class="muted small" style="margin-top:8px">{{ cssPreview }}</div>
+          </div>
+        </div>
+        <div style="margin-top:16px"><button class="btn btn-primary" onClick="{{ onSaveBranding }}">Save system name &amp; sign-in page</button></div>
       </div>
       <div style="background:#fff;border:1px solid #e8e3e0;border-radius:14px;padding:22px;margin-bottom:16px">
         <div style="font-size:14px;font-weight:700;margin-bottom:16px">Integrations</div>
@@ -75,13 +123,56 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { navSections: [], f: {}, logoWidth: 170, integrations: [] };
+  state = { navSections: [], f: {}, logoWidth: 170, integrations: [], b: { system_name: '', login_headline: '' }, g: null, imageUrl: null, version: null };
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
     this.setState(await this.app.shell('settings', ['admin']));
     this.load();
+    this.loadBranding();
   }
+
+  // ---- System name & sign-in page -------------------------------------------------------
+  DEFAULT_GRADIENT = { type: 'linear', angle: 160, stops: [{ color: '#1c1a19', opacity: 100, position: 0 }, { color: '#3a1420', opacity: 100, position: 70 }] };
+  loadBranding = async () => {
+    const br = await this.app.run(() => this.app.api('/branding'));
+    if (br) this.applyBranding(br);
+  };
+  applyBranding = (br) => this.setState({
+    b: { system_name: br.system_name || '', login_headline: br.login.headline || '' },
+    g: JSON.parse(JSON.stringify(br.login.gradient)), imageUrl: br.login.image_url, version: br.version,
+  });
+  onBrandField = (e) => this.setState({ b: { ...this.state.b, [e.target.name]: e.target.value } });
+  setGrad = (patch) => this.setState({ g: { ...this.state.g, ...patch } });
+  setStop = (i, patch) => this.setGrad({ stops: this.state.g.stops.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
+  onGradType = (e) => this.setGrad({ type: e.target.value });
+  onAngle = (e) => this.setGrad({ angle: parseInt(e.target.value, 10) });
+  onAddStop = () => {
+    const stops = this.state.g.stops;
+    if (stops.length >= 10) { this.app.toast('Up to 10 colours', 'warn'); return; }
+    this.setGrad({ stops: [...stops, { color: '#7a1528', opacity: 60, position: 100 }] });
+  };
+  onResetGrad = () => this.setState({ g: JSON.parse(JSON.stringify(this.DEFAULT_GRADIENT)) });
+  onSaveBranding = async () => {
+    const s = this.state;
+    const body = { system_name: (s.b.system_name || '').trim() || 'Morena CRM', login_headline: (s.b.login_headline || '').trim() || null, login_gradient: s.g };
+    const br = await this.app.run(() => this.app.api('/settings/branding', { method: 'PUT', body }), 'Saved — the sign-in page and footer now use this design');
+    if (br) this.applyBranding(br);
+  };
+  onImage = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { this.app.toast('That image is over 5 MB', 'danger'); return; }
+    const fd = new FormData();
+    fd.append('image', file);
+    const br = await this.app.run(() => this.app.api('/settings/login-image', { method: 'POST', form: fd }), 'Background image uploaded');
+    if (br) this.setState({ imageUrl: br.login.image_url });
+  };
+  onRemoveImage = async () => {
+    const br = await this.app.run(() => this.app.api('/settings/login-image', { method: 'DELETE' }), 'Background image removed');
+    if (br) this.setState({ imageUrl: null });
+  };
 
   load = async () => {
     const s = await this.app.api('/settings');
@@ -111,12 +202,42 @@ class Component extends DCLogic {
     if (await this.app.run(() => this.app.api('/settings', { method: 'PUT', body }), 'Settings saved')) this.load();
   };
 
+  brandingVals() {
+    const app = this.app;
+    const s = this.state;
+    const g = s.g || this.DEFAULT_GRADIENT;
+    const n = g.stops.length;
+    const login = { gradient: g, image_url: s.imageUrl };
+    const panel = app ? app.loginPanelStyle(login) : {};
+    const hex = (v) => (/^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : null);
+    return {
+      b: s.b, g: { type: g.type, angle: g.angle ?? 160 }, isLinear: g.type !== 'radial',
+      onBrandField: this.onBrandField, onGradType: this.onGradType, onAngle: this.onAngle, onAddStop: this.onAddStop,
+      onResetGrad: this.onResetGrad, onSaveBranding: this.onSaveBranding, onImage: this.onImage, onRemoveImage: this.onRemoveImage,
+      versionLabel: s.version ? 'Version ' + s.version.number + (s.version.build ? ' · build ' + s.version.build : '') : '',
+      hasImage: !!s.imageUrl, imageLabel: s.imageUrl ? 'Replace image' : 'Upload image',
+      thumbStyle: { width: 64, height: 40, borderRadius: 6, border: '1px solid #e8e3e0', background: s.imageUrl ? `center / cover no-repeat url("${s.imageUrl}")` : '#f1ede9' },
+      stops: g.stops.map((st, i) => ({
+        color: st.color, opacity: st.opacity ?? 100, position: st.position ?? (n > 1 ? Math.round(i / (n - 1) * 100) : 0), canRemove: n > 1,
+        onColor: (e) => this.setStop(i, { color: e.target.value }),
+        onHex: (e) => { const v = e.target.value.trim(); this.setStop(i, { color: hex(v) || v }); },
+        onOpacity: (e) => this.setStop(i, { opacity: parseInt(e.target.value, 10) }),
+        onPosition: (e) => this.setStop(i, { position: parseInt(e.target.value, 10) }),
+        onRemove: () => this.setGrad({ stops: g.stops.filter((_, j) => j !== i) }),
+      })),
+      previewStyle: { ...panel, flex: 'none', height: 240, borderRadius: 12, padding: 20, border: '1px solid #e8e3e0' },
+      previewHeadline: (s.b.login_headline || '').trim() || 'One system for sales, people, documents and training — everything your team needs, nothing on WhatsApp.',
+      cssPreview: app ? app.gradientCss(g) : '',
+    };
+  }
+
   renderVals() {
     const app = this.app;
     const s = this.state;
     return {
       ...(app ? app.shellVals(s) : {}), f: s.f, logoWidth: s.logoWidth,
       onField: this.onField, onLogoWidthChange: this.onLogoWidthChange, onSave: this.onSave,
+      ...this.brandingVals(),
       integrations: app ? s.integrations.map((i) => ({
         name: i.name, desc: i.desc, status: i.connected ? 'Connected' : 'Not connected', badge: app.badge(i.connected ? 'ok' : 'muted'),
       })) : [],

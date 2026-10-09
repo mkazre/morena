@@ -69,6 +69,8 @@ class Component extends DCLogic {
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
+    // Header Export menu (CSV / Excel / PDF) — this page shows cards, so hand over the data itself.
+    import('../assets/export.js').then((xp) => { window.__morenaExport = () => xp.recordSets('Branch dashboard', this.state.d); });
     this.setState(await this.app.shell('dashboard', ['branch_manager']));
     import('../assets/extras.js').then((x) => x.mountMyDay());
     const d = await this.app.run(() => this.app.api('/dashboard/manager'));

@@ -76,6 +76,8 @@ class Component extends DCLogic {
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
+    // Header Export menu (CSV / Excel / PDF) — this page shows cards, so hand over the data itself.
+    import('../assets/export.js').then((xp) => { window.__morenaExport = () => [xp.records('New hires', this.state.hires), xp.records('Onboarding tasks', (this.state.hires || []).flatMap((h) => (h.tasks || []).map((t) => ({ new_hire: h.name, ...t }))))]; });
     this.forms = await import('../assets/forms.js');
     this.setState(await this.app.shell('onboarding', ['admin', 'hr']));
     this.load();

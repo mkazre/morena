@@ -54,6 +54,58 @@ class FinanceController extends Controller
         ];
     }
 
+    /**
+     * GET /finance/dashboard/charts — data for the dashboard graphs: 12 months of income, expenses, net profit and
+     * month-end cash; receivables/payables aging; where the money comes from and goes to this financial year;
+     * top customers. Every figure comes from the ledger, so it always agrees with the reports.
+     */
+    public function charts(Reports $reports)
+    {
+        $today = now();
+        $settings = AccountingSetting::current();
+        $yearStart = $settings->yearStart($today)->toDateString();
+        $banks = Account::bank()->get();
+
+        $months = collect(range(11, 0))->map(function ($i) use ($reports, $today, $banks) {
+            $s = $today->copy()->startOfMonth()->subMonths($i);
+            $end = $i === 0 ? $today->toDateString() : $s->copy()->endOfMonth()->toDateString();
+            $pl = $reports->profitAndLoss($s->toDateString(), $end);
+            $income = $pl['income']['total'] + $pl['other_income']['total'];
+            $expenses = $pl['cost_of_sales']['total'] + $pl['operating_expenses']['total'] + $pl['other_expenses']['total'];
+
+            return ['label' => $s->format('M Y'), 'short' => $s->format('M'), 'income' => round($income, 2), 'expenses' => round($expenses, 2),
+                'net' => round($income - $expenses, 2), 'cash' => round($banks->sum(fn ($a) => $reports->balance($a, $end)), 2)];
+        })->values();
+
+        $ytd = $reports->profitAndLoss($yearStart, $today->toDateString());
+        $slices = function ($rows, int $n = 6) {
+            $sorted = collect($rows)->filter(fn ($r) => abs($r['amount']) > 0.004)->sortByDesc('amount')->values();
+            $top = $sorted->take($n)->map(fn ($r) => ['label' => $r['name'], 'value' => round($r['amount'], 2)]);
+            $rest = round($sorted->slice($n)->sum('amount'), 2);
+
+            return $rest > 0 ? $top->push(['label' => 'Other', 'value' => $rest])->values() : $top->values();
+        };
+        $bucket = fn (array $t) => [
+            ['label' => 'Current', 'value' => $t['current']], ['label' => '1–30 days', 'value' => $t['d30']], ['label' => '31–60 days', 'value' => $t['d60']],
+            ['label' => '61–90 days', 'value' => $t['d90']], ['label' => '90+ days', 'value' => $t['d90plus']],
+        ];
+        $customers = Invoice::with('contact')->whereNotIn('status', ['draft', 'void'])->whereBetween('date', [$yearStart, $today->toDateString()])->get()
+            ->groupBy('contact_id')->map(fn ($g) => ['label' => $g->first()->contact->name, 'value' => round($g->sum('total'), 2)])
+            ->sortByDesc('value')->take(8)->values();
+
+        return [
+            'year_start' => $yearStart, 'as_at' => $today->toDateString(),
+            'months' => $months,
+            'expenses_ytd' => $slices(collect($ytd['operating_expenses']['rows'])->concat($ytd['cost_of_sales']['rows'])->concat($ytd['other_expenses']['rows'])),
+            'income_ytd' => $slices(collect($ytd['income']['rows'])->concat($ytd['other_income']['rows'])),
+            'receivables_aging' => $bucket($reports->aging('receivables', $today->toDateString())['totals']),
+            'payables_aging' => $bucket($reports->aging('payables', $today->toDateString())['totals']),
+            'top_customers' => $customers,
+            'totals' => ['income_ytd' => round($ytd['income']['total'] + $ytd['other_income']['total'], 2), 'net_ytd' => $ytd['net_profit'],
+                'margin_ytd' => ($ytd['income']['total'] ?: 0) ? round($ytd['net_profit'] / $ytd['income']['total'] * 100, 1) : null],
+        ];
+    }
+
     public function settings()
     {
         $s = AccountingSetting::current();

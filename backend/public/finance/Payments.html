@@ -55,7 +55,7 @@
       <tr>
         <td class="strong">{{ r.number }}</td><td>{{ r.date }}</td><td>{{ r.contact }}</td><td class="muted">{{ r.bank }}</td><td class="muted">{{ r.method }}</td><td class="muted">{{ r.reference }}</td>
         <td class="num strong" style="color:{{ r.color }}">{{ r.amount }}</td><td><span class="{{ r.statusClass }}">{{ r.status }}</span></td>
-        <td style="white-space:nowrap"><sc-if value="{{ r.receipt }}"><a class="link small" href="{{ r.receipt }}" target="_blank">📎 Receipt</a> · </sc-if><sc-if value="{{ r.noReceipt }}"><a class="link small" onClick="{{ r.onReceipt }}">+ Receipt</a> · </sc-if><a class="link small" href="{{ r.journalHref }}">Journal</a><sc-if value="{{ r.canVoid }}"> · <a class="link small" style="color:#b42318" onClick="{{ r.onVoid }}">Void</a></sc-if></td>
+        <td style="white-space:nowrap"><sc-if value="{{ r.receipt }}"><a class="link small" href="{{ r.receipt }}" target="_blank"><span class="i i-paperclip"></span> Receipt</a> · </sc-if><sc-if value="{{ r.noReceipt }}"><a class="link small" onClick="{{ r.onReceipt }}">+ Receipt</a> · </sc-if><a class="link small" href="{{ r.journalHref }}">Journal</a><sc-if value="{{ r.canVoid }}"> · <a class="link small" style="color:#b42318" onClick="{{ r.onVoid }}">Void</a></sc-if></td>
       </tr>
     </sc-for>
   </tbody>

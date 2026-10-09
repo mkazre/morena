@@ -79,6 +79,8 @@ class Component extends DCLogic {
 
   async componentDidMount() {
     this.app = await import('../assets/app.js');
+    // Header Export menu (CSV / Excel / PDF) — this page shows cards, so hand over the data itself.
+    import('../assets/export.js').then((xp) => { window.__morenaExport = () => xp.recordSets('Course', this.state.course); });
     this.forms = await import('../assets/forms.js');
     const shell = await this.app.shell('courses', ['admin', 'hr', 'branch_manager', 'agent']);
     const nav = await import('../shell/nav-config.js');

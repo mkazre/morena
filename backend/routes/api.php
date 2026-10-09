@@ -20,6 +20,9 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
     Route::post('auth/forgot-password', [V1\AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
     Route::post('auth/reset-password', [V1\AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 
+    // Branding for the sign-in page, footer and emails (no secrets in it).
+    Route::get('branding', [V1\BrandingController::class, 'show'])->middleware('throttle:120,1');
+
     // Client upload links (no auth — token + expiry validated server-side, §7)
     Route::get('upload-links/{token}', [V1\PublicUploadController::class, 'show'])
         ->where('token', '[a-z0-9]{6,64}')->middleware('throttle:60,1');
@@ -194,6 +197,7 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
         // Finance / accounting (agency books — trust accounts stay in PayProp)
         Route::prefix('finance')->middleware('role:admin|finance')->group(function () {
             Route::get('dashboard', [V1\Finance\FinanceController::class, 'dashboard']);
+            Route::get('dashboard/charts', [V1\Finance\FinanceController::class, 'charts']);
             Route::get('settings', [V1\Finance\FinanceController::class, 'settings']);
             Route::put('settings', [V1\Finance\FinanceController::class, 'updateSettings']);
 
@@ -264,6 +268,9 @@ Route::prefix('v1')->group(function () use ($sales, $staffRoles, $hr) {
             Route::post('users/invite', [V1\UserController::class, 'invite']);
             Route::put('users/{user}/role', [V1\UserController::class, 'updateRole']);
             Route::put('settings', [V1\SettingsController::class, 'update']);
+            Route::put('settings/branding', [V1\BrandingController::class, 'update']);
+            Route::post('settings/login-image', [V1\BrandingController::class, 'uploadImage']);
+            Route::delete('settings/login-image', [V1\BrandingController::class, 'deleteImage']);
         });
         Route::get('settings', [V1\SettingsController::class, 'show']);
         Route::get('branches', [V1\SettingsController::class, 'branches']);

@@ -181,7 +181,7 @@ class AuthController extends Controller
             'settings' => [
                 'company_name' => $settings->company_name,
                 'sidebar_logo_width' => $settings->sidebar_logo_width,
-            ],
+            ] + collect($settings->branding())->only(['system_name', 'version'])->all(),
         ];
     }
 

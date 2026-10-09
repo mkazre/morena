@@ -39,62 +39,7 @@
   <div style="flex:1;display:flex;flex-direction:column;min-width:0">
     <header style="height:68px;flex-shrink:0;border-bottom:1px solid #e8e3e0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff">
       <div style="font-size:13px;color:#6b6660;font-weight:500">Account / <span style="color:#1c1a19;font-weight:700">Security</span></div>
-      <div class="btn-row">@@body
-<div class="page-head">
-  <div><h1>Account security</h1><p>Protect your Morena account — it holds client FICA documents and financial records (POPIA).</p></div>
-</div>
-<div class="grid grid-main">
-  <div class="stack">
-    <div class="card">
-      <div class="card-title">Two-factor authentication <span class="{{ statusCls }}">{{ statusLabel }}</span></div>
-      <sc-if value="{{ isOff }}">
-        <p class="muted" style="margin-bottom:14px">After your password, you’ll also enter a 6-digit code from an authenticator app on your phone (Google Authenticator, Microsoft Authenticator or Authy). Someone who steals your password still can’t sign in.</p>
-        <button class="btn btn-primary" onClick="{{ onSetup }}">Turn on two-factor</button>
-      </sc-if>
-      <sc-if value="{{ isSetup }}">
-        <ol style="font-size:13px;line-height:1.6;padding-left:18px;margin:0 0 14px">
-          <li>Open your authenticator app and add an account by scanning this code.</li>
-          <li>Can’t scan? Choose “enter a setup key” and type: <strong style="font-family:monospace;letter-spacing:.05em">{{ secret }}</strong></li>
-          <li>Type the 6-digit code the app shows to finish.</li>
-        </ol>
-        <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
-          <div role="img" aria-label="QR code for your authenticator app" style="{{ qrStyle }}"></div>
-          <div style="flex:1;min-width:200px">
-            <div class="field"><label>6-digit code</label><input class="inp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="{{ code }}" onChange="{{ onCode }}" placeholder="123456" style="font-size:18px;letter-spacing:.2em;max-width:180px" /></div>
-            <div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" onClick="{{ onConfirm }}">Confirm &amp; turn on</button><button class="btn" onClick="{{ onCancel }}">Cancel</button></div>
-          </div>
-        </div>
-      </sc-if>
-      <sc-if value="{{ hasCodes }}">
-        <div class="notice warn" style="margin-bottom:12px">Save these recovery codes somewhere safe (password manager or printed). Each one signs you in once if you lose your phone. They won’t be shown again.</div>
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-family:monospace;font-size:14px;background:#faf8f6;border:1px solid #e8e3e0;border-radius:10px;padding:14px 18px">
-          <sc-for list="{{ codes }}" as="c"><div>{{ c }}</div></sc-for>
-        </div>
-        <div class="btn-row" style="margin-top:12px"><button class="btn" onClick="{{ onCopy }}">Copy codes</button><button class="btn" onClick="{{ onDoneCodes }}">I’ve saved them</button></div>
-      </sc-if>
-      <sc-if value="{{ isOn }}">
-        <p class="muted" style="margin-bottom:14px">Your account asks for an authenticator code at every sign-in. Lost your phone? Use a recovery code, then turn two-factor off and on again here to link the new phone.</p>
-        <button class="btn btn-danger" onClick="{{ onDisable }}">Turn off two-factor</button>
-      </sc-if>
-    </div>
-    <div class="card">
-      <div class="card-title">Password</div>
-      <p class="muted" style="margin-bottom:14px">Use a long passphrase you don’t use anywhere else. After 5 wrong attempts an account is locked for 15 minutes.</p>
-      <button class="btn" onClick="{{ onReset }}">Email me a password reset link</button>
-    </div>
-  </div>
-  <div class="card flush">
-    <div class="card-title" style="padding:18px 20px 0">Recent sign-ins</div>
-    <p class="muted small" style="padding:4px 20px 10px">Don’t recognise one? Reset your password and tell your administrator.</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>When</th><th>Result</th><th>Device</th><th>IP</th></tr></thead>
-      <tbody>
-        <sc-if value="{{ noHistory }}"><tr><td colspan="4" class="empty">No sign-ins recorded yet.</td></tr></sc-if>
-        <sc-for list="{{ history }}" as="h"><tr><td style="white-space:nowrap">{{ h.at }}</td><td><span class="{{ h.cls }}">{{ h.result }}</span></td><td class="muted small">{{ h.device }}</td><td class="muted small">{{ h.ip }}</td></tr></sc-for>
-      </tbody>
-    </table></div>
-  </div>
-</div></div>
+      <div class="btn-row"></div>
     </header>
     <main style="flex:1;padding:28px 32px;min-width:0">
 <div class="page-head">

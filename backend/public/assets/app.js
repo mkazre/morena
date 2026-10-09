@@ -94,6 +94,8 @@ export async function shell(activeKey, roles) {
   }
   applyLogoWidth(session.settings.sidebar_logo_width);
   mobileNav();
+  mountFooter(session.settings);
+  setTimeout(() => mountFooter(session.settings), 1500); // in case <main> rendered after this
   const navSections = nav.decorateNav(u.nav_role, activeKey);
   import('./extras.js').then((x) => x.install(session, navSections)).catch(() => {});
   return {
@@ -116,8 +118,9 @@ function mobileNav() {
   btn.className = 'mnav-btn';
   btn.type = 'button';
   btn.setAttribute('aria-label', 'Menu');
-  btn.textContent = '☰';
-  const set = (open) => { document.body.classList.toggle('mnav-open', open); btn.textContent = open ? '✕' : '☰'; };
+  const glyph = (open) => import('./icons.js').then((m) => { btn.innerHTML = m.icon(open ? 'x' : 'menu', 22); });
+  glyph(false);
+  const set = (open) => { document.body.classList.toggle('mnav-open', open); glyph(open); };
   btn.onclick = () => set(!document.body.classList.contains('mnav-open'));
   document.body.appendChild(btn);
   document.addEventListener('click', (e) => {
@@ -144,6 +147,52 @@ export async function signOut(e) {
 export function applyLogoWidth(w) {
   window.__morenaLogoWidth = w;
   if (window.applyMorenaLogo) window.applyMorenaLogo();
+}
+
+// ---- Branding (sign-in panel + footer) ------------------------------------------------------
+
+const hexToRgba = (hex, opacity) => {
+  const n = parseInt(String(hex || '#000000').replace('#', ''), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(100, opacity ?? 100)) / 100})`;
+};
+
+/** {type, angle, stops:[{color, opacity, position}]} → CSS gradient. Stops without a position are spread evenly. */
+export function gradientCss(g) {
+  const stops = (g && g.stops && g.stops.length ? g.stops : [{ color: '#1c1a19', opacity: 100 }, { color: '#3a1420', opacity: 100 }]);
+  const list = stops.map((s, i) => {
+    const pos = s.position ?? (stops.length > 1 ? Math.round((i / (stops.length - 1)) * 100) : 0);
+    return hexToRgba(s.color, s.opacity) + ' ' + pos + '%';
+  });
+  if (list.length === 1) list.push(list[0].replace(/ \d+%$/, ' 100%'));
+  return g && g.type === 'radial' ? `radial-gradient(circle at center, ${list.join(', ')})` : `linear-gradient(${(g && g.angle) ?? 160}deg, ${list.join(', ')})`;
+}
+
+/** Style object for the sign-in page's right panel: gradient layered over the optional background image. */
+export function loginPanelStyle(login) {
+  const grad = gradientCss(login && login.gradient);
+  return {
+    flex: 1, position: 'relative', display: 'flex', alignItems: 'flex-end', padding: 56, boxSizing: 'border-box',
+    background: login && login.image_url ? `${grad}, url("${login.image_url}") center / cover no-repeat` : grad,
+    backgroundColor: '#1c1a19',
+  };
+}
+
+/** "Morena CRM · v1.5.0 (build 20261009-1200) · © 2026 Morena Properties" */
+export function footerText(b) {
+  if (!b) return '';
+  const v = b.version || {};
+  return [b.system_name, v.number ? 'v' + v.number + (v.build ? ' · build ' + v.build : '') : null, '© ' + new Date().getFullYear() + ' ' + (b.company_name || '')]
+    .filter(Boolean).join('  ·  ');
+}
+
+/** Footer under every signed-in page (outside the React tree, after <main>). */
+function mountFooter(settings) {
+  const main = document.querySelector('main');
+  if (!main || document.querySelector('.app-footer')) return;
+  const f = document.createElement('footer');
+  f.className = 'app-footer';
+  f.textContent = footerText(settings);
+  main.parentElement.appendChild(f);
 }
 
 export function param(name) {
