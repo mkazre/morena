@@ -18,12 +18,18 @@ if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
 
 Write-Host "Copying app to $stage ..."
 # /XD = skip folders, /XF = skip files. Exit codes < 8 are success for robocopy.
+# Composer's vendor/ is excluded by FULL PATH (it's rebuilt below) — a bare "vendor" would also drop
+# public/assets/vendor (Chart.js, jsPDF, QR codes).
 robocopy $src $stage /E /NFL /NDL /NJH /NJS /NP `
-  /XD vendor node_modules tests .git .idea .vscode `
+  /XD (Join-Path $src 'vendor') node_modules tests .git .idea .vscode `
       (Join-Path $src 'storage\logs') (Join-Path $src 'storage\app') (Join-Path $src 'storage\framework') `
       (Join-Path $src 'public\storage') (Join-Path $src 'bootstrap\cache') `
   /XF .env .env.backup .env.testing *.sqlite *.sqlite-journal .phpunit.result.cache phpunit.xml | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE)" }
+foreach ($f in 'public\assets\vendor\qrcode.js', 'public\assets\vendor\chart.umd.js', 'public\assets\vendor\jspdf.umd.min.js',
+               'public\assets\vendor\jspdf.plugin.autotable.min.js', 'public\assets\icons.js', 'public\sw.js') {
+  if (-not (Test-Path (Join-Path $stage $f))) { throw "Release is missing $f" }
+}
 
 # Recreate the empty writable folders Laravel expects.
 foreach ($d in 'storage\app\public', 'storage\app\private', 'storage\framework\cache\data', 'storage\framework\sessions',
